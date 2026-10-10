@@ -43,16 +43,26 @@ def interval_metrics(y: np.ndarray, lo: np.ndarray, med: np.ndarray, hi: np.ndar
 
 
 def ols_design(d: pd.DataFrame, cols_cat: list[str], with_sap: bool, levels: dict | None = None):
-    X = [np.ones(len(d)), d["log_tfa"].to_numpy(float), d["rooms"].fillna(5).clip(1, 12).to_numpy(float),
-         d["leasehold"].astype(float).to_numpy(), d["new_build"].astype(float).to_numpy(),
-         d["epc_age_years"].to_numpy(float)]
-    levels = levels or {c: sorted(d[c].astype(str).unique())[1:] for c in cols_cat}
+    s = {c: d[c].astype(object).fillna("unknown").astype(str) for c in cols_cat}  # Arrow strings keep NA otherwise
+    levels = levels or {c: sorted(s[c].unique())[1:] for c in cols_cat}
+    n_cols = 6 + sum(len(v) for v in levels.values()) + int(with_sap)
+    X = np.zeros((len(d), n_cols), dtype=np.float32)  # preallocated float32: no list-of-columns copies
+    X[:, 0] = 1
+    X[:, 1] = d["log_tfa"].to_numpy(float)
+    X[:, 2] = d["rooms"].fillna(5).clip(1, 12).to_numpy(float)
+    X[:, 3] = d["leasehold"].astype(float).to_numpy()
+    X[:, 4] = d["new_build"].astype(float).to_numpy()
+    X[:, 5] = d["epc_age_years"].to_numpy(float)
+    j = 6
     for c in cols_cat:
-        v = d[c].astype(str).to_numpy()
-        X += [(v == lv).astype(float) for lv in levels[c]]
+        lut = {lv: i for i, lv in enumerate(levels[c])}
+        idx = s[c].map(lut)
+        rows = np.flatnonzero(idx.notna().to_numpy())
+        X[rows, j + idx.iloc[rows].astype(int).to_numpy()] = 1
+        j += len(levels[c])
     if with_sap:
-        X.append(d["sap"].to_numpy(float))
-    return np.column_stack(X), levels
+        X[:, -1] = d["sap"].to_numpy(float)
+    return X, levels
 
 
 def main() -> None:
@@ -76,6 +86,7 @@ def main() -> None:
     nspl = pd.read_parquet(a.nspl)
     hpi = load_hpi(a.hpi)
     df, prep_log = prepare(sales, nspl, hpi, PrepConfig(max_epc_age_years=a.max_epc_age, seed=a.seed))
+    del sales, nspl  # free memory before fitting
     log("prepared", json.dumps(prep_log, default=str))
     proc = ROOT / "data" / "processed"
     proc.mkdir(parents=True, exist_ok=True)
@@ -94,10 +105,17 @@ def main() -> None:
 
     post_eval = {k: v[:300] for k, v in post.items()}  # 300 draws x eval rows keeps memory bounded
 
+    # save the posterior before evaluation, so an evaluation error never costs a refit
+    keep_samples = {k: v for k, v in post.items() if k not in ("a_lsoa", "a_la")}
+    np.savez_compressed(out / "posterior.npz", **keep_samples,
+                        a_lsoa_mean=post["a_lsoa"].mean(0), a_lsoa_std=post["a_lsoa"].std(0),
+                        a_la_mean=post["a_la"].mean(0), a_la_std=post["a_la"].std(0))
+    (out / "encoding.json").write_text(json.dumps(fit.enc.levels))
+
     def bayes_eval(d):
         d = d.sample(min(a.eval_n, len(d)), random_state=a.seed)
-        ys = np.concatenate([fit.predict_samples(c, post_eval, rng) for c in np.array_split(d, 10)], axis=1)
-        d = pd.concat(np.array_split(d, 10))
+        chunks = [d.iloc[i] for i in np.array_split(np.arange(len(d)), 10)]
+        ys = np.concatenate([fit.predict_samples(c, post_eval, rng) for c in chunks], axis=1)
         lo, med, hi = np.percentile(ys, [5, 50, 95], axis=0)
         return interval_metrics(d["log_price_adj"].to_numpy(), lo, med, hi)
 
@@ -125,7 +143,8 @@ def main() -> None:
 
     # ------------------------------------------------------------------ baselines
     cats = ["laua", "typeform", "age_band", "year"]
-    trd, ted, ootd = (H.add_design_cols(x) for x in (tr, te.sample(min(a.eval_n, len(te)), random_state=a.seed),
+    trd, ted, ootd = (H.add_design_cols(x) for x in (tr.sample(min(250_000, len(tr)), random_state=a.seed),
+                                                    te.sample(min(a.eval_n, len(te)), random_state=a.seed),
                                                     oot.sample(min(a.eval_n, len(oot)), random_state=a.seed)))
     for with_sap in (False, True):
         Xtr, lv = ols_design(trd, cats, with_sap)
@@ -151,7 +170,8 @@ def main() -> None:
                           "year_num": d["year"].astype(int), "leasehold": d["leasehold"].astype(int),
                           "new_build": d["new_build"].astype(int)})
         for c, src in (("ptype_c", "ptype"), ("typeform_c", "typeform"), ("age_c", "age_band")):
-            x[c] = pd.Categorical(d[src].astype(str), categories=sorted(trd[src].astype(str).unique()))
+            cats_ = sorted(trd[src].astype(object).fillna("unknown").astype(str).unique())
+            x[c] = pd.Categorical(d[src].astype(object).fillna("unknown").astype(str), categories=cats_)
         return x[feats]
     Xl = lgb_X(trd.sample(min(500_000, len(trd)), random_state=a.seed))
     yl = trd.loc[Xl.index, "log_price_adj"]
@@ -169,11 +189,6 @@ def main() -> None:
     log("LightGBM quantile", json.dumps(res))
 
     # ------------------------------------------------------------------ save
-    keep_samples = {k: v for k, v in post.items() if k not in ("a_lsoa", "a_la")}
-    np.savez_compressed(out / "posterior.npz", **keep_samples,
-                        a_lsoa_mean=post["a_lsoa"].mean(0), a_lsoa_std=post["a_lsoa"].std(0),
-                        a_la_mean=post["a_la"].mean(0), a_la_std=post["a_la"].std(0))
-    (out / "encoding.json").write_text(json.dumps(fit.enc.levels))
     (out / "metrics.json").write_text(json.dumps(metrics, indent=2, default=float))
     (out / "config.json").write_text(json.dumps(vars(a), indent=2))
     log("wrote", out)
