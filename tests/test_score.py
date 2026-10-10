@@ -58,6 +58,21 @@ def test_u_value_curves_monotonic_and_consistent_with_loft_table():
     assert abs(float(m.roof_u_sub(0.40)) - float(m.loft_sub(100))) < 1e-9
 
 
+def test_loft_curve_is_share_of_heat_loss_cut():
+    """v0.3.0 (D-24): sub-score = 100 x (U0 - U(mm)) / (U0 - Umin), U from RdSAP 10 Table 16."""
+    table = {0: 2.3, 50: 0.68, 100: 0.40, 200: 0.21, 270: 0.16, 400: 0.11}
+    for mm, u in table.items():
+        assert abs(float(m.loft_sub(mm)) - 100 * (2.3 - u) / (2.3 - 0.11)) < 0.01, mm
+    assert float(m.loft_sub(100)) > 85  # first 100 mm delivers most of the benefit
+
+
+def test_good_loft_does_not_hide_unfilled_cavity():
+    prop, usage = load("SH2")  # 100 mm loft, unfilled cavity walls
+    res = GreenHomeScorer(n_samples=300).score(prop, energy_from_usage(prop, usage, n=300))
+    issue = next(i for i in res.key_issues if i.code == "poor_insulation")
+    assert "walls" in issue.label and issue.evidence["walls_sub_score"] == 25
+
+
 def test_wall_insulation_never_lowers_score():
     better = [WallInsulation.none, WallInsulation.cavity_filled, WallInsulation.internal, WallInsulation.external]
     for wt in WallType:

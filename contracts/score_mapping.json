@@ -1,7 +1,10 @@
 {
   "_doc": "Green Home Score sub-score mappings v0.1. Fixed weights from the problem statement. Every mapping is monotonic (better state never lowers the sub-score) and is unit-tested. Piecewise-linear 'points' are [x, sub_score] pairs, linearly interpolated, clamped at the ends. Owner: Physics & Bayesian lead. Changes need a PR + updated tests.",
-  "version": "0.2.0",
-  "changelog": {"0.2.0": "Added U-value curves (walls, roof, floor) for homes with a known or EPC-reported U-value (decision D-15). Roof U maps through RdSAP 10 Table 16 to an equivalent loft depth, so both paths agree."},
+  "version": "0.3.0",
+  "changelog": {
+    "0.2.0": "Added U-value curves (walls, roof, floor) for homes with a known or EPC-reported U-value (decision D-15). Roof U maps through RdSAP 10 Table 16 to an equivalent loft depth, so both paths agree.",
+    "0.3.0": "Loft curve is now physics-based: share of the maximum heat-loss cut, 100 x (U0 - U(mm)) / (U0 - Umin), U from RdSAP 10 Table 16 (U0 = 2.3 at 0 mm, Umin = 0.11 at 400 mm). Replaces the near-linear curve, which the EBM check (decision D-23) showed under-valued the first 100 mm."
+  },
   "weights": {
     "energy_efficiency": 0.25,
     "energy_intensity": 0.20,
@@ -40,7 +43,8 @@
       "input": "Roof, walls, floor states",
       "element_weights": {"roof": 0.40, "walls": 0.45, "floor": 0.15},
       "renormalise_when_absent": "Flats with a dwelling above drop 'roof'; with a dwelling below drop 'floor'; remaining weights rescaled to sum to 1.",
-      "roof_loft_mm_points": [[0, 0], [50, 25], [100, 45], [150, 65], [200, 80], [270, 100]],
+      "roof_loft_mm_points": [[0, 0], [12, 36.53], [25, 59.36], [50, 73.97], [75, 82.19], [100, 86.76], [125, 89.04], [150, 91.32], [175, 93.61], [200, 95.43], [225, 96.35], [250, 97.26], [270, 97.72], [300, 98.63], [350, 99.54], [400, 100]],
+      "roof_loft_rule": "sub_score = 100 x (2.3 - U(mm)) / (2.3 - 0.11), U(mm) from RdSAP 10 Table 16 (see roof_u_to_loft_mm); points above are that formula at every table depth, rounded to 2 dp",
       "roof_other": {"flat_uninsulated": 20, "flat_insulated": 85, "room_in_roof_uninsulated": 20, "room_in_roof_insulated": 85},
       "walls": {
         "solid_none": 0, "cavity_none": 25, "timber_or_system_none": 30,

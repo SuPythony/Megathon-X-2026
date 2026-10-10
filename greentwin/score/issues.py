@@ -12,6 +12,7 @@ import numpy as np
 
 from contracts.models import GlazingType, KeyIssue, Property
 
+from . import mapping as m
 from .mapping import BOILERS
 
 HIGH_INTENSITY_P = 0.7      # P(intensity > peer median) above which intensity is an issue
@@ -41,12 +42,22 @@ def key_issues(prop: Property, subs: Mapping[str, float], intensity_samples: np.
             code="high_intensity", label="High energy use per m2", severity=_sev(subs["energy_intensity"]),
             evidence={"kwh_m2": round(mean_int, 1), "basis": "absolute scale (no peer data)"}))
 
-    if subs["insulation"] < POOR_SUB_SCORE:
+    # judged per element: a good loft must not hide unfilled cavity walls (D-24)
+    elements = {"walls": m.wall_u_sub(prop.walls.u_value) if prop.walls.u_value is not None
+                else m.wall_sub(prop.walls.type, prop.walls.insulation, prop.construction_age_band)}
+    if prop.roof.type.value != "pitched_loft" or prop.roof.loft_insulation_mm is not None:
+        elements["roof"] = m.roof_sub(prop)
+    elements["floor"] = m.floor_sub(prop)
+    weak = {k: float(v) for k, v in elements.items() if v is not None and float(v) < POOR_SUB_SCORE}
+    if subs["insulation"] < POOR_SUB_SCORE or weak:
         ev = {"walls": f"{prop.walls.type.value}, {prop.walls.insulation.value}"}
         if prop.roof.loft_insulation_mm is not None:
             ev["loft_mm"] = prop.roof.loft_insulation_mm
-        out.append(KeyIssue(code="poor_insulation", label="Poorly insulated walls, roof or floor",
-                            severity=_sev(subs["insulation"]), evidence=ev))
+        ev.update({f"{k}_sub_score": round(v, 1) for k, v in weak.items()})
+        worst = min([subs["insulation"], *weak.values()])
+        out.append(KeyIssue(code="poor_insulation",
+                            label="Poorly insulated " + (", ".join(weak) if weak else "walls, roof or floor"),
+                            severity=_sev(worst), evidence=ev))
 
     age = prop.heating.system_age_years
     old_boiler = prop.heating.main_system in BOILERS and age is not None and age > OLD_BOILER_YEARS

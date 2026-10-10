@@ -30,7 +30,8 @@ Branch: `worktree-p3-green-score`. Research background: `docs/score/GREEN_SCORE_
 | D-20 | EPC targets are era-specific (fuel prices, carbon factors): fit final weights on the RdSAP 10 era only; other eras = stability check | Decided (raised by user, 11 Oct 2026) |
 | D-21 | Priors fitted from real data (band mix, loft depth by age, NEED peer kWh/m²) | Done |
 | D-22 | Missing `PHOTO_SUPPLY` = unknown PV, not "no PV" (bug found in v1 results) | Fixed |
-| D-23 | EBM curve check: loft curve too linear (data + physics: diminishing returns); heating map between cost and carbon orderings | Findings; loft change **proposed** |
+| D-23 | EBM curve check: loft curve too linear (data + physics: diminishing returns); heating map between cost and carbon orderings | Findings |
+| D-24 | Loft curve = share of max heat-loss cut (RdSAP Table 16), `score_mapping.json` v0.3.0; insulation key issue judged per element | Decided (user, 11 Oct 2026) |
 
 ---
 
@@ -161,6 +162,22 @@ The first full v1 run gave renewables a weight of 0.020, and exactly 0 on both c
 **Loft: diminishing returns.** Mean EBM points by recorded depth (SAP; EIR similar): 0 mm −6.6, 50 mm −1.7, 100 mm −0.5, 200 mm +0.1, 270 mm +0.4, 400 mm +1.3. About 78% (SAP) / 74% (EIR) of the 0→400 mm gain is reached by 100 mm. RdSAP 10 Table 16 says the same: U falls 2.3 → 0.40 W/m²K by 100 mm, 87% of the possible reduction. Our curve gives 45 of 100 points at 100 mm. Ranking is preserved (both monotone), but the spacing over-rewards top-ups and under-rewards the first insulation. **Proposal (not applied):** loft sub-score = 100 × (U₀ − U(mm)) / (U₀ − U_min) with U from Table 16 (0 mm 0; 50 mm 74; 100 mm 87; 200 mm 95; 270 mm 99; 400 mm 100). Still monotone, physics-based, consistent with the roof U-value path (D-15).
 
 **Heating: our order sits between cost and carbon.** Cost (SAP) ranks condensing gas top, heat pumps near neutral, LPG worst. Carbon (EIR, SAP 10.2 factors) ranks ASHP best (+7.9), district heating and GSHP next, oil worst (−15.5). Our map (heat pumps top, solid fuel / oil bottom) follows the carbon end and the reformed-EPC heating-metric principles (§1.2 of the standards doc). Mismatches on carbon: direct electric −1.3 (ours 30, low), storage −7.3 / HHR −6.3 (ours 35 / 50, high), and "solid fuel" mixes coal and biomass (no biomass enum value). Left as is for now; noted for the heating-map backlog item.
+
+## D-24 Physics-based loft curve (applied)
+Approved after D-23. `roof_loft_mm_points` = `100 × (2.3 − U(mm)) / (2.3 − 0.11)` at every RdSAP 10 Table 16 depth:
+
+| mm | 0 | 12 | 25 | 50 | 75 | 100 | 150 | 200 | 270 | 300 | 400 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Old | 0 | 6 | 12.5 | 25 | 35 | 45 | 65 | 80 | 100 | 100 | 100 |
+| **New** | 0 | 36.5 | 59.4 | 74.0 | 82.2 | 86.8 | 91.3 | 95.4 | 97.7 | 98.6 | 100 |
+
+Why: the sub-score now measures what loft insulation does, the share of the possible heat-loss cut, and its spacing matches both physics and the EBM-learned curve (D-23). It is monotone (test `test_loft_curve_is_share_of_heat_loss_cut` pins the formula at 6 table depths), and the roof U-value path (D-15) goes through the same table, so a known U and a known depth give the same score.
+
+Effect on the showcase homes (headline, brief weights): SH1 30 → **33** Poor; SH2 49 Poor → **51 Moderate**; SH3 unchanged at 65 (no loft). SH2's band flip is a real change in meaning: a 1970s semi with 100 mm of loft insulation has already captured most of the loft benefit.
+
+Side effect fixed: with a better roof score, SH2's insulation average (50.5) no longer triggered `poor_insulation`, hiding its unfilled cavity walls (sub-score 25). The key issue is now raised if the average **or any element** is below 40, and names the weak elements (test `test_good_loft_does_not_hide_unfilled_cavity`).
+
+Learned weights retrained as **v2** on the new sub-scores (v1 kept for the record).
 
 ---
 

@@ -19,7 +19,7 @@ def test_walls():
 
 def test_roof_and_floor():
     assert E.roof_score("(another dwelling above)") == E.ABSENT_ELEMENT
-    assert E.roof_score("Pitched, 270 mm loft insulation") == 100
+    assert E.roof_score("Pitched, 270 mm loft insulation") == float(m.loft_sub(270))
     assert E.roof_score("Pitched, 400+ mm loft insulation") == 100
     assert E.roof_score("Pitched, no insulation (assumed)") == 0
     assert E.roof_score("Average thermal transmittance 0.40 W/m²K") == float(m.loft_sub(100))
