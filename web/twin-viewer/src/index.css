@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --green: #0b6e4f;
+  --blue: #2a6fdb;
+  --red: #c0392b;
+  --ink: #1f2a30;
+  --muted: #66727a;
+  --line: #dde3e0;
+  --bg: #f6f8f7;
+  --card: #ffffff;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+button, select { font: inherit; }
+
+.app { display: flex; flex-direction: column; height: 100%; }
+
+.topbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--card);
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-right: 8px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); }
+.topbar select, .topbar button {
+  height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); cursor: pointer;
+}
+.toggle.on { background: var(--green); color: #fff; border-color: var(--green); }
+.topbar button:disabled { opacity: 0.5; cursor: default; }
+.hint-inline { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+.stage { flex: 1; display: flex; min-height: 0; }
+.viewport { flex: 1; min-width: 0; position: relative; }
+
+.panel {
+  width: 360px; flex-shrink: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px;
+  border-left: 1px solid var(--line); background: var(--bg);
+}
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.card h2 { margin: 8px 0; font-size: 18px; }
+.card h3 { margin: 0 0 8px; font-size: 15px; }
+.card h4 { margin: 8px 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 0; font-size: 14px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.facts dd.cap { text-transform: capitalize; }
+.hint { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+.pending { margin: 16px 0 0; padding: 8px; border-radius: 8px; background: #eef4f1; color: var(--green); font-size: 13px; }
+.muted { color: var(--muted); font-size: 12px; }
+
+.room-list { display: flex; flex-direction: column; gap: 4px; }
+.room-btn, .app-btn {
+  display: flex; align-items: center; gap: 8px; justify-content: space-between; width: 100%;
+  padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); cursor: pointer; text-align: left;
+}
+.room-btn:hover, .app-btn:hover { border-color: var(--green); }
+.link { border: 0; background: none; color: var(--blue); padding: 0; cursor: pointer; }
+
+.app-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.app-list li.active .app-btn { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+.app-btn { justify-content: flex-start; }
+.app-btn .muted { margin-left: auto; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.app-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.app-tools button, .add-row button, .actions button {
+  height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); cursor: pointer;
+}
+.app-tools .danger { color: var(--red); }
+.warn { width: 100%; margin: 0; font-size: 12px; color: #9a6200; }
+.add-row { display: flex; gap: 8px; }
+.add-row select { flex: 1; min-width: 0; height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; }
+.add-row button:disabled { opacity: 0.5; }
+
+.actions { display: flex; flex-direction: column; gap: 8px; }
+.actions button { background: var(--green); color: #fff; border-color: var(--green); }
+.upload {
+  display: flex; align-items: center; justify-content: center; height: 32px; border: 1px dashed var(--line);
+  border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--muted);
+}
+.upload input { display: none; }
+.basis { font-size: 12px; color: var(--muted); margin: 0; }
+
+.room-tag, .compass-label {
+  padding: 2px 8px; border-radius: 8px; background: rgba(31, 42, 48, 0.85); color: #fff; font-size: 12px; white-space: nowrap;
+}
+.compass-label { background: var(--green); font-weight: 700; }
+.empty { padding: 16px; }
+
+@media (max-width: 800px) {
+  .stage { flex-direction: column; }
+  .viewport { min-height: 55vh; }
+  .panel { width: 100%; border-left: 0; border-top: 1px solid var(--line); }
+  .hint-inline { display: none; }
+}
