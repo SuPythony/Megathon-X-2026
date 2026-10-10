@@ -1,5 +1,71 @@
 {
   "$defs": {
+    "AlternativeScore": {
+      "description": "The same seven sub-scores combined with different weights (e.g. weights learned from data).\n\nReported beside the headline score, which always uses the brief's fixed weights.",
+      "properties": {
+        "name": {
+          "const": "learned_weights",
+          "default": "learned_weights",
+          "title": "Name",
+          "type": "string"
+        },
+        "weights": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Component -> weight; sums to 1",
+          "title": "Weights",
+          "type": "object"
+        },
+        "score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        },
+        "band": {
+          "enum": [
+            "Highly efficient",
+            "Good",
+            "Moderate",
+            "Poor",
+            "Very poor"
+          ],
+          "title": "Band",
+          "type": "string"
+        },
+        "score_distribution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "weights_version": {
+          "description": "e.g. 'artifacts/score_weights/v1'",
+          "title": "Weights Version",
+          "type": "string"
+        },
+        "method": {
+          "description": "How the weights were learned (documented in docs/score)",
+          "title": "Method",
+          "type": "string"
+        }
+      },
+      "required": [
+        "weights",
+        "score",
+        "band",
+        "weights_version",
+        "method"
+      ],
+      "title": "AlternativeScore",
+      "type": "object"
+    },
     "CredibleInterval": {
       "description": "Central (equal-tailed) credible interval, e.g. level 0.9 = P5..P95.",
       "properties": {
@@ -410,7 +476,7 @@
       "description": "Score over posterior samples"
     },
     "band": {
-      "description": "Mode of band_probabilities (most probable band)",
+      "description": "Classification of the rounded score (brief section 2); band_probabilities gives the spread over posterior samples",
       "enum": [
         "Highly efficient",
         "Good",
@@ -493,6 +559,14 @@
       "description": "Version of contracts/score_mapping.json used",
       "title": "Mapping Version",
       "type": "string"
+    },
+    "alternatives": {
+      "description": "Companion scores with other weights (never replaces the headline score)",
+      "items": {
+        "$ref": "#/$defs/AlternativeScore"
+      },
+      "title": "Alternatives",
+      "type": "array"
     }
   },
   "required": [

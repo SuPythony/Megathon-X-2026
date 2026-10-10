@@ -1,6 +1,11 @@
 {
   "_doc": "Green Home Score sub-score mappings v0.1. Fixed weights from the problem statement. Every mapping is monotonic (better state never lowers the sub-score) and is unit-tested. Piecewise-linear 'points' are [x, sub_score] pairs, linearly interpolated, clamped at the ends. Owner: Physics & Bayesian lead. Changes need a PR + updated tests.",
-  "version": "0.1.0",
+  "version": "0.4.0",
+  "changelog": {
+    "0.2.0": "Added U-value curves (walls, roof, floor) for homes with a known or EPC-reported U-value (decision D-15). Roof U maps through RdSAP 10 Table 16 to an equivalent loft depth, so both paths agree.",
+    "0.3.0": "Loft curve is now physics-based: share of the maximum heat-loss cut, 100 x (U0 - U(mm)) / (U0 - Umin), U from RdSAP 10 Table 16 (U0 = 2.3 at 0 mm, Umin = 0.11 at 400 mm). Replaces the near-linear curve, which the EBM check (decision D-23) showed under-valued the first 100 mm.",
+    "0.4.0": "Lighting scored inside smart_energy_management: 0.53 x controls level + 0.47 x low-energy lighting %, share learned from RdSAP 10 data (decision D-26)."
+  },
   "weights": {
     "energy_efficiency": 0.25,
     "energy_intensity": 0.20,
@@ -39,13 +44,21 @@
       "input": "Roof, walls, floor states",
       "element_weights": {"roof": 0.40, "walls": 0.45, "floor": 0.15},
       "renormalise_when_absent": "Flats with a dwelling above drop 'roof'; with a dwelling below drop 'floor'; remaining weights rescaled to sum to 1.",
-      "roof_loft_mm_points": [[0, 0], [50, 25], [100, 45], [150, 65], [200, 80], [270, 100]],
+      "roof_loft_mm_points": [[0, 0], [12, 36.53], [25, 59.36], [50, 73.97], [75, 82.19], [100, 86.76], [125, 89.04], [150, 91.32], [175, 93.61], [200, 95.43], [225, 96.35], [250, 97.26], [270, 97.72], [300, 98.63], [350, 99.54], [400, 100]],
+      "roof_loft_rule": "sub_score = 100 x (2.3 - U(mm)) / (2.3 - 0.11), U(mm) from RdSAP 10 Table 16 (see roof_u_to_loft_mm); points above are that formula at every table depth, rounded to 2 dp",
       "roof_other": {"flat_uninsulated": 20, "flat_insulated": 85, "room_in_roof_uninsulated": 20, "room_in_roof_insulated": 85},
       "walls": {
         "solid_none": 0, "cavity_none": 25, "timber_or_system_none": 30,
         "cavity_filled": 75, "internal": 85, "external": 90, "as_built": 100
       },
       "floor": {"uninsulated": 30, "insulated": 100},
+      "wall_u_points": [[0.18, 100], [0.30, 92], [0.45, 82], [0.60, 70], [1.0, 40], [1.5, 25], [1.7, 0]],
+      "roof_u_to_loft_mm": {
+        "source": "RdSAP 10 specification (BRE, Feb 2024) Table 16, column 'insulation at joists at ceiling level and flat roof'",
+        "points": [[0.11, 400], [0.12, 350], [0.14, 300], [0.16, 270], [0.17, 250], [0.19, 225], [0.21, 200], [0.25, 175], [0.30, 150], [0.35, 125], [0.40, 100], [0.50, 75], [0.68, 50], [1.0, 25], [1.5, 12], [2.3, 0]]
+      },
+      "floor_u_points": [[0.15, 100], [0.25, 90], [0.45, 60], [0.70, 30]],
+      "u_value_rule": "When an element's U-value is known (measured, or 'Average thermal transmittance' on the EPC) the U-value curve is used instead of the category. Lower U never lowers the sub-score.",
       "justification": "Insulation is an actionable lever; overlap with the EPC rating is accepted and documented: the rating is an overall modelled outcome, components are the levers customers can change."
     },
     "heating_system": {
@@ -69,7 +82,10 @@
       "cap": 100
     },
     "smart_energy_management": {
-      "input": "Controls present",
+      "input": "Controls present + share of low-energy (LED/CFL) fixed lighting",
+      "lighting_share": 0.47,
+      "combine": "sub_score = (1 - lighting_share) x controls_level + lighting_share x low_energy_lighting_pct (0-100). Missing lighting % is sampled from the EPC prior, never 0.",
+      "lighting_justification": "The brief fixes seven components, so lighting joins this one as 'controls and efficient electricity use'. lighting_share is learned (decision D-26): simplex NNLS on RdSAP 10 certificates, lighting share of this component 0.463 (SAP target) and 0.472 (primary energy); adding lighting raises held-out R2 on all four modelled targets. Overlap with energy efficiency (SAP already counts lighting) is accepted on the same basis as insulation: the rating is an outcome, components are levers.",
       "levels": [
         {"requires": [], "sub_score": 0},
         {"requires": ["programmer"], "sub_score": 20},
@@ -79,7 +95,7 @@
         {"requires": ["smart_thermostat", "trvs"], "sub_score": 90},
         {"requires": ["smart_thermostat", "zoned_control", "smart_meter"], "sub_score": 100}
       ],
-      "rule": "Highest level whose requirements are all present."
+      "rule": "controls_level = highest level whose requirements are all present."
     }
   }
 }

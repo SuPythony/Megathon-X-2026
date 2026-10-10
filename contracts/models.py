@@ -808,10 +808,26 @@ class KeyIssue(BaseModel):
     probability: Optional[float] = Field(None, ge=0, le=1, description="e.g. P(intensity above peers)")
 
 
+class AlternativeScore(BaseModel):
+    """The same seven sub-scores combined with different weights (e.g. weights learned from data).
+
+    Reported beside the headline score, which always uses the brief's fixed weights.
+    """
+
+    name: Literal["learned_weights"] = "learned_weights"
+    weights: dict[str, float] = Field(description="Component -> weight; sums to 1")
+    score: int = Field(ge=0, le=100)
+    band: ScoreBand
+    score_distribution: Optional[Distribution] = None
+    weights_version: str = Field(description="e.g. 'artifacts/score_weights/v1'")
+    method: str = Field(description="How the weights were learned (documented in docs/score)")
+
+
 class ScoreResult(BaseModel):
     score: int = Field(ge=0, le=100, description="Rounded weighted sum (of the posterior mean inputs)")
     score_distribution: Optional[Distribution] = Field(None, description="Score over posterior samples")
-    band: ScoreBand = Field(description="Mode of band_probabilities (most probable band)")
+    band: ScoreBand = Field(description="Classification of the rounded score (brief section 2); "
+                                        "band_probabilities gives the spread over posterior samples")
     band_probabilities: dict[str, float] = Field(default_factory=dict, description="P(each band); sums to 1")
     p_poor_or_very_poor: Optional[float] = Field(None, ge=0, le=1)
     components: list[ScoreComponent]
@@ -822,6 +838,9 @@ class ScoreResult(BaseModel):
         default_factory=dict, description="e.g. local-authority band shares from EPC live table D1"
     )
     mapping_version: str = Field("score_mapping.json", description="Version of contracts/score_mapping.json used")
+    alternatives: list[AlternativeScore] = Field(
+        default_factory=list, description="Companion scores with other weights (never replaces the headline score)"
+    )
 
 
 # =========================================================================== #

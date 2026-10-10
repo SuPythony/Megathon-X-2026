@@ -1,0 +1,99 @@
+{
+  "n_train": 210454,
+  "n_test": 44762,
+  "r2_test_sap": 0.6317,
+  "term_importance": {
+    "loft_mm": 0.893,
+    "s_walls": 3.405,
+    "s_floor": 3.367,
+    "s_windows_glazing": 0.836,
+    "heating_system": 2.572,
+    "s_smart_energy_management": 1.487,
+    "pv_kwp_est": 1.715,
+    "low_energy_lighting_pct": 1.278
+  },
+  "spearman_ebm_term_vs_our_subscore": {
+    "loft_mm": 0.578,
+    "s_walls": 1.0,
+    "s_floor": 1.0,
+    "s_windows_glazing": 1.0,
+    "heating_system": 0.705,
+    "s_smart_energy_management": 1.0,
+    "pv_kwp_est": 0.932
+  },
+  "heating_system_ebm_vs_ours": [
+    {
+      "h": "lpg_boiler",
+      "ebm_points": -21.74,
+      "our_sub_score": 25.0,
+      "n": 255
+    },
+    {
+      "h": "solid_fuel",
+      "ebm_points": -16.09,
+      "our_sub_score": 5.0,
+      "n": 104
+    },
+    {
+      "h": "oil_boiler",
+      "ebm_points": -11.05,
+      "our_sub_score": 20.0,
+      "n": 1268
+    },
+    {
+      "h": "electric_direct",
+      "ebm_points": -8.94,
+      "our_sub_score": 30.0,
+      "n": 3066
+    },
+    {
+      "h": "gas_boiler_non_condensing",
+      "ebm_points": -8.61,
+      "our_sub_score": 30.0,
+      "n": 189
+    },
+    {
+      "h": "electric_storage",
+      "ebm_points": -3.77,
+      "our_sub_score": 35.0,
+      "n": 1402
+    },
+    {
+      "h": "electric_storage_hhr",
+      "ebm_points": -2.85,
+      "our_sub_score": 50.0,
+      "n": 541
+    },
+    {
+      "h": "ground_source_heat_pump",
+      "ebm_points": -0.51,
+      "our_sub_score": 100.0,
+      "n": 71
+    },
+    {
+      "h": "air_source_heat_pump",
+      "ebm_points": 0.51,
+      "our_sub_score": 95.0,
+      "n": 1314
+    },
+    {
+      "h": "gas_boiler_unknown_condensing",
+      "ebm_points": 1.47,
+      "our_sub_score": 42.5,
+      "n": 33329
+    },
+    {
+      "h": "district_heating",
+      "ebm_points": 2.05,
+      "our_sub_score": 70.0,
+      "n": 2228
+    },
+    {
+      "h": "gas_boiler_condensing",
+      "ebm_points": 3.35,
+      "our_sub_score": 55.0,
+      "n": 995
+    }
+  ],
+  "seed": 42
+}
