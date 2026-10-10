@@ -15,11 +15,27 @@ import math
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
+
+from pydantic import Field
 
 from contracts.models import BuiltForm, FloorType, Property, PropertyType, RoofType, TwinParams
+from greentwin.twin.appliances import ApplianceSummary
 from greentwin.twin.archetypes import TwinLayout, build_layout
-from greentwin.twin.physics_api import FuelConfig
+from greentwin.twin.household import Presence, heating_behaviour, hot_water_system, occupancy
+from greentwin.twin.physics_api import FuelConfig, FuelName
+
+
+class ExtendedTwinParams(TwinParams):
+    """TwinParams plus what Part 1 adds for the physics: a separate hot-water system and the household. Still a
+    TwinParams (it can go anywhere one is expected); the extra numeric fields are physics_api.EXTRA_PARAM_KEYS."""
+
+    hot_water_fuel: FuelName
+    hot_water_efficiency: float = Field(description="Delivered hot water / fuel for the main hot-water system")
+    hot_water_standing_loss_kwh_per_day: float = Field(0.0, description="Cylinder loss; 0 for combi/instantaneous")
+    shower_electric_kwh_per_day: float = Field(0.0, description="Electric showers: electricity, efficiency 1")
+    occupants: float
+    postcode_district: str
 
 HERE = Path(__file__).resolve().parent
 
@@ -97,13 +113,23 @@ def hot_water_fuel(prop: Property) -> str:
     return prop.heating.main_fuel
 
 
-def fuel_config(prop: Property) -> FuelConfig:
-    return FuelConfig(heating_fuel=prop.heating.main_fuel, hot_water_fuel=hot_water_fuel(prop))
+def fuel_config(prop_or_params: Property | ExtendedTwinParams) -> FuelConfig:
+    if isinstance(prop_or_params, ExtendedTwinParams):
+        return FuelConfig(heating_fuel=prop_or_params.heating_fuel, hot_water_fuel=prop_or_params.hot_water_fuel)
+    return FuelConfig(heating_fuel=prop_or_params.heating.main_fuel, hot_water_fuel=hot_water_fuel(prop_or_params))
 
 
-def params_with_sources(prop: Property, layout: Optional[TwinLayout] = None,
-                        appliance_kwh_per_day: Optional[float] = None) -> tuple[TwinParams, dict[str, str]]:
-    """TwinParams for one home plus, per field, where the value came from."""
+def params_with_sources(
+    prop: Property,
+    layout: Optional[TwinLayout] = None,
+    appliances: Optional[ApplianceSummary] = None,
+    occupants: Optional[float] = None,
+    presence: Optional[Presence] = None,
+    thermostat_c: Optional[float] = None,
+    heating_periods: Optional[Sequence[tuple[int, int]]] = None,
+) -> tuple[ExtendedTwinParams, dict[str, str]]:
+    """Parameters for one home plus, per field, where the value came from. Household answers (occupants, presence,
+    thermostat, heating periods) and the appliance list replace SAP defaults when given."""
     d = rdsap()
     band = age_band_index(prop.construction_age_band, prop.year_built)
     src: dict[str, str] = {}
@@ -181,31 +207,49 @@ def params_with_sources(prop: Property, layout: Optional[TwinLayout] = None,
         eff = d["heating_efficiency"][prop.heating.main_system.value]
         src["heating_efficiency"] = f"rdsap_default by system ({d['heating_efficiency']['_status']})"
 
-    # Occupancy-driven demands (SAP 2012 Appendix J and L)
+    # Household: occupancy and heating behaviour (user answers, else SAP defaults)
     tfa = prop.floor_area_m2
-    n = sap_occupancy(tfa)
-    hot_water = (25 * n + 36) * 4.19 * 37 / 3600  # litres/day x specific heat x 37 K mean rise -> kWh/day useful heat
-    src["hot_water_kwh_per_day"] = "sap_2012 appendix J (useful heat, 37 K mean rise)"
+    occ = occupancy(prop, occupants, presence, sap_occupancy(tfa))
+    n = occ.occupants
+    behaviour = heating_behaviour(thermostat_c, heating_periods, occ.presence)
+    src["occupants"] = occ.source
+    src["setpoint_c"] = behaviour.source + " (calibrated)"
+    src["heating_hours_per_day"] = behaviour.source
+
+    # Demands (SAP 2012 Appendix J and L, with the household's occupants)
+    hot_water_useful = (25 * n + 36) * 4.19 * 37 / 3600  # litres/day x specific heat x 37 K mean rise -> kWh/day
     e_appliances = 207.8 * (tfa * n) ** 0.4714
     low_energy = (prop.low_energy_lighting_pct if prop.low_energy_lighting_pct is not None else 50) / 100
     e_lighting = 59.73 * (tfa * n) ** 0.4714 * (1 - 0.5 * low_energy)
     e_cooking = (35 + 7 * n) * 8.76
-    sap_baseload = (e_appliances + e_lighting + e_cooking) / 365
-    if appliance_kwh_per_day is not None:
-        baseload, src["baseload_kwh_per_day"] = appliance_kwh_per_day + e_lighting / 365, "appliance list + sap lighting"
+    lighting_gains_w = 0.85 * e_lighting * 1000 / 8760
+    if appliances is not None:
+        baseload = appliances.baseload_kwh_per_day + e_lighting / 365
+        src["baseload_kwh_per_day"] = f"appliance list ({appliances.status}) + sap_2012 lighting"
+        internal_gains = occ.metabolic_gains_w - 40 * n + appliances.gains_w_mean + lighting_gains_w
+        src["internal_gains_w"] = "metabolic (occupancy) + appliance schedules + sap lighting, less evaporation"
     else:
-        baseload, src["baseload_kwh_per_day"] = sap_baseload, "sap_2012 appendix L (appliances + lighting + cooking)"
+        baseload = (e_appliances + e_lighting + e_cooking) / 365
+        src["baseload_kwh_per_day"] = "sap_2012 appendix L (appliances + lighting + cooking)"
+        internal_gains = occ.metabolic_gains_w - 40 * n + e_appliances * 1000 / 8760 + lighting_gains_w + 35 + 7 * n
+        src["internal_gains_w"] = "sap_2012 table 5 (metabolic x presence, appliances, lighting, cooking, less evaporation)"
     lighting_share = (e_lighting / 365) / baseload if baseload > 0 else 0.15
     src["lighting_share_of_baseload"] = "sap_2012 appendix L"
-    internal_gains = 60 * n - 40 * n + (e_appliances + 0.85 * e_lighting) * 1000 / 8760 + 35 + 7 * n
-    src["internal_gains_w"] = "sap_2012 table 5 (metabolic, appliances, lighting, cooking, less evaporation)"
 
-    src.update({"heat_loss_multiplier": "default 1.0 (calibrated)", "setpoint_c": "default 19.5 (calibrated)",
-                "heating_hours_per_day": "twinparams_default", "solar_gain_factor": "twinparams_default",
+    # Hot water: its own system, fuel and efficiency
+    hws = hot_water_system(prop, eff, hot_water_useful, appliances)
+    src["hot_water_kwh_per_day"] = hws.sources["main_useful"]
+    src["hot_water_fuel"] = hws.sources["system"]
+    src["hot_water_efficiency"] = hws.sources["efficiency"]
+    src["hot_water_standing_loss_kwh_per_day"] = hws.sources["standing_loss"]
+    src["shower_electric_kwh_per_day"] = "appliance list (electric shower)" if hws.electric_shower else "none listed"
+
+    src.update({"heat_loss_multiplier": "default 1.0 (calibrated)", "solar_gain_factor": "twinparams_default",
+                "postcode_district": "epc / intake",
                 "pv_kwp": "epc", "pv_azimuth_deg": "epc or 180", "pv_tilt_deg": "epc or 35", "battery_kwh": "epc",
                 "heating_fuel": "epc", "tariff": "default standard"})
 
-    params = TwinParams(
+    params = ExtendedTwinParams(
         property_id=prop.property_id,
         wall_area_m2=round(wall_area, 2), roof_area_m2=round(roof_area, 2), floor_area_m2=round(floor_area, 2),
         window_area_m2=round(window_area, 2), door_area_m2=round(env.door_area_m2, 2),
@@ -213,14 +257,19 @@ def params_with_sources(prop: Property, layout: Optional[TwinLayout] = None,
         wall_u=round(wall_u, 3), roof_u=round(roof_u, 3), floor_u=round(floor_u, 3), window_u=round(window_u, 3),
         door_u=door_u, air_changes_per_hour=round(max(ach, 0.2), 3), volume_m3=round(env.volume_m3, 2),
         heating_efficiency=eff, heating_fuel=prop.heating.main_fuel,
-        hot_water_kwh_per_day=round(hot_water, 3), baseload_kwh_per_day=round(baseload, 3),
+        setpoint_c=round(behaviour.setpoint_c, 2), heating_hours_per_day=round(behaviour.heating_hours_per_day, 2),
+        hot_water_kwh_per_day=hws.main_useful_kwh_per_day, baseload_kwh_per_day=round(baseload, 3),
         lighting_share_of_baseload=round(lighting_share, 3), internal_gains_w=round(internal_gains, 1),
         pv_kwp=prop.renewables.pv_kwp, pv_azimuth_deg=prop.renewables.pv_azimuth_deg or 180.0,
         pv_tilt_deg=prop.renewables.pv_tilt_deg or 35.0, battery_kwh=prop.renewables.battery_kwh,
+        hot_water_fuel=hws.fuel, hot_water_efficiency=hws.efficiency,
+        hot_water_standing_loss_kwh_per_day=hws.standing_loss_kwh_per_day,
+        shower_electric_kwh_per_day=hws.shower_electric_kwh_per_day, occupants=n,
+        postcode_district=prop.location.postcode_district,
     )
     return params, src
 
 
-def params_from_property(prop: Property, layout: Optional[TwinLayout] = None) -> TwinParams:
+def params_from_property(prop: Property, layout: Optional[TwinLayout] = None) -> ExtendedTwinParams:
     """``DigitalTwin.params_from_property``: RdSAP defaults (+ fitted floor plan geometry) -> one parameter set."""
     return params_with_sources(prop, layout)[0]

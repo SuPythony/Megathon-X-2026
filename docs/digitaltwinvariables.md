@@ -136,6 +136,26 @@ Weather scenarios (`typical`, `cold_year`, `warm_year`, `forecast_week`, `ukcp18
 
 ---
 
+## 4b. Extra inputs from the twin (added 11 Oct 2026, all optional)
+
+The twin now sends more than `TwinParams`. Read these if your model can use them; each has a default if absent
+(key lists in `greentwin/twin/physics_api.py`):
+
+| Key | In | Unit | Meaning | Default if absent |
+|---|---|---|---|---|
+| `hot_water_efficiency` | params | – | Main hot-water system: delivered heat / fuel. Separate from `heating_efficiency` | `heating_efficiency` |
+| `hot_water_standing_loss_kwh_per_day` | params | kWh/day | Cylinder loss the DHW system also supplies | 0 |
+| `shower_electric_kwh_per_day` | params | kWh/day | Electric showers: electricity at efficiency 1 | 0 |
+| `appliance_month_factor` | time series | – | Monthly baseload shape (mean 1): baseload_kwh_per_day × days × factor | 1 |
+| `gains_month_factor` | time series | – | Monthly internal-gains shape (mean 1) | 1 |
+| `secondary_heating_kwh_monthly` | time series | kWh | Plug-in electric heaters: electricity; the heat displaces main space heating | 0 |
+| `extra_electricity_kwh_monthly` | time series | kWh | EV charger, hot tub: outside the envelope, no gains | 0 |
+| `extra_gas_kwh_monthly` | time series | kWh | Gas cooking (its gains are already in `internal_gains_w`) | 0 |
+
+`FuelConfig.hot_water_fuel` can now differ from `heating_fuel` (e.g. gas heating + electric immersion). The full
+per-home bundle with sources, priors and meter readings is the physics inputs package: see
+`docs/DIGITAL_TWIN_HANDOFF.md` section 2.
+
 ## 5. Output
 
 Return a dict with these keys. They map 1:1 onto `TwinRun` in `greentwin/interfaces.py`. After `vmap`, each array gains a leading `n_samples` axis.

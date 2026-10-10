@@ -21,6 +21,7 @@ from greentwin.interfaces import PosteriorSamples, TwinRun
 from greentwin.twin.physics_api import (
     BEHAVIOUR_KEYS,
     ELEMENTS,
+    EXTRA_PARAM_KEYS,
     MONTHLY_KEYS,
     PHYSICS_PARAM_KEYS,
     TOTAL_KEYS,
@@ -39,12 +40,21 @@ PRIOR = {
 }
 
 
-def prior_samples(base: TwinParams, n_samples: int = 1000, seed: int = 42) -> PosteriorSamples:
+def _input_keys(base: TwinParams) -> list[str]:
+    """TwinParams physics keys, plus the extra keys an ExtendedTwinParams carries."""
+    return [*PHYSICS_PARAM_KEYS, *(k for k in EXTRA_PARAM_KEYS if getattr(base, k, None) is not None)]
+
+
+def prior_samples(base: TwinParams, n_samples: int = 1000, seed: int = 42,
+                  priors: Optional[dict[str, tuple[str, float, float]]] = None) -> PosteriorSamples:
+    """Samples from the prior. ``priors`` maps a key to (kind, a, b): 'lognormal' multiplies the base value by
+    lognormal(a, b); 'normal_add' adds normal(a, b). Defaults to PRIOR."""
     rng = np.random.default_rng(seed)
+    table = PRIOR if priors is None else priors
     params: dict[str, np.ndarray] = {}
-    for key in PHYSICS_PARAM_KEYS:
+    for key in _input_keys(base):
         v = float(getattr(base, key))
-        spec = PRIOR.get(key)
+        spec = table.get(key)
         if spec is None:
             params[key] = np.full(n_samples, v, dtype=np.float32)
         elif spec[0] == "lognormal":
@@ -56,7 +66,7 @@ def prior_samples(base: TwinParams, n_samples: int = 1000, seed: int = 42) -> Po
 
 def _batched_params(samples: PosteriorSamples, mode: str) -> dict[str, jnp.ndarray]:
     out = {}
-    for key in PHYSICS_PARAM_KEYS:
+    for key in _input_keys(samples.base):
         if mode == "standard" and key in BEHAVIOUR_KEYS:
             values = np.full(samples.n_samples, float(getattr(samples.base, key)), dtype=np.float32)
         elif key in samples.params:
@@ -93,6 +103,6 @@ def simulate_one(params: TwinParams, weather: dict[str, np.ndarray], fuel: FuelC
                  mode: Literal["calibrated", "standard"] = "calibrated") -> dict[str, float]:
     """Single deterministic run (no uncertainty), handy for debugging and quick checks."""
     fn, _ = get_run_physics()
-    p = {k: jnp.asarray(float(getattr(params, k))) for k in PHYSICS_PARAM_KEYS}
+    p = {k: jnp.asarray(float(getattr(params, k))) for k in _input_keys(params)}
     out = fn(p, {k: jnp.asarray(v) for k, v in weather.items()}, mode, fuel)
     return {k: float(out[k]) for k in TOTAL_KEYS}

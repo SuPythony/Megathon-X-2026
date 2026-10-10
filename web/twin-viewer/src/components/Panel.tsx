@@ -1,9 +1,20 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { bbox, roomStats } from '../geometry'
 import { VISUALS, exportPlacements, useViewer } from '../store'
-import type { RoomScene } from '../types'
+import type { Range, RoomScene } from '../types'
 
 const fmt = (v: number, dp = 1) => v.toFixed(dp)
+const n0 = (v: number) => Math.round(v).toLocaleString('en-GB')
+
+/** Unit + headline + 90% range, as AGENTS.md asks for every number. */
+function RangeText({ r, prefix = '' }: { r: Range; prefix?: string }) {
+  const unit = r.unit === 'GBP/yr' ? '/yr' : ` ${r.unit}`
+  return (
+    <span>
+      {prefix}{n0(r.headline)}{unit} <span className="muted">(90%: {prefix}{n0(r.lo)}–{prefix}{n0(r.hi)})</span>
+    </span>
+  )
+}
 const STOREY_NAMES = ['Ground floor', 'First floor', 'Second floor', 'Third floor']
 
 function download(name: string, data: unknown) {
@@ -55,6 +66,7 @@ function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
   const [newType, setNewType] = useState('')
   const room = scene.rooms.find((r) => r.room_id === roomId)!
   const stats = roomStats(room, scene.walls, scene.openings)
+  const energy = scene.energy?.rooms.find((r) => r.room_id === roomId)
   const mine = appliances.filter((a) => a.room_id === roomId)
   const sel = mine.find((a) => a.appliance_id === selectedAppliance)
   const types = Object.entries(VISUALS)
@@ -75,7 +87,23 @@ function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
           <dt>Windows</dt><dd>{stats.windowCount} · {fmt(stats.windowArea, 2)} m²</dd>
           {stats.partyWall > 0 && <><dt>Party wall</dt><dd>{fmt(stats.partyWall)} m²</dd></>}
         </dl>
-        <p className="pending">Heat loss and energy for this room appear once the twin has run on this home.</p>
+        {energy ? (
+          <>
+            <h3 className="sub">Energy (estimated)</h3>
+            <dl className="facts">
+              <dt>Heat loss</dt><dd><RangeText r={energy.heat_loss_w_per_k} /> · {fmt(energy.heat_loss_share_pct)}% of house</dd>
+              <dt>Heating</dt><dd><RangeText r={energy.space_heating_kwh} /></dd>
+              {energy.appliance_kwh && <><dt>Appliances</dt><dd><RangeText r={energy.appliance_kwh} /></dd></>}
+              <dt>Lighting</dt><dd><RangeText r={energy.lighting_kwh} /></dd>
+              {Object.entries(energy.other_kwh).map(([k, v]) => (
+                <Fragment key={k}><dt>{k.replace(/_/g, ' ')}</dt><dd>{n0(v)} kWh/yr</dd></Fragment>
+              ))}
+              {energy.running_cost_gbp && <><dt>Running cost</dt><dd><RangeText r={energy.running_cost_gbp} prefix="£" /></dd></>}
+            </dl>
+          </>
+        ) : (
+          <p className="pending">Heat loss and energy for this room appear once the twin has run on this home.</p>
+        )}
       </section>
 
       <section className="card">

@@ -11,6 +11,9 @@ import { useViewer } from './store'
 import type { RoomScene } from './types'
 
 const SCENE_NAMES: Record<string, string> = {
+  SH1: 'SH1 · Victorian terrace (with energy)',
+  SH2: 'SH2 · 1970s semi (with energy)',
+  SH3: 'SH3 · Electric flat (with energy)',
   victorian_terrace_2bed: 'Victorian terrace',
   interwar_semi_3bed: '1930s semi',
   postwar_detached_4bed: '1960s-80s detached',
@@ -61,8 +64,8 @@ function Viewport({ scene }: { scene: RoomScene }) {
 }
 
 export default function App() {
-  const { scenes, sceneKey, setScene, showRoof, toggleRoof, explode, toggleExplode, selectedRoom, selectRoom } =
-    useViewer()
+  const { scenes, sceneKey, setScene, showRoof, toggleRoof, explode, toggleExplode, selectedRoom, selectRoom,
+    heatTint, toggleHeatTint } = useViewer()
   const scene = scenes[sceneKey]
   const [intakeOpen, setIntakeOpen] = useState(false)
 
@@ -89,9 +92,16 @@ export default function App() {
         </select>
         <button className={showRoof ? 'toggle on' : 'toggle'} onClick={toggleRoof} disabled={!!selectedRoom || explode}>Roof</button>
         <button className={explode ? 'toggle on' : 'toggle'} onClick={toggleExplode}>Explode floors</button>
+        <button className={heatTint ? 'toggle on' : 'toggle'} onClick={toggleHeatTint} disabled={!scene?.energy}
+          title={scene?.energy ? 'Colour rooms by share of heat loss' : 'No energy results for this scene'}>Heat loss</button>
         <button className="primary-btn" onClick={() => setIntakeOpen(true)}>New home</button>
         <span className="hint-inline">{selectedRoom ? 'Esc to return to the whole house' : 'Click a room to isolate it'}</span>
       </header>
+      {scene.energy?.engine === 'physics_stub' && (
+        <div className="stub-banner">
+          Stand-in physics, uncalibrated, {scene.energy.weather_source} weather: room numbers show the method, not real results.
+        </div>
+      )}
       <main className="stage">
         <div className="viewport"><Viewport scene={scene} /></div>
         <Panel scene={scene} />

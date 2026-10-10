@@ -895,5 +895,6 @@
       "warnings": []
     }
   ],
+  "energy": null,
   "basis": "Layout from the closest standard UK house type, fitted to this home; room heat loss is estimated, only whole-house totals are calibrated to bills"
 }

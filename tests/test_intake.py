@@ -33,7 +33,7 @@ def test_intake_never_keeps_full_postcode():
     dumped = intake.model_dump_json()
     assert intake.postcode_district == "M14" and "5AB" not in dumped
     assert intake.epc_rrn == "0390-2954-3640-2196-6705"
-    assert intake.warnings == []
+    assert not any("Scotland" in w or "EPC" in w for w in intake.warnings)
 
 
 def test_intake_warnings():

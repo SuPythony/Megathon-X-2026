@@ -23,7 +23,8 @@ STUB_ASSUMPTIONS = (
     "Solar gains = window area x GHI x 0.5 (vertical/horizontal) x 0.63 (g-value) x 0.7 (frame, shading).",
     "Gain utilisation fixed at 0.9.",
     "PV yield = kWp x GHI x 0.85; self-consumption 30%, rising to 65% with a large battery.",
-    "Hot water uses the heating efficiency when on the same fuel, else 1.0 (electric immersion).",
+    "Hot water: its own efficiency (hot_water_efficiency) and fuel; cylinder standing loss added to the demand.",
+    "Electric showers add electricity at efficiency 1; plug-in heaters add electricity and displace main heating.",
     "Standard mode: setpoint 19.0 C and 11 heating hours/day (SAP-style), other behaviour from the caller.",
     "Non-gas fossil fuels (oil, LPG, solid, district) are returned as other_fuel_kwh (provisional key).",
 )
@@ -40,6 +41,12 @@ def run_physics(params: dict, weather: dict, mode: str, fuel: FuelConfig) -> dic
     days = weather["days_in_month"]
     t_out = weather["mean_temp_c"]
     ghi = weather["ghi_kwh_m2"]
+    ones, zeros = jnp.ones_like(days), jnp.zeros_like(days)
+    appliance_factor = weather.get("appliance_month_factor", ones)
+    gains_factor = weather.get("gains_month_factor", ones)
+    secondary = weather.get("secondary_heating_kwh_monthly", zeros)
+    extra_elec = weather.get("extra_electricity_kwh_monthly", zeros)
+    extra_gas = weather.get("extra_gas_kwh_monthly", zeros)
 
     setpoint = jnp.asarray(19.0) if mode == "standard" else p["setpoint_c"]
     hours = jnp.asarray(11.0) if mode == "standard" else p["heating_hours_per_day"]
@@ -60,13 +67,14 @@ def run_physics(params: dict, weather: dict, mode: str, fuel: FuelConfig) -> dic
     t_in = setpoint - 1.5 * (16.0 - hours) / 16.0
     loss_kwh = hlc * jax.nn.softplus(t_in - t_out) * 24.0 * days / 1000.0
     solar_kwh = p["solar_gain_factor"] * p["window_area_m2"] * ghi * 0.5 * 0.63 * 0.7
-    internal_kwh = p["internal_gains_w"] * 24.0 * days / 1000.0
+    internal_kwh = p["internal_gains_w"] * gains_factor * 24.0 * days / 1000.0
     space_heat = _smooth_pos(loss_kwh - 0.9 * (solar_kwh + internal_kwh))  # useful heat, kWh/month
+    main_heat = _smooth_pos(space_heat - secondary)  # plug-in heaters cover part of it
 
-    hot_water = p["hot_water_kwh_per_day"] * days
-    heat_fuel = space_heat / p["heating_efficiency"]
-    dhw_eff = p["heating_efficiency"] if fuel.hot_water_fuel == fuel.heating_fuel else 1.0
-    dhw_fuel = hot_water / dhw_eff
+    hot_water = (p["hot_water_kwh_per_day"] + p.get("hot_water_standing_loss_kwh_per_day", 0.0)) * days
+    heat_fuel = main_heat / p["heating_efficiency"]
+    dhw_fuel = hot_water / p.get("hot_water_efficiency", p["heating_efficiency"])
+    shower = p.get("shower_electric_kwh_per_day", 0.0) * days
 
     zero = jnp.zeros_like(days)
     by_fuel = {"electricity": zero, "mains_gas": zero, "other": zero}
@@ -80,17 +88,18 @@ def run_physics(params: dict, weather: dict, mode: str, fuel: FuelConfig) -> dic
 
     pv = p["pv_kwp"] * ghi * 0.85
     self_share = 0.30 + 0.35 * (1.0 - jnp.exp(-p["battery_kwh"] / 5.0))
-    demand_elec = p["baseload_kwh_per_day"] * days + by_fuel["electricity"]
+    demand_elec = (p["baseload_kwh_per_day"] * days * appliance_factor + by_fuel["electricity"] + shower + secondary
+                   + extra_elec)
     self_used = jnp.minimum(self_share * pv, demand_elec)
     export = pv - self_used
     monthly_elec = demand_elec - self_used
-    monthly_gas = by_fuel["mains_gas"]
+    monthly_gas = by_fuel["mains_gas"] + extra_gas
 
     return {
         "electricity_import_kwh": monthly_elec.sum(),
         "gas_kwh": monthly_gas.sum(),
         "space_heating_kwh": space_heat.sum(),
-        "hot_water_kwh": hot_water.sum(),
+        "hot_water_kwh": (hot_water + shower).sum(),
         "pv_generation_kwh": pv.sum(),
         "export_kwh": export.sum(),
         "monthly_electricity_kwh": monthly_elec,

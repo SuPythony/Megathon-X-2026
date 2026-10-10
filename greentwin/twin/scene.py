@@ -115,6 +115,8 @@ class AppliancePlacement(BaseModel):
     x_m: Optional[float] = Field(None, description="Outdoor only: plan x in metres")
     y_m: Optional[float] = Field(None, description="Outdoor only: plan y in metres (negative = in front)")
     rotation_deg: Optional[float] = None
+    answers: dict[str, str] = Field(default_factory=dict,
+                                    description="Size questions from appliance_energy.json, e.g. {'size': 'large'}")
 
 
 # --------------------------------------------------------------------------- output scene
@@ -193,6 +195,35 @@ class SceneStyle(BaseModel):
     door_colour: str
 
 
+class Range(BaseModel):
+    """Compact view of a Distribution for the viewer: headline value and 90% interval."""
+
+    headline: float
+    lo: float
+    hi: float
+    unit: str
+
+
+class RoomEnergyView(BaseModel):
+    room_id: str
+    heat_loss_w_per_k: Range
+    heat_loss_share_pct: float
+    space_heating_kwh: Range
+    appliance_kwh: Optional[Range] = None
+    lighting_kwh: Range
+    running_cost_gbp: Optional[Range] = None
+    other_kwh: dict[str, float] = Field(default_factory=dict)
+
+
+class EnergyOverlay(BaseModel):
+    engine: str = Field(description="'physics' or 'physics_stub' (stand-in: never real results)")
+    calibrated: bool
+    weather_source: str
+    rooms: list[RoomEnergyView]
+    unaccounted_electricity_kwh: Optional[Range] = None
+    basis: str
+
+
 class RoomScene(BaseModel):
     scene_version: str = SCENE_VERSION
     property_id: str
@@ -211,6 +242,7 @@ class RoomScene(BaseModel):
     features: list[SceneFeature]
     context: list[ContextBlock]
     appliances: list[SceneAppliance]
+    energy: Optional[EnergyOverlay] = Field(None, description="Per-room numbers from the twin, when it has run")
     basis: str = BASIS_LABEL
 
 

@@ -14,6 +14,13 @@ const ROOM_COLOURS: Record<string, string> = {
   conservatory: '#e3ecd8', other: '#e4e4e4',
 }
 const GLASS = '#9ec9e6'
+// Cividis-like ramp (colour-blind safe, AGENTS.md): low heat-loss share -> high.
+const HEAT_RAMP = ['#00224e', '#35456c', '#666970', '#958f78', '#cbba69', '#fee838']
+
+export function heatColour(share: number, maxShare: number): string {
+  const t = maxShare > 0 ? Math.min(share / maxShare, 1) : 0
+  return HEAT_RAMP[Math.round(t * (HEAT_RAMP.length - 1))]
+}
 const FADED_OPACITY = 0.1
 
 export function storeyOffset(storey: number, explode: boolean): number {
@@ -45,9 +52,9 @@ function isClick(e: ThreeEvent<MouseEvent>) {
 // When one room is isolated, the walls nearest the camera (front and right) become see-through: a cutaway.
 const CUTAWAY_SIDES = new Set(['front', 'right'])
 
-function Room({ scene, room, vis, isolated, explode, onHover }: {
+function Room({ scene, room, vis, isolated, explode, onHover, tint }: {
   scene: RoomScene; room: SceneRoom; vis: Visibility; isolated: boolean; explode: boolean
-  onHover: (id: string | null) => void
+  onHover: (id: string | null) => void; tint: string | null
 }) {
   const selectRoom = useViewer((s) => s.selectRoom)
   const base = storeyOffset(room.storey, explode)
@@ -76,7 +83,7 @@ function Room({ scene, room, vis, isolated, explode, onHover }: {
     <group>
       <mesh position={toThree((x0 + x1) / 2, (y0 + y1) / 2, base + room.floor_z_m + 0.025)} {...handlers}>
         <boxGeometry args={[x1 - x0, 0.05, y1 - y0]} />
-        <Mat colour={ROOM_COLOURS[room.room_type] ?? ROOM_COLOURS.other} vis={vis} />
+        <Mat colour={tint ?? ROOM_COLOURS[room.room_type] ?? ROOM_COLOURS.other} vis={vis} />
       </mesh>
       {pieces.map((p) => {
         const colour =
@@ -214,6 +221,13 @@ export function House({ scene }: { scene: RoomScene }) {
   const selectedRoomId = useViewer((s) => s.selectedRoom)
   const showRoof = useViewer((s) => s.showRoof)
   const explode = useViewer((s) => s.explode)
+  const heatTint = useViewer((s) => s.heatTint)
+  const energy = scene.energy
+  const maxShare = energy ? Math.max(...energy.rooms.map((r) => r.heat_loss_share_pct)) : 0
+  const tintFor = (id: string) => {
+    const r = heatTint && energy ? energy.rooms.find((x) => x.room_id === id) : undefined
+    return r ? heatColour(r.heat_loss_share_pct, maxShare) : null
+  }
   const [hover, setHover] = useState<string | null>(null)
   const selected = scene.rooms.find((r) => r.room_id === selectedRoomId) ?? null
   const [w, d] = scene.footprint_m
@@ -230,7 +244,7 @@ export function House({ scene }: { scene: RoomScene }) {
       )}
       {scene.rooms.map((room) => (
         <Room key={room.room_id} scene={scene} room={room} vis={roomVisibility(room, selected)}
-          isolated={selected?.room_id === room.room_id} explode={explode} onHover={setHover} />
+          isolated={selected?.room_id === room.room_id} explode={explode} onHover={setHover} tint={tintFor(room.room_id)} />
       ))}
       {!selected && !explode && showRoof && <Roof scene={scene} explode={explode} />}
       {!selected && !explode && scene.features.map((f, i) => <Feature key={`${f.kind}${i}`} f={f} scene={scene} explode={explode} />)}

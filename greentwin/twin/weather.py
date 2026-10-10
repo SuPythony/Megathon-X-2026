@@ -39,6 +39,19 @@ def typical_year(area_code: str, year: int = 2025) -> list[WeatherMonth]:
     return out
 
 
+def synthetic_months(area_code: str, months: Sequence[str]) -> list[WeatherMonth]:
+    """SYNTHETIC weather for specific months (e.g. the months a home has meter readings for): the typical-year values
+    for each calendar month. Stand-in until Part 0's load_weather(area_code, months) returns the real months."""
+    by_month = {int(w.month[5:]): w for w in typical_year(area_code)}
+    out = []
+    for month in months:
+        t = by_month[int(month[5:7])]
+        hdd = max(0.0, 15.5 - t.mean_temp_c + _HDD_SPREAD_UPLIFT_K) * _days(month)
+        out.append(WeatherMonth(area_code=area_code, month=month, hdd_15_5=round(hdd, 1), mean_temp_c=t.mean_temp_c,
+                                ghi_kwh_m2=t.ghi_kwh_m2, source="synthetic"))
+    return out
+
+
 def weather_arrays(months: Sequence[WeatherMonth]) -> dict[str, np.ndarray]:
     """``WeatherMonth`` list -> {key: array (n_months,)}. Missing temperature is estimated from HDD; missing
     irradiation falls back to the typical-year value for that calendar month. Both are filled, never zero."""

@@ -11,9 +11,9 @@ Fetching is Part 0's job; ``EPCLookup`` is the seam until the data layer exposes
 from __future__ import annotations
 
 import re
-from typing import Optional, Protocol
+from typing import Literal, Optional, Protocol
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from contracts.models import Property
 from greentwin.twin.scene import AppliancePlacement
@@ -52,6 +52,22 @@ def normalise_rrn(text: str) -> str:
     return "-".join(digits[i:i + 4] for i in range(0, 20, 4))
 
 
+class MeterReading(BaseModel):
+    """One month of bills or smart-meter data as the user entered it. Missing values stay None, never 0."""
+
+    month: str = Field(description="YYYY-MM")
+    electricity_kwh: Optional[float] = Field(None, ge=0)
+    gas_kwh: Optional[float] = Field(None, ge=0, description="0 only if the home has no gas supply")
+    estimated: bool = Field(False, description="Estimated read on the bill")
+
+    @field_validator("month")
+    @classmethod
+    def _month(cls, v: str) -> str:
+        if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", v):
+            raise ValueError(f"{v!r} is not a month (YYYY-MM)")
+        return v
+
+
 class TwinIntake(BaseModel):
     """One home's intake. Images travel separately (multipart upload); only their file names are recorded here."""
 
@@ -62,7 +78,24 @@ class TwinIntake(BaseModel):
     fuse_box_image: Optional[str] = None
     appliances: list[AppliancePlacement] = Field(default_factory=list)
     photo_consent: bool = Field(False, description="User agreed to interior photos being processed")
+    # Household: all optional; SAP defaults are used (with wider priors) when missing.
+    occupants: Optional[int] = Field(None, ge=1, le=12)
+    daytime_occupancy: Optional[Literal["out_all_day", "part_day", "home_all_day"]] = None
+    thermostat_c: Optional[float] = Field(None, ge=10, le=28, description="Thermostat setting")
+    heating_periods: list[tuple[int, int]] = Field(default_factory=list,
+                                                   description="Heating on periods, e.g. [(6, 9), (17, 22)]")
+    meter_readings: list[MeterReading] = Field(default_factory=list, description="Monthly bills, ideally 12+ months")
     warnings: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _unique_months(self) -> "TwinIntake":
+        months = [r.month for r in self.meter_readings]
+        if len(months) != len(set(months)):
+            raise ValueError("meter readings repeat a month")
+        for start, end in self.heating_periods:
+            if not (0 <= start <= 23 and 0 <= end <= 24):
+                raise ValueError(f"heating period {(start, end)} is not within 0-24 h")
+        return self
 
     @field_validator("postcode_district", mode="before")
     @classmethod
@@ -82,6 +115,11 @@ class TwinIntake(BaseModel):
             self.warnings.append("No EPC number: the twin starts from the closest house type and the floor plan only")
         if (self.floor_plan_image or self.fuse_box_image) and not self.photo_consent:
             self.warnings.append("Photos supplied without consent; they will not be processed")
+        if not self.meter_readings:
+            self.warnings.append("No meter readings: the twin can't be calibrated to this home yet (prior only)")
+        elif len(self.meter_readings) < 12:
+            self.warnings.append(f"Only {len(self.meter_readings)} months of meter readings; 12+ covering winter and "
+                                 "summer are needed for a reliable calibration")
 
 
 class EPCLookup(Protocol):

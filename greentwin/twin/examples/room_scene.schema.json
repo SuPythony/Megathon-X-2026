@@ -57,6 +57,142 @@
       "title": "ContextBlock",
       "type": "object"
     },
+    "EnergyOverlay": {
+      "properties": {
+        "engine": {
+          "description": "'physics' or 'physics_stub' (stand-in: never real results)",
+          "title": "Engine",
+          "type": "string"
+        },
+        "calibrated": {
+          "title": "Calibrated",
+          "type": "boolean"
+        },
+        "weather_source": {
+          "title": "Weather Source",
+          "type": "string"
+        },
+        "rooms": {
+          "items": {
+            "$ref": "#/$defs/RoomEnergyView"
+          },
+          "title": "Rooms",
+          "type": "array"
+        },
+        "unaccounted_electricity_kwh": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "basis": {
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "engine",
+        "calibrated",
+        "weather_source",
+        "rooms",
+        "basis"
+      ],
+      "title": "EnergyOverlay",
+      "type": "object"
+    },
+    "Range": {
+      "description": "Compact view of a Distribution for the viewer: headline value and 90% interval.",
+      "properties": {
+        "headline": {
+          "title": "Headline",
+          "type": "number"
+        },
+        "lo": {
+          "title": "Lo",
+          "type": "number"
+        },
+        "hi": {
+          "title": "Hi",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "headline",
+        "lo",
+        "hi",
+        "unit"
+      ],
+      "title": "Range",
+      "type": "object"
+    },
+    "RoomEnergyView": {
+      "properties": {
+        "room_id": {
+          "title": "Room Id",
+          "type": "string"
+        },
+        "heat_loss_w_per_k": {
+          "$ref": "#/$defs/Range"
+        },
+        "heat_loss_share_pct": {
+          "title": "Heat Loss Share Pct",
+          "type": "number"
+        },
+        "space_heating_kwh": {
+          "$ref": "#/$defs/Range"
+        },
+        "appliance_kwh": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "lighting_kwh": {
+          "$ref": "#/$defs/Range"
+        },
+        "running_cost_gbp": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "other_kwh": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Other Kwh",
+          "type": "object"
+        }
+      },
+      "required": [
+        "room_id",
+        "heat_loss_w_per_k",
+        "heat_loss_share_pct",
+        "space_heating_kwh",
+        "lighting_kwh"
+      ],
+      "title": "RoomEnergyView",
+      "type": "object"
+    },
     "SceneAppliance": {
       "properties": {
         "appliance_id": {
@@ -741,6 +877,18 @@
       },
       "title": "Appliances",
       "type": "array"
+    },
+    "energy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EnergyOverlay"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Per-room numbers from the twin, when it has run"
     },
     "basis": {
       "default": "Layout from the closest standard UK house type, fitted to this home; room heat loss is estimated, only whole-house totals are calibrated to bills",

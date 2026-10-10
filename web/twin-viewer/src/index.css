@@ -120,3 +120,6 @@ button, select { font: inherit; }
   .panel { width: 100%; border-left: 0; border-top: 1px solid var(--line); }
   .hint-inline { display: none; }
 }
+
+.stub-banner { padding: 8px 16px; background: #fff4d6; color: #7a5600; font-size: 13px; border-bottom: 1px solid #f0dfa8; }
+.card h3.sub { margin: 16px 0 8px; font-size: 14px; }

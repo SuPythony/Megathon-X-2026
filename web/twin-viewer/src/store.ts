@@ -4,8 +4,9 @@ import { bbox, clampToRoom, findFree, findWallSpot, overlaps } from './geometry'
 import type { AppliancePlacement, ApplianceVisual, RoomScene, SceneAppliance, Vec3 } from './types'
 
 const sceneModules = import.meta.glob<RoomScene>('./data/scenes/*.scene.json', { eager: true, import: 'default' })
+// Keyed by file name: archetype examples ('flat_2bed') and showcase homes with energy ('SH1').
 export const EXAMPLE_SCENES: Record<string, RoomScene> = Object.fromEntries(
-  Object.values(sceneModules).map((s) => [s.archetype_id, s]),
+  Object.entries(sceneModules).map(([path, s]) => [path.split('/').pop()!.replace('.scene.json', ''), s]),
 )
 export const VISUALS = (visualsJson as { types: Record<string, ApplianceVisual> }).types
 
@@ -18,6 +19,7 @@ interface ViewerState {
   dragging: boolean
   showRoof: boolean
   explode: boolean
+  heatTint: boolean
   notice: string | null
   setScene: (key: string) => void
   addScene: (scene: RoomScene) => void
@@ -26,6 +28,7 @@ interface ViewerState {
   setDragging: (on: boolean) => void
   toggleRoof: () => void
   toggleExplode: () => void
+  toggleHeatTint: () => void
   moveAppliance: (id: string, x: number, y: number) => void
   rotateAppliance: (id: string, by: number) => void
   removeAppliance: (id: string) => void
@@ -44,6 +47,7 @@ export const useViewer = create<ViewerState>((set, get) => ({
   dragging: false,
   showRoof: true,
   explode: false,
+  heatTint: false,
   notice: null,
 
   setScene: (key) =>
@@ -58,6 +62,7 @@ export const useViewer = create<ViewerState>((set, get) => ({
   setDragging: (on) => set({ dragging: on }),
   toggleRoof: () => set((s) => ({ showRoof: !s.showRoof })),
   toggleExplode: () => set((s) => ({ explode: !s.explode })),
+  toggleHeatTint: () => set((s) => ({ heatTint: !s.heatTint })),
 
   // Dragging slides along whatever it bumps into: try the full move, then each axis alone, else stay put.
   moveAppliance: (id, x, y) =>

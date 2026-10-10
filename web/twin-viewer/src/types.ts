@@ -96,6 +96,33 @@ export interface SceneStyle {
   door_colour: string
 }
 
+export interface Range {
+  headline: number
+  lo: number
+  hi: number
+  unit: string
+}
+
+export interface RoomEnergyView {
+  room_id: string
+  heat_loss_w_per_k: Range
+  heat_loss_share_pct: number
+  space_heating_kwh: Range
+  appliance_kwh: Range | null
+  lighting_kwh: Range
+  running_cost_gbp: Range | null
+  other_kwh: Record<string, number>
+}
+
+export interface EnergyOverlay {
+  engine: string // 'physics' or 'physics_stub' (stand-in, never real results)
+  calibrated: boolean
+  weather_source: string
+  rooms: RoomEnergyView[]
+  unaccounted_electricity_kwh: Range | null
+  basis: string
+}
+
 export interface RoomScene {
   scene_version: string
   property_id: string
@@ -114,6 +141,7 @@ export interface RoomScene {
   features: SceneFeature[]
   context: ContextBlock[]
   appliances: SceneAppliance[]
+  energy?: EnergyOverlay | null
   basis: string
 }
 

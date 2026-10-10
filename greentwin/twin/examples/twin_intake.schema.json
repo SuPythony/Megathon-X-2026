@@ -100,6 +100,14 @@
           ],
           "default": null,
           "title": "Rotation Deg"
+        },
+        "answers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Size questions from appliance_energy.json, e.g. {'size': 'large'}",
+          "title": "Answers",
+          "type": "object"
         }
       },
       "required": [
@@ -107,6 +115,54 @@
         "type"
       ],
       "title": "AppliancePlacement",
+      "type": "object"
+    },
+    "MeterReading": {
+      "description": "One month of bills or smart-meter data as the user entered it. Missing values stay None, never 0.",
+      "properties": {
+        "month": {
+          "description": "YYYY-MM",
+          "title": "Month",
+          "type": "string"
+        },
+        "electricity_kwh": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Electricity Kwh"
+        },
+        "gas_kwh": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "0 only if the home has no gas supply",
+          "title": "Gas Kwh"
+        },
+        "estimated": {
+          "default": false,
+          "description": "Estimated read on the bill",
+          "title": "Estimated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "month"
+      ],
+      "title": "MeterReading",
       "type": "object"
     }
   },
@@ -170,6 +226,78 @@
       "description": "User agreed to interior photos being processed",
       "title": "Photo Consent",
       "type": "boolean"
+    },
+    "occupants": {
+      "anyOf": [
+        {
+          "maximum": 12,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Occupants"
+    },
+    "daytime_occupancy": {
+      "anyOf": [
+        {
+          "enum": [
+            "out_all_day",
+            "part_day",
+            "home_all_day"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Daytime Occupancy"
+    },
+    "thermostat_c": {
+      "anyOf": [
+        {
+          "maximum": 28,
+          "minimum": 10,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Thermostat setting",
+      "title": "Thermostat C"
+    },
+    "heating_periods": {
+      "description": "Heating on periods, e.g. [(6, 9), (17, 22)]",
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Heating Periods",
+      "type": "array"
+    },
+    "meter_readings": {
+      "description": "Monthly bills, ideally 12+ months",
+      "items": {
+        "$ref": "#/$defs/MeterReading"
+      },
+      "title": "Meter Readings",
+      "type": "array"
     },
     "warnings": {
       "items": {

@@ -98,6 +98,14 @@
       ],
       "default": null,
       "title": "Rotation Deg"
+    },
+    "answers": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Size questions from appliance_energy.json, e.g. {'size': 'large'}",
+      "title": "Answers",
+      "type": "object"
     }
   },
   "required": [
