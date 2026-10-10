@@ -1,6 +1,6 @@
 # Merge notes: Part 3 Green Home Score → `main`
 
-Branch: `p3/green-home-score` (12 commits, 11 Oct 2026). This page lists everything a teammate must know or update when this branch is merged. Detail and evidence for every item: [DECISIONS.md](DECISIONS.md) (decision ids D-xx). Index: [README.md](README.md).
+Branch: `p3/green-home-score` (11 Oct 2026; commits: `git log main..p3/green-home-score`). This page lists everything a teammate must know or update when this branch is merged. Detail and evidence for every item: [DECISIONS.md](DECISIONS.md) (decision ids D-xx). Index: [README.md](README.md).
 
 **Merge risk:** low. Checked against `origin/main` (unchanged since branch point `a1ba6e4`) and `origin/satyarth` (twin work): **no file overlaps**. All 57 tests pass (`uv run pytest -q`).
 
