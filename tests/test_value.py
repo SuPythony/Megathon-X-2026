@@ -1,0 +1,97 @@
+"""Property value (Part 4): guarantees the judges check (indicative wording, current value, unavailable cases)."""
+
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from contracts.models import Property, RatingEstimate
+from contracts.summarise import exact, summarise
+from greentwin.interfaces import ValueModel
+from greentwin.value.model import HedonicValueModel, ppd_type
+from greentwin.value.prepare import PrepConfig, prepare
+
+EX = Path(__file__).resolve().parents[1] / "contracts" / "examples"
+WORDING = "Indicative range based on historical associations in sales data; not a promised or proven increase."
+
+
+@pytest.fixture
+def fake_artifacts(tmp_path):
+    """Tiny posterior: beta = 0.02 per 10 SAP points (~0.2% per point) for NW semis, pooled elsewhere."""
+    rng = np.random.default_rng(0)
+    n = 500
+    rt = ["E12000002|semi", "E12000009|semi"]
+    np.savez(tmp_path / "posterior.npz", beta_rt=np.column_stack([rng.normal(0.02, 0.002, n)] * 2 + [np.zeros(n)]),
+             beta0=rng.normal(0.02, 0.002, n))
+    (tmp_path / "encoding.json").write_text(json.dumps({"rt": rt}))
+    return str(tmp_path)
+
+
+def load(pid):
+    return Property.model_validate_json((EX / f"{pid}_property.json").read_text(encoding="utf-8"))
+
+
+def rating(mean, sd=2.0, band="C"):
+    return RatingEstimate(sap=summarise(np.random.default_rng(1).normal(mean, sd, 1000), "SAP points"), band=band,
+                          anchored_to_recorded_sap=True)
+
+
+def test_interface(fake_artifacts):
+    assert isinstance(HedonicValueModel(artifact_dir=fake_artifacts), ValueModel)
+
+
+def test_wording_label_and_current_value(fake_artifacts):
+    p = load("SH2")  # SAP 60, value 325k
+    v = HedonicValueModel(artifact_dir=fake_artifacts).value_impact(p, rating(72))
+    assert v.label == "indicative" and v.wording == WORDING
+    assert v.current_value_gbp == p.current_value_estimate_gbp  # baseline = current estimate, never a sale price
+    # +12 SAP at ~0.2%/point -> ~2.4%
+    assert 1.5 < v.uplift_pct.median < 3.5
+    assert abs(v.value_after_gbp.median / p.current_value_estimate_gbp - 1 - v.uplift_pct.median / 100) < 0.002
+
+
+def test_no_change_no_uplift(fake_artifacts):
+    p = load("SH2")
+    v = HedonicValueModel(artifact_dir=fake_artifacts).value_impact(
+        p, RatingEstimate(sap=exact(60, "SAP points", 10), band="D", anchored_to_recorded_sap=True))
+    assert abs(v.uplift_pct.median) < 1e-9
+
+
+def test_unavailable_without_rating_or_recorded_sap(fake_artifacts):
+    m = HedonicValueModel(artifact_dir=fake_artifacts)
+    p = load("SH2")
+    v = m.value_impact(p, None)
+    assert v.method == "unavailable" and v.unavailable_reason and v.uplift_pct is None
+    q = p.model_copy(deep=True)
+    q.epc.sap_score = None
+    v2 = m.value_impact(q, rating(72))
+    assert v2.method == "unavailable" and v2.uplift_pct is None
+
+
+def test_type_mapping():
+    assert ppd_type(load("SH1")) == "terraced" and ppd_type(load("SH2")) == "semi" and ppd_type(load("SH3")) == "flat"
+
+
+def test_prepare_drops_epc_after_sale_and_never_keeps_address():
+    sales = pd.DataFrame({
+        "postcode": ["M14 5AA", "M14 5AA"], "transactionid": ["a", "b"], "price": ["200000", "210000"],
+        "dateoftransfer": ["2020-06-01", "2015-06-01"], "propertytype": ["S", "S"], "oldnew": ["N", "N"],
+        "duration": ["F", "F"], "categorytype": ["A", "A"], "recordstatus": ["A", "A"], "lad23cd": ["E08000003"] * 2,
+        "CURRENT_ENERGY_EFFICIENCY": ["60", "60"], "LODGEMENT_DATE": ["2019-01-01", "2019-01-01"],
+        "TOTAL_FLOOR_AREA": ["90", "90"], "NUMBER_HABITABLE_ROOMS": ["5", "5"], "BUILT_FORM": ["Semi-Detached"] * 2,
+        "CONSTRUCTION_AGE_BAND": ["England and Wales: 1930-1949"] * 2, "prop_key": ["k1", "k1"],
+    })
+    nspl = pd.DataFrame({"pcds": ["M14 5AA"], "laua": ["E08000003"], "rgn": ["E12000002"], "ctry": ["E92000001"],
+                         "lsoa21": ["E01005000"], "msoa21": ["E02000900"], "lat": [53.4471], "long": [-2.2222],
+                         "imd": [5000], "ru11ind": ["A1"]})
+    hpi = pd.DataFrame({"month": ["2020-06", "2015-06", "2026-07"], "RegionName": ["Manchester"] * 3,
+                        "AreaCode": ["E08000003"] * 3, "Index": [100, 90, 130], "DetachedIndex": [100, 90, 130],
+                        "SemiDetachedIndex": [100, 90, 130], "TerracedIndex": [100, 90, 130],
+                        "FlatIndex": [100, 90, 130]})
+    out, log = prepare(sales, nspl, hpi, PrepConfig())
+    assert len(out) == 1 and out["transactionid"].iloc[0] == "a"   # 2015 sale had a 2019 EPC -> dropped (V-05)
+    assert abs(out["price_adj"].iloc[0] - 200000 * 1.3) < 1e-6      # HPI to the reference month (V-07)
+    assert "postcode" not in out and out["postcode_district"].iloc[0] == "M14"  # V-06
+    assert not {"paon", "saon", "street"} & set(out.columns)
