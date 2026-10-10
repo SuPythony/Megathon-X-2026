@@ -146,6 +146,7 @@ The twin now sends more than `TwinParams`. Read these if your model can use them
 | `hot_water_efficiency` | params | – | Main hot-water system: delivered heat / fuel. Separate from `heating_efficiency` | `heating_efficiency` |
 | `hot_water_standing_loss_kwh_per_day` | params | kWh/day | Cylinder loss the DHW system also supplies | 0 |
 | `shower_electric_kwh_per_day` | params | kWh/day | Electric showers: electricity at efficiency 1 | 0 |
+| `heat_capacity_kj_per_k` | params | kJ/K | Thermal mass from construction × layout areas. Time constant τ = C / (3.6 × HLC) h. The stub uses τ for SAP gain utilisation (Table 9a) and for cooling while the heating is off | 250 × volume / 2.5 (SAP medium) |
 | `appliance_month_factor` | time series | – | Monthly baseload shape (mean 1): baseload_kwh_per_day × days × factor | 1 |
 | `gains_month_factor` | time series | – | Monthly internal-gains shape (mean 1) | 1 |
 | `secondary_heating_kwh_monthly` | time series | kWh | Plug-in electric heaters: electricity; the heat displaces main space heating | 0 |

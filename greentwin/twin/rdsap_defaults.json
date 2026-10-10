@@ -2,54 +2,383 @@
   "_doc": "Default fabric and system values used by params_from_property when the EPC doesn't give a measured value. Structure follows RdSAP 2012 (BRE) for England & Wales: age bands A-L, wall U-values by construction and insulation (Table S6), roof by loft insulation depth (Table S9), windows by glazing (Table S14), floors by BS EN ISO 13370 (computed in params.py). STATUS: values marked to_verify are working approximations, NOT yet checked line by line against the published RdSAP 2012 v9.94 tables. Verify before submission (AGENTS.md 'Sourced inputs only'). Every number used is reported per field by params_with_sources().",
   "version": "0.1.0",
   "age_bands": {
-    "A": [0, 1899], "B": [1900, 1929], "C": [1930, 1949], "D": [1950, 1966], "E": [1967, 1975], "F": [1976, 1982],
-    "G": [1983, 1990], "H": [1991, 1995], "I": [1996, 2002], "J": [2003, 2006], "K": [2007, 2011], "L": [2012, 9999]
+    "A": [
+      0,
+      1899
+    ],
+    "B": [
+      1900,
+      1929
+    ],
+    "C": [
+      1930,
+      1949
+    ],
+    "D": [
+      1950,
+      1966
+    ],
+    "E": [
+      1967,
+      1975
+    ],
+    "F": [
+      1976,
+      1982
+    ],
+    "G": [
+      1983,
+      1990
+    ],
+    "H": [
+      1991,
+      1995
+    ],
+    "I": [
+      1996,
+      2002
+    ],
+    "J": [
+      2003,
+      2006
+    ],
+    "K": [
+      2007,
+      2011
+    ],
+    "L": [
+      2012,
+      9999
+    ]
   },
   "wall_u": {
     "_source": "RdSAP 2012 Table S6 (England & Wales), approximated; status to_verify",
     "_status": "to_verify",
-    "solid_brick":  {"none": [2.1, 2.1, 2.1, 2.1, 1.7, 1.0, 0.6, 0.6, 0.45, 0.35, 0.30, 0.28], "internal": 0.30, "external": 0.30, "as_built": [2.1, 2.1, 2.1, 2.1, 1.7, 1.0, 0.6, 0.6, 0.45, 0.35, 0.30, 0.28]},
-    "solid_stone":  {"none": [2.3, 2.3, 2.3, 2.3, 1.7, 1.0, 0.6, 0.6, 0.45, 0.35, 0.30, 0.28], "internal": 0.32, "external": 0.32, "as_built": [2.3, 2.3, 2.3, 2.3, 1.7, 1.0, 0.6, 0.6, 0.45, 0.35, 0.30, 0.28]},
-    "cavity":       {"none": [1.5, 1.5, 1.5, 1.5, 1.5, 1.0, 0.6, 0.6, 0.45, 0.35, 0.30, 0.28], "cavity_filled": 0.6, "internal": 0.30, "external": 0.30, "as_built": [1.5, 1.5, 1.5, 1.5, 1.5, 1.0, 0.6, 0.6, 0.45, 0.35, 0.30, 0.28]},
-    "timber_frame": {"none": [2.5, 1.9, 1.9, 1.0, 0.8, 0.45, 0.4, 0.4, 0.4, 0.35, 0.30, 0.28], "internal": 0.30, "external": 0.30, "as_built": [2.5, 1.9, 1.9, 1.0, 0.8, 0.45, 0.4, 0.4, 0.4, 0.35, 0.30, 0.28]},
-    "system_built": {"none": [2.0, 2.0, 2.0, 2.0, 1.7, 1.0, 0.6, 0.6, 0.45, 0.35, 0.30, 0.28], "internal": 0.35, "external": 0.35, "as_built": [2.0, 2.0, 2.0, 2.0, 1.7, 1.0, 0.6, 0.6, 0.45, 0.35, 0.30, 0.28]}
+    "solid_brick": {
+      "none": [
+        2.1,
+        2.1,
+        2.1,
+        2.1,
+        1.7,
+        1.0,
+        0.6,
+        0.6,
+        0.45,
+        0.35,
+        0.3,
+        0.28
+      ],
+      "internal": 0.3,
+      "external": 0.3,
+      "as_built": [
+        2.1,
+        2.1,
+        2.1,
+        2.1,
+        1.7,
+        1.0,
+        0.6,
+        0.6,
+        0.45,
+        0.35,
+        0.3,
+        0.28
+      ]
+    },
+    "solid_stone": {
+      "none": [
+        2.3,
+        2.3,
+        2.3,
+        2.3,
+        1.7,
+        1.0,
+        0.6,
+        0.6,
+        0.45,
+        0.35,
+        0.3,
+        0.28
+      ],
+      "internal": 0.32,
+      "external": 0.32,
+      "as_built": [
+        2.3,
+        2.3,
+        2.3,
+        2.3,
+        1.7,
+        1.0,
+        0.6,
+        0.6,
+        0.45,
+        0.35,
+        0.3,
+        0.28
+      ]
+    },
+    "cavity": {
+      "none": [
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.0,
+        0.6,
+        0.6,
+        0.45,
+        0.35,
+        0.3,
+        0.28
+      ],
+      "cavity_filled": 0.6,
+      "internal": 0.3,
+      "external": 0.3,
+      "as_built": [
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.0,
+        0.6,
+        0.6,
+        0.45,
+        0.35,
+        0.3,
+        0.28
+      ]
+    },
+    "timber_frame": {
+      "none": [
+        2.5,
+        1.9,
+        1.9,
+        1.0,
+        0.8,
+        0.45,
+        0.4,
+        0.4,
+        0.4,
+        0.35,
+        0.3,
+        0.28
+      ],
+      "internal": 0.3,
+      "external": 0.3,
+      "as_built": [
+        2.5,
+        1.9,
+        1.9,
+        1.0,
+        0.8,
+        0.45,
+        0.4,
+        0.4,
+        0.4,
+        0.35,
+        0.3,
+        0.28
+      ]
+    },
+    "system_built": {
+      "none": [
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.7,
+        1.0,
+        0.6,
+        0.6,
+        0.45,
+        0.35,
+        0.3,
+        0.28
+      ],
+      "internal": 0.35,
+      "external": 0.35,
+      "as_built": [
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.7,
+        1.0,
+        0.6,
+        0.6,
+        0.45,
+        0.35,
+        0.3,
+        0.28
+      ]
+    }
   },
   "loft_u_by_mm": {
     "_source": "RdSAP 2012 Table S9 (loft insulation at joists); status to_verify",
     "_status": "to_verify",
-    "0": 2.30, "12": 1.50, "25": 1.00, "50": 0.68, "75": 0.50, "100": 0.40, "125": 0.35, "150": 0.30, "175": 0.25,
-    "200": 0.21, "225": 0.19, "250": 0.17, "270": 0.16, "300": 0.14, "350": 0.12, "400": 0.11
+    "0": 2.3,
+    "12": 1.5,
+    "25": 1.0,
+    "50": 0.68,
+    "75": 0.5,
+    "100": 0.4,
+    "125": 0.35,
+    "150": 0.3,
+    "175": 0.25,
+    "200": 0.21,
+    "225": 0.19,
+    "250": 0.17,
+    "270": 0.16,
+    "300": 0.14,
+    "350": 0.12,
+    "400": 0.11
   },
   "roof_u_unknown_insulation": {
     "_source": "RdSAP 2012 Table S10 (roof U-value by age band when insulation is unknown), approximated; status to_verify",
     "_status": "to_verify",
-    "pitched_loft": [2.3, 2.3, 2.3, 2.3, 1.5, 0.68, 0.40, 0.35, 0.35, 0.25, 0.16, 0.16],
-    "pitched_room_in_roof": [2.3, 2.3, 2.3, 2.3, 1.5, 0.80, 0.50, 0.35, 0.35, 0.30, 0.25, 0.18],
-    "flat": [2.3, 2.3, 2.3, 2.3, 1.5, 0.68, 0.40, 0.35, 0.35, 0.25, 0.20, 0.18]
+    "pitched_loft": [
+      2.3,
+      2.3,
+      2.3,
+      2.3,
+      1.5,
+      0.68,
+      0.4,
+      0.35,
+      0.35,
+      0.25,
+      0.16,
+      0.16
+    ],
+    "pitched_room_in_roof": [
+      2.3,
+      2.3,
+      2.3,
+      2.3,
+      1.5,
+      0.8,
+      0.5,
+      0.35,
+      0.35,
+      0.3,
+      0.25,
+      0.18
+    ],
+    "flat": [
+      2.3,
+      2.3,
+      2.3,
+      2.3,
+      1.5,
+      0.68,
+      0.4,
+      0.35,
+      0.35,
+      0.25,
+      0.2,
+      0.18
+    ]
   },
   "window_u": {
     "_source": "RdSAP 2012 Table S14 / SAP 2012 Table 6e, approximated; status to_verify",
     "_status": "to_verify",
-    "single": 4.8, "secondary": 2.4, "double_pre_2002": 2.8, "double_post_2002": 2.0, "triple": 1.6
+    "single": 4.8,
+    "secondary": 2.4,
+    "double_pre_2002": 2.8,
+    "double_post_2002": 2.0,
+    "triple": 1.6
   },
-  "door_u": {"_source": "SAP 2012 default for an uninsulated solid door; status to_verify", "_status": "to_verify", "value": 3.0},
+  "door_u": {
+    "_source": "SAP 2012 default for an uninsulated solid door; status to_verify",
+    "_status": "to_verify",
+    "value": 3.0
+  },
   "floor": {
     "_source": "BS EN ISO 13370 simplified slab-on-ground method as used by RdSAP 2012 Appendix S5: lambda_ground 1.5 W/mK, wall thickness 0.3 m, Rsi 0.17, Rse 0.04. Insulated floors add R = 2.5 m2K/W (about 100 mm). Suspended floors use the same method (approximation).",
     "_status": "to_verify",
-    "lambda_ground": 1.5, "wall_thickness_m": 0.3, "rsi": 0.17, "rse": 0.04, "insulation_r": 2.5
+    "lambda_ground": 1.5,
+    "wall_thickness_m": 0.3,
+    "rsi": 0.17,
+    "rse": 0.04,
+    "insulation_r": 2.5
   },
   "air_changes_per_hour": {
     "_source": "Working assumption by age band (SAP's full ventilation calculation needs chimneys, fans and test results the EPC lacks); draught-proofed share reduces it by up to 0.2 ach. status assumption",
     "_status": "assumption",
-    "by_band": [1.1, 1.0, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.5, 0.45, 0.4],
+    "by_band": [
+      1.1,
+      1.0,
+      0.9,
+      0.85,
+      0.8,
+      0.75,
+      0.7,
+      0.65,
+      0.6,
+      0.5,
+      0.45,
+      0.4
+    ],
     "draught_proofing_max_reduction": 0.2
   },
   "heating_efficiency": {
     "_source": "Typical seasonal efficiencies / SCOP by system (SAP 2012 Table 4a/4b defaults, approximated); used only when the EPC gives no seasonal_efficiency. status to_verify",
     "_status": "to_verify",
-    "gas_boiler_condensing": 0.84, "gas_boiler_non_condensing": 0.70, "oil_boiler": 0.80, "lpg_boiler": 0.84,
-    "electric_storage": 1.0, "electric_storage_hhr": 1.0, "electric_direct": 1.0,
-    "air_source_heat_pump": 2.5, "ground_source_heat_pump": 3.0, "district_heating": 0.90, "communal_boiler": 0.80,
-    "solid_fuel": 0.60
+    "gas_boiler_condensing": 0.84,
+    "gas_boiler_non_condensing": 0.7,
+    "oil_boiler": 0.8,
+    "lpg_boiler": 0.84,
+    "electric_storage": 1.0,
+    "electric_storage_hhr": 1.0,
+    "electric_direct": 1.0,
+    "air_source_heat_pump": 2.5,
+    "ground_source_heat_pump": 3.0,
+    "district_heating": 0.9,
+    "communal_boiler": 0.8,
+    "solid_fuel": 0.6
+  },
+  "thermal_mass": {
+    "_source": "Areal heat capacity kappa (kJ/m2K) of the inner layers by construction, in the style of SAP 2012 Table 1e; approximated, status to_verify. Heat capacity C = sum(kappa x area); thermal mass parameter TMP = C / total floor area (SAP indicative: low 100, medium 250, high 450).",
+    "_status": "to_verify",
+    "external_wall_kappa": {
+      "solid_brick": 135,
+      "solid_stone": 190,
+      "cavity": 135,
+      "timber_frame": 9,
+      "system_built": 110
+    },
+    "external_wall_insulated_inside_kappa": 9,
+    "party_wall_kappa": 135,
+    "internal_partition_kappa": {
+      "solid": 75,
+      "hollow": 9,
+      "unknown_pre_1950": 75,
+      "unknown_post_1950": 9
+    },
+    "ground_floor_kappa": {
+      "solid": 110,
+      "suspended_timber": 20,
+      "another_dwelling_below": 100
+    },
+    "intermediate_floor_kappa": 18,
+    "ceiling_kappa": 9,
+    "dwelling_above_ceiling_kappa": 100,
+    "classes": {
+      "low": [
+        0,
+        150
+      ],
+      "medium": [
+        150,
+        350
+      ],
+      "high": [
+        350,
+        100000
+      ]
+    }
   }
 }

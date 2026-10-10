@@ -24,6 +24,7 @@ from greentwin.twin.appliances import ApplianceSummary
 from greentwin.twin.archetypes import TwinLayout, build_layout
 from greentwin.twin.household import Presence, heating_behaviour, hot_water_system, occupancy
 from greentwin.twin.physics_api import FuelConfig, FuelName
+from greentwin.twin.thermal import PartitionAnswer, thermal_mass
 
 
 class ExtendedTwinParams(TwinParams):
@@ -36,6 +37,8 @@ class ExtendedTwinParams(TwinParams):
     shower_electric_kwh_per_day: float = Field(0.0, description="Electric showers: electricity, efficiency 1")
     occupants: float
     postcode_district: str
+    heat_capacity_kj_per_k: float = Field(description="Thermal mass: heat stored per K (construction x layout areas)")
+    thermal_mass_kj_per_m2k: float = Field(description="SAP thermal mass parameter (heat capacity / floor area)")
 
 HERE = Path(__file__).resolve().parent
 
@@ -127,6 +130,7 @@ def params_with_sources(
     presence: Optional[Presence] = None,
     thermostat_c: Optional[float] = None,
     heating_periods: Optional[Sequence[tuple[int, int]]] = None,
+    internal_walls: Optional[PartitionAnswer] = None,
 ) -> tuple[ExtendedTwinParams, dict[str, str]]:
     """Parameters for one home plus, per field, where the value came from. Household answers (occupants, presence,
     thermostat, heating periods) and the appliance list replace SAP defaults when given."""
@@ -244,6 +248,10 @@ def params_with_sources(
     src["hot_water_standing_loss_kwh_per_day"] = hws.sources["standing_loss"]
     src["shower_electric_kwh_per_day"] = "appliance list (electric shower)" if hws.electric_shower else "none listed"
 
+    mass = thermal_mass(prop, layout, internal_walls, band)
+    src["heat_capacity_kj_per_k"] = f"{mass.source}; partitions: {mass.partitions}"
+    src["thermal_mass_kj_per_m2k"] = src["heat_capacity_kj_per_k"]
+
     src.update({"heat_loss_multiplier": "default 1.0 (calibrated)", "solar_gain_factor": "twinparams_default",
                 "postcode_district": "epc / intake",
                 "pv_kwp": "epc", "pv_azimuth_deg": "epc or 180", "pv_tilt_deg": "epc or 35", "battery_kwh": "epc",
@@ -266,6 +274,7 @@ def params_with_sources(
         hot_water_standing_loss_kwh_per_day=hws.standing_loss_kwh_per_day,
         shower_electric_kwh_per_day=hws.shower_electric_kwh_per_day, occupants=n,
         postcode_district=prop.location.postcode_district,
+        heat_capacity_kj_per_k=mass.heat_capacity_kj_per_k, thermal_mass_kj_per_m2k=mass.tmp_kj_per_m2k,
     )
     return params, src
 

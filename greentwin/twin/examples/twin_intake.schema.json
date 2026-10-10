@@ -299,6 +299,67 @@
       "title": "Meter Readings",
       "type": "array"
     },
+    "heating_system": {
+      "anyOf": [
+        {
+          "enum": [
+            "gas_boiler_combi",
+            "gas_boiler_regular",
+            "oil_boiler",
+            "lpg_boiler",
+            "air_source_heat_pump",
+            "ground_source_heat_pump",
+            "electric_storage",
+            "electric_storage_hhr",
+            "electric_radiators",
+            "district_or_communal",
+            "solid_fuel"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Heating System"
+    },
+    "hot_water_source": {
+      "anyOf": [
+        {
+          "enum": [
+            "from_boiler",
+            "cylinder_from_boiler",
+            "electric_immersion",
+            "heat_pump_cylinder",
+            "instantaneous_electric"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Hot Water Source"
+    },
+    "internal_walls": {
+      "anyOf": [
+        {
+          "enum": [
+            "solid",
+            "hollow"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Do internal walls sound solid or hollow when knocked? (thermal mass)",
+      "title": "Internal Walls"
+    },
     "warnings": {
       "items": {
         "type": "string"

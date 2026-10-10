@@ -22,11 +22,19 @@ from pydantic import BaseModel, Field
 from contracts.models import EnergyUsageMonth, Property, WeatherMonth
 from greentwin.twin.appliances import DAYS, ApplianceSummary, summarise_appliances
 from greentwin.twin.archetypes import TwinLayout
-from greentwin.twin.household import HotWaterSystem, heating_behaviour, hot_water_system, occupancy
+from greentwin.twin.household import (
+    HotWaterSystem,
+    apply_user_heating,
+    heating_behaviour,
+    hot_water_system,
+    meter_fuel_conflicts,
+    occupancy,
+)
 from greentwin.twin.intake import TwinIntake
 from greentwin.twin.params import ExtendedTwinParams, fuel_config, params_with_sources, sap_occupancy
 from greentwin.twin.physics_api import EXTRA_PARAM_KEYS, PHYSICS_PARAM_KEYS, FuelConfig
 from greentwin.twin.scene import AppliancePlacement
+from greentwin.twin.thermal import ThermalMass, thermal_mass
 from greentwin.twin.weather import filled_fields, synthetic_months, typical_year, weather_arrays
 
 INPUTS_VERSION = "physics_inputs/0.1"
@@ -118,6 +126,7 @@ class PhysicsInputs(BaseModel):
     ventilation: Ventilation
     heating_system: HeatingSystemInfo
     hot_water: HotWaterSystem
+    thermal_mass: ThermalMass
     occupancy: dict[str, str | float]
     heating_behaviour: dict[str, object]
     appliances: ApplianceSummary | None
@@ -181,6 +190,9 @@ def _priors(params: ExtendedTwinParams, sources: dict[str, str], household: dict
         Prior(param="heating_hours_per_day", kind="normal_add", mu=0.0, sigma=household["hours_sd"],
               base=params.heating_hours_per_day, lower=2.0, upper=24.0,
               rationale="Optional: weakly identified with monthly data; fix unless the user gave a schedule"),
+        Prior(param="heat_capacity_kj_per_k", kind="lognormal", mu=0.0, sigma=0.3, base=params.heat_capacity_kj_per_k,
+              rationale="Thermal mass from construction (to_verify kappa); weakly identified from monthly bills: "
+                        "propagate as uncertainty, don't calibrate"),
     ]
 
 
@@ -215,6 +227,19 @@ def _readiness(meter: Optional[Meter], prop: Property) -> Readiness:
                      identifiable=ident, weakly_identified=weak, notes=notes)
 
 
+def _layout_for(prop: Property) -> TwinLayout:
+    from greentwin.twin.archetypes import build_layout
+    from greentwin.twin.params import choose_archetype
+
+    return build_layout(choose_archetype(prop), total_floor_area_m2=prop.floor_area_m2, built_form=prop.built_form)
+
+
+def _band(prop: Property) -> int:
+    from greentwin.twin.params import age_band_index
+
+    return age_band_index(prop.construction_age_band, prop.year_built)
+
+
 def build_physics_inputs(
     prop: Property,
     layout: Optional[TwinLayout] = None,
@@ -225,6 +250,9 @@ def build_physics_inputs(
 ) -> PhysicsInputs:
     """Assemble the package. ``usage`` (contract meter records) wins over ``intake.meter_readings``; real
     ``weather_months`` (from Part 0) win over the synthetic stand-in."""
+    # The user's heating answers replace the EPC's (EPCs can be years old)
+    prop, heating_conflicts, heating_sources = apply_user_heating(
+        prop, intake.heating_system if intake else None, intake.hot_water_source if intake else None)
     occupants = intake.occupants if intake else None
     presence = intake.daytime_occupancy if intake else None
     n_guess = float(occupants) if occupants else sap_occupancy(prop.floor_area_m2)
@@ -235,7 +263,9 @@ def build_physics_inputs(
         prop, layout=layout, appliances=summary, occupants=occupants, presence=presence,
         thermostat_c=intake.thermostat_c if intake else None,
         heating_periods=intake.heating_periods if intake and intake.heating_periods else None,
+        internal_walls=intake.internal_walls if intake else None,
     )
+    sources.update({f"user_{k}": v for k, v in heating_sources.items()})
     occ = occupancy(prop, occupants, presence, sap_occupancy(prop.floor_area_m2))
     behaviour = heating_behaviour(intake.thermostat_c if intake else None,
                                   intake.heating_periods if intake and intake.heating_periods else None, occ.presence)
@@ -278,7 +308,9 @@ def build_physics_inputs(
 
     to_verify = sorted(k for k, s in sources.items() if "to_verify" in s)
     assumptions = sorted(k for k, s in sources.items() if "assumption" in s or "default" in s)
-    flags = []
+    flags = list(heating_conflicts)
+    if meter:
+        flags += meter_fuel_conflicts(prop, meter.gas_kwh, bool(summary and summary.gas_cooking_kwh_per_day > 0))
     if weather.source == "synthetic":
         flags.append("weather is a synthetic typical year: replace with load_weather(district, months)")
     if summary and any(a.defaulted for a in summary.appliances):
@@ -300,6 +332,8 @@ def build_physics_inputs(
         heating_system=HeatingSystemInfo(system=prop.heating.main_system.value, fuel=prop.heating.main_fuel,
                                          efficiency=params.heating_efficiency, source=sources["heating_efficiency"]),
         hot_water=hws,
+        thermal_mass=thermal_mass(prop, layout or _layout_for(prop), intake.internal_walls if intake else None,
+                                  _band(prop)),
         occupancy=occ.model_dump(),
         heating_behaviour=behaviour.model_dump(),
         appliances=summary,

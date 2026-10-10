@@ -47,7 +47,9 @@
     "hot_water_standing_loss_kwh_per_day": 0.0,
     "shower_electric_kwh_per_day": 0.0,
     "occupants": 4.0,
-    "postcode_district": "BS16"
+    "postcode_district": "BS16",
+    "heat_capacity_kj_per_k": 24400.0,
+    "thermal_mass_kj_per_m2k": 256.8
   },
   "sources": {
     "wall_area_m2": "layout:interwar_semi_3bed (floor plan)",
@@ -76,6 +78,8 @@
     "hot_water_efficiency": "assumption from main system (boiler summer penalty 0.9; heat pump cylinder 2.0; electric 1.0)",
     "hot_water_standing_loss_kwh_per_day": "epc cylinder_insulated (assumption: 1.0 / 3.0 kWh/day)",
     "shower_electric_kwh_per_day": "none listed",
+    "heat_capacity_kj_per_k": "construction x layout areas, kappa from rdsap_defaults.json (to_verify); partitions: assumption by age (pre-1950 masonry, later plasterboard)",
+    "thermal_mass_kj_per_m2k": "construction x layout areas, kappa from rdsap_defaults.json (to_verify); partitions: assumption by age (pre-1950 masonry, later plasterboard)",
     "heat_loss_multiplier": "default 1.0 (calibrated)",
     "solar_gain_factor": "twinparams_default",
     "postcode_district": "epc / intake",
@@ -160,6 +164,21 @@
       "standing_loss": "epc cylinder_insulated (assumption: 1.0 / 3.0 kWh/day)",
       "main_useful": "sap_2012 appendix J demand less electric shower use (floor 40%)"
     }
+  },
+  "thermal_mass": {
+    "heat_capacity_kj_per_k": 24400.0,
+    "tmp_kj_per_m2k": 256.8,
+    "thermal_class": "medium",
+    "breakdown_kj_per_k": {
+      "external_walls": 11286.0,
+      "party_walls": 4828.0,
+      "partitions": 1352.0,
+      "ground_floor": 5225.0,
+      "intermediate_floors": 1282.0,
+      "top_ceiling": 427.0
+    },
+    "partitions": "assumption by age (pre-1950 masonry, later plasterboard)",
+    "source": "construction x layout areas, kappa from rdsap_defaults.json (to_verify)"
   },
   "occupancy": {
     "occupants": 4.0,
@@ -983,6 +1002,16 @@
       "lower": 2.0,
       "upper": 24.0,
       "rationale": "Optional: weakly identified with monthly data; fix unless the user gave a schedule"
+    },
+    {
+      "param": "heat_capacity_kj_per_k",
+      "kind": "lognormal",
+      "mu": 0.0,
+      "sigma": 0.3,
+      "base": 24400.0,
+      "lower": null,
+      "upper": null,
+      "rationale": "Thermal mass from construction (to_verify kappa); weakly identified from monthly bills: propagate as uncertainty, don't calibrate"
     }
   ],
   "observation_model": {
@@ -1023,14 +1052,17 @@
     "to_verify": [
       "door_u",
       "floor_u",
+      "heat_capacity_kj_per_k",
       "heating_efficiency",
       "roof_u",
+      "thermal_mass_kj_per_m2k",
       "wall_u",
       "window_u"
     ],
     "assumptions_or_defaults": [
       "air_changes_per_hour",
       "door_u",
+      "heat_capacity_kj_per_k",
       "heat_loss_multiplier",
       "heating_efficiency",
       "hot_water_efficiency",
@@ -1039,6 +1071,7 @@
       "solar_gain_factor",
       "tariff",
       "thermal_bridging_y",
+      "thermal_mass_kj_per_m2k",
       "wall_u",
       "window_u"
     ],

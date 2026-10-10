@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { type TwinIntake, intakeWarnings, normaliseRrn, postcodeDistrict } from '../intake'
+import { HEATING_OPTIONS, HOT_WATER_OPTIONS, type TwinIntake, intakeWarnings, normaliseRrn, postcodeDistrict } from '../intake'
 import { exportPlacements, useViewer } from '../store'
 
 const FIND_EPC_URL = 'https://find-energy-certificate.service.gov.uk/'
@@ -21,6 +21,9 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
   const [plan, setPlan] = useState<File | null>(null)
   const [fuse, setFuse] = useState<File | null>(null)
   const [consent, setConsent] = useState(false)
+  const [heating, setHeating] = useState('')
+  const [hotWater, setHotWater] = useState('')
+  const [walls, setWalls] = useState<'' | 'solid' | 'hollow'>('')
   const [done, setDone] = useState<TwinIntake | null>(null)
 
   const district = postcode.trim() ? postcodeDistrict(postcode) : null
@@ -40,6 +43,9 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
       fuse_box_image: fuse?.name ?? null,
       appliances: exportPlacements(scenes[sceneKey], appliances),
       photo_consent: consent,
+      heating_system: heating || null,
+      hot_water_source: hotWater || null,
+      internal_walls: walls || null,
     }
     const intake: TwinIntake = { ...base, warnings: intakeWarnings(base) }
     download(`${intake.intake_id}.json`, intake)
@@ -58,6 +64,9 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
               <dt>EPC number</dt><dd>{done.epc_rrn ?? 'none'}</dd>
               <dt>Floor plan</dt><dd>{done.floor_plan_image ?? 'none'}</dd>
               <dt>Fuse box</dt><dd>{done.fuse_box_image ?? 'none'}</dd>
+              <dt>Heating</dt><dd>{HEATING_OPTIONS.find(([v]) => v === done.heating_system)?.[1] ?? 'from EPC'}</dd>
+              <dt>Hot water</dt><dd>{HOT_WATER_OPTIONS.find(([v]) => v === done.hot_water_source)?.[1] ?? 'from EPC'}</dd>
+              <dt>Internal walls</dt><dd>{done.internal_walls ?? 'not sure'}</dd>
               <dt>Appliances</dt><dd>{done.appliances.length}</dd>
             </dl>
             {done.warnings.map((w) => <p key={w} className="warn">{w}</p>)}
@@ -87,6 +96,31 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
             <label className="check">
               <input type="checkbox" checked={noEpc} onChange={(e) => setNoEpc(e.target.checked)} />
               I don't have an EPC number
+            </label>
+
+            <label className="field">
+              <span>Heating system</span>
+              <select value={heating} onChange={(e) => setHeating(e.target.value)}>
+                <option value="">Use my EPC</option>
+                {HEATING_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+              <small className="muted">What heats the home today. Overrides the EPC, which may be years old.</small>
+            </label>
+            <label className="field">
+              <span>Hot water</span>
+              <select value={hotWater} onChange={(e) => setHotWater(e.target.value)}>
+                <option value="">Use my EPC</option>
+                {HOT_WATER_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Internal walls</span>
+              <select value={walls} onChange={(e) => setWalls(e.target.value as '' | 'solid' | 'hollow')}>
+                <option value="">Not sure</option>
+                <option value="solid">Solid when knocked (brick or block)</option>
+                <option value="hollow">Hollow when knocked (plasterboard)</option>
+              </select>
+              <small className="muted">Tells the twin how much heat the house stores (thermal mass).</small>
             </label>
 
             <label className="field">

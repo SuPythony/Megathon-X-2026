@@ -78,6 +78,8 @@ run_physics(pkg.physics_params(), pkg.physics_timeseries(), "calibrated", pkg.fu
 | Weather | `weather`: months, arrays (`hdd_15_5`, `mean_temp_c`, `ghi_kwh_m2`, `days_in_month`, `month_of_year`), source, filled fields | Part 0 `load_weather` when available; until then **synthetic** typical values for the meter months |
 | Monthly meter readings | `meter`: months, electricity/gas kWh (None = missing, never 0), estimated flags | Usage records or the intake's `meter_readings` |
 | Occupancy | `occupancy`: occupants, presence, metabolic gains, source | User answer, else SAP Table 1b from floor area |
+| Thermal mass | `thermal_mass`: heat capacity (kJ/K), SAP thermal mass parameter (kJ/m²K), low / medium / high, breakdown by element; `params.heat_capacity_kj_per_k` | Construction (walls, floors, partitions) × layout areas, κ values **to_verify**; user's "internal walls solid or hollow?" answer |
+| Heating + hot water as the user knows it | intake `heating_system`, `hot_water_source`: these override the EPC; conflicts go in `data_quality.flags` (EPC vs answer, bills vs fuel) | User answers > EPC |
 | Heating behaviour | `heating_behaviour`: setpoint (+ prior sd), heating hours (+ sd), periods, source | User thermostat and schedule, else defaults (wider priors) |
 | Calibration priors | `priors[]`: param, lognormal / normal_add, mu, sigma, bounds, rationale | User-given values get tighter priors |
 | Likelihood suggestion | `observation_model`: lognormal per fuel, 5% actual / 15% estimated reads, missing months latent | Suggestion; the calibration team decides |

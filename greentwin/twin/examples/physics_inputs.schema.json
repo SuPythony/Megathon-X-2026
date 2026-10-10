@@ -468,6 +468,16 @@
         "postcode_district": {
           "title": "Postcode District",
           "type": "string"
+        },
+        "heat_capacity_kj_per_k": {
+          "description": "Thermal mass: heat stored per K (construction x layout areas)",
+          "title": "Heat Capacity Kj Per K",
+          "type": "number"
+        },
+        "thermal_mass_kj_per_m2k": {
+          "description": "SAP thermal mass parameter (heat capacity / floor area)",
+          "title": "Thermal Mass Kj Per M2K",
+          "type": "number"
         }
       },
       "required": [
@@ -489,7 +499,9 @@
         "hot_water_fuel",
         "hot_water_efficiency",
         "occupants",
-        "postcode_district"
+        "postcode_district",
+        "heat_capacity_kj_per_k",
+        "thermal_mass_kj_per_m2k"
       ],
       "title": "ExtendedTwinParams",
       "type": "object"
@@ -821,6 +833,54 @@
       "title": "Readiness",
       "type": "object"
     },
+    "ThermalMass": {
+      "properties": {
+        "heat_capacity_kj_per_k": {
+          "title": "Heat Capacity Kj Per K",
+          "type": "number"
+        },
+        "tmp_kj_per_m2k": {
+          "description": "Thermal mass parameter: heat capacity per m2 of floor (SAP)",
+          "title": "Tmp Kj Per M2K",
+          "type": "number"
+        },
+        "thermal_class": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Thermal Class",
+          "type": "string"
+        },
+        "breakdown_kj_per_k": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Breakdown Kj Per K",
+          "type": "object"
+        },
+        "partitions": {
+          "description": "How partitions were classed: user answer or age-band assumption",
+          "title": "Partitions",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "heat_capacity_kj_per_k",
+        "tmp_kj_per_m2k",
+        "thermal_class",
+        "breakdown_kj_per_k",
+        "partitions",
+        "source"
+      ],
+      "title": "ThermalMass",
+      "type": "object"
+    },
     "Ventilation": {
       "properties": {
         "air_changes_per_hour": {
@@ -958,6 +1018,9 @@
     "hot_water": {
       "$ref": "#/$defs/HotWaterSystem"
     },
+    "thermal_mass": {
+      "$ref": "#/$defs/ThermalMass"
+    },
     "occupancy": {
       "additionalProperties": {
         "anyOf": [
@@ -1046,6 +1109,7 @@
     "ventilation",
     "heating_system",
     "hot_water",
+    "thermal_mass",
     "occupancy",
     "heating_behaviour",
     "appliances",

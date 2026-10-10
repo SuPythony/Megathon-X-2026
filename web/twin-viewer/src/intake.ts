@@ -31,8 +31,33 @@ export interface TwinIntake {
   fuse_box_image: string | null
   appliances: AppliancePlacement[]
   photo_consent: boolean
+  heating_system: string | null
+  hot_water_source: string | null
+  internal_walls: 'solid' | 'hollow' | null
   warnings: string[]
 }
+
+// Heating as the user knows it today; overrides the EPC (greentwin/twin/household.py apply_user_heating).
+export const HEATING_OPTIONS: [string, string][] = [
+  ['gas_boiler_combi', 'Gas boiler (combi, no hot water tank)'],
+  ['gas_boiler_regular', 'Gas boiler with a hot water tank'],
+  ['air_source_heat_pump', 'Air-source heat pump'],
+  ['ground_source_heat_pump', 'Ground-source heat pump'],
+  ['electric_storage', 'Electric storage heaters'],
+  ['electric_storage_hhr', 'High-heat-retention storage heaters'],
+  ['electric_radiators', 'Electric radiators / panel heaters'],
+  ['oil_boiler', 'Oil boiler'],
+  ['lpg_boiler', 'LPG boiler'],
+  ['district_or_communal', 'District / communal heating'],
+  ['solid_fuel', 'Solid fuel (wood, coal)'],
+]
+export const HOT_WATER_OPTIONS: [string, string][] = [
+  ['from_boiler', 'From the boiler on demand (combi)'],
+  ['cylinder_from_boiler', 'Hot water tank heated by the boiler'],
+  ['electric_immersion', 'Electric immersion heater in a tank'],
+  ['heat_pump_cylinder', 'Heat pump with a hot water tank'],
+  ['instantaneous_electric', 'Instant electric water heater'],
+]
 
 export function intakeWarnings(i: Omit<TwinIntake, 'warnings'>): string[] {
   const out: string[] = []

@@ -85,6 +85,15 @@ class TwinIntake(BaseModel):
     heating_periods: list[tuple[int, int]] = Field(default_factory=list,
                                                    description="Heating on periods, e.g. [(6, 9), (17, 22)]")
     meter_readings: list[MeterReading] = Field(default_factory=list, description="Monthly bills, ideally 12+ months")
+    # Heating, as the user knows it today: overrides the EPC, which can be years old.
+    heating_system: Optional[Literal[
+        "gas_boiler_combi", "gas_boiler_regular", "oil_boiler", "lpg_boiler", "air_source_heat_pump",
+        "ground_source_heat_pump", "electric_storage", "electric_storage_hhr", "electric_radiators",
+        "district_or_communal", "solid_fuel"]] = None
+    hot_water_source: Optional[Literal["from_boiler", "cylinder_from_boiler", "electric_immersion",
+                                       "heat_pump_cylinder", "instantaneous_electric"]] = None
+    internal_walls: Optional[Literal["solid", "hollow"]] = Field(
+        None, description="Do internal walls sound solid or hollow when knocked? (thermal mass)")
     warnings: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
