@@ -44,12 +44,32 @@ Every uncertain number carries a **Bayesian 90% credible interval**. A **tool-on
 9. Splits are by **property / customer**, assigned once (`Property.split`). No fields that aren't available at prediction time (`epc.potential_*` = leakage).
 10. Better state → never a lower sub-score (monotonicity tests are mandatory).
 
+## Compliance fixes (from the constraint review, 10 Oct 2026) — binding
+1. **Post-retrofit rating.** The projected score's energy-efficiency component and the value model's "band after" come **only** from `contracts/sap_estimator.json`: SAP 2012 ECF formula, anchored to the recorded SAP, run under standard conditions. The output is `RatingEstimate`, always labelled "estimated rating, not an EPC".
+2. **Sourced inputs only.**
+   - Carbon uses `contracts/emission_factors.json`, verified against the DESNZ 2025 file:
+     - Electricity 0.19553 kgCO2e/kWh (generation 0.177 + T&D 0.01853).
+     - Gas 0.18296 kgCO2e/kWh (gross CV).
+   - Bills use `contracts/tariffs.json` (Ofgem Q4 2026).
+   - Costs use `retrofit_catalogue.json` (BEIS 2017 Table 3 × ONS CPI 1.3888).
+   - Any item with `cost_status: unsourced` returns `cost = null` plus a reason, and is excluded from cost ranking.
+   - A fuel with no sourced factor → carbon `null` plus a reason.
+3. **Energy intensity = the brief's definition:** annualised **metered** grid import + gas, divided by floor area. It is not weather-normalised; the weather-normalised figure is reported as a sensitivity only. The PV overlap with renewables is justified in `score_mapping.json`, and its size is reported (score with and without PV added back).
+4. **Heating mapping** covers every `HeatingSystem` value (test-enforced), including electric storage, direct electric, district and communal heating.
+5. **Green Profits is a scenario, not a trained model.** Take-up follows the documented rule in `contracts/green_profits_assumptions.json`; every coefficient is a labelled assumption on a slider. No model is trained on synthetic labels.
+6. **Value wording.** Every display of the value range uses `ValueImpact.wording`: "Indicative range based on historical associations in sales data; not a promised or proven increase." Never present it as a reason to borrow.
+7. **Synthetic green premium.** Recovering the premium we inserted into synthetic values is reported **only** as a method check, never as evidence of real uplift.
+8. **3D element colours.** `ElementHeatLoss.estimated = true`. Show the `basis` label: "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills".
+
 ## Shared data formats
 - **Source of truth:** `contracts/models.py` (Pydantic v2). TS mirror: `contracts/types.ts`. Change both in the same commit.
 - Configs:
   - `contracts/score_mapping.json`: weights + sub-score mappings.
   - `contracts/feasibility_rules.json`: rules + ordering.
-  - `contracts/retrofit_catalogue.json`: twin edits, grants; costs are TO_SOURCE.
+  - `contracts/retrofit_catalogue.json`: twin edits, grants, sourced costs with `cost_status`.
+  - `contracts/emission_factors.json` (DESNZ 2025) and `contracts/tariffs.json` (Ofgem Q4 2026).
+  - `contracts/sap_estimator.json`: the post-retrofit rating method.
+  - `contracts/green_profits_assumptions.json`: the scenario rule, assumptions only.
 - Examples: `contracts/examples/` (showcase homes, usage, scenario spec, a **MOCK** result that is shape only).
 - JSON Schema: `python -m contracts.export_schemas` → `contracts/schema/`.
 - Units:
@@ -88,11 +108,21 @@ cp .env.example .env            # fill only what you have; see Keys
 - Code comments/docs in English; numbers in the UI always show the unit + interval.
 - Never let a `provenance.engine == "mock"` result reach the demo or evaluation.
 
-## Facts still to verify (mark as TO_VERIFY until checked against official files)
-- DESNZ 2025 electricity factor (~0.177 kgCO2e/kWh) and the gas gross vs net CV factor (~0.183 vs 0.2049). Meter kWh are gross CV.
-- Ofgem Oct–Dec 2026 unit rates (26.32p elec / 7.97p gas) and their VAT basis.
-- BUS £9,000 off-gas uplift dates; ECO4/GBIS status.
-- Retrofit costs: BEIS 2017 + CPI (catalogue `source: TO_SOURCE`).
+## Verified (10 Oct 2026)
+- **DESNZ 2025 factors** (flat file), with row IDs in `emission_factors.json`:
+  - Electricity generation 0.177, T&D 0.01853.
+  - Natural gas 0.18296 (gross CV) / 0.2027 (net CV).
+- **Ofgem 1 Oct – 31 Dec 2026:**
+  - Electricity 26.32 p/kWh and 54.83 p/day. Ofgem states it excludes VAT for Oct 2026 – Mar 2027.
+  - Gas 7.97 p/kWh and 29.68 p/day, including 5% VAT.
+- **BEIS 2017 Table 3 costs + ONS CPI** (D7BT: 2017 = 103.4, Aug 2026 = 143.6) for draught proofing, loft, cavity, internal/external wall, underfloor, double glazing and heating controls.
+
+## Still to verify (do not present as confirmed)
+- Air-source heat pump cost: £12,500 for 8 kW, Apr–Jun 2025, as reported by Which? citing DESNZ BUS statistics. Status `secondary_source`.
+- PV cost: £1,876/kW, ≤ 4 kW, 2024/25, as reported by pv magazine citing DESNZ. Status `secondary_source`.
+- Still unsourced: triple glazing, secondary glazing, HHR storage heaters, battery costs.
+- BUS £9,000 off-gas dates; ECO4/GBIS status (excluded from net cost until confirmed).
+- The SAP 2012 ECF formula and deflator against the published BRE specification.
 - UCL linked dataset variable names (854942 / 857911).
 
 ## Owners

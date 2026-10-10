@@ -47,6 +47,18 @@
           ],
           "default": null,
           "title": "Area M2"
+        },
+        "estimated": {
+          "default": true,
+          "description": "Per-element split comes from priors, not measurement",
+          "title": "Estimated",
+          "type": "boolean"
+        },
+        "basis": {
+          "default": "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills",
+          "description": "Label shown wherever element colours/values are displayed",
+          "title": "Basis",
+          "type": "string"
         }
       },
       "required": [
@@ -102,7 +114,20 @@
           "default": null
         },
         "intensity_kwh_m2": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Interval",
+          "description": "Annualised METERED energy (grid import + gas) / floor area, as defined in the brief; used by the score"
+        },
+        "intensity_weather_normalised_kwh_m2": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Interval"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sensitivity only; never used in the score"
         }
       },
       "required": [
@@ -251,6 +276,7 @@
           "enum": [
             "physics_l1",
             "surrogate_deeponet",
+            "sap_estimator",
             "ebm",
             "xgboost",
             "hedonic",
@@ -303,6 +329,58 @@
       "title": "Provenance",
       "type": "object"
     },
+    "RatingEstimate": {
+      "description": "Post-retrofit EPC-style rating from contracts/sap_estimator.json. Never presented as an EPC.",
+      "properties": {
+        "sap": {
+          "$ref": "#/$defs/Interval"
+        },
+        "band": {
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ],
+          "title": "Band",
+          "type": "string"
+        },
+        "band_probabilities": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Band Probabilities",
+          "type": "object"
+        },
+        "anchored_to_recorded_sap": {
+          "description": "False when the home has no recorded EPC",
+          "title": "Anchored To Recorded Sap",
+          "type": "boolean"
+        },
+        "method": {
+          "const": "sap2012_ecf_delta",
+          "default": "sap2012_ecf_delta",
+          "title": "Method",
+          "type": "string"
+        },
+        "label": {
+          "const": "estimated rating, not an EPC",
+          "default": "estimated rating, not an EPC",
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sap",
+        "band",
+        "anchored_to_recorded_sap"
+      ],
+      "title": "RatingEstimate",
+      "type": "object"
+    },
     "RetrofitEffect": {
       "properties": {
         "retrofit_id": {
@@ -340,6 +418,19 @@
             }
           ],
           "default": null
+        },
+        "cost_unavailable_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when the catalogue cost is unsourced",
+          "title": "Cost Unavailable Reason"
         },
         "p_net_benefit": {
           "maximum": 1,
@@ -516,6 +607,32 @@
           ],
           "title": "Current Value Gbp"
         },
+        "band_before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Recorded EPC band",
+          "title": "Band Before"
+        },
+        "band_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "From RatingEstimate (sap_estimator), not a lodged EPC",
+          "title": "Band After"
+        },
         "uplift_pct": {
           "anyOf": [
             {
@@ -554,6 +671,12 @@
           "title": "Label",
           "type": "string"
         },
+        "wording": {
+          "default": "Indicative range based on historical associations in sales data; not a promised or proven increase.",
+          "description": "Must accompany every display of the value range",
+          "title": "Wording",
+          "type": "string"
+        },
         "unavailable_reason": {
           "anyOf": [
             {
@@ -577,7 +700,7 @@
   },
   "properties": {
     "schema_version": {
-      "default": "0.1.0",
+      "default": "0.2.0",
       "title": "Schema Version",
       "type": "string"
     },
@@ -633,13 +756,34 @@
       "title": "Improvement Potential Unavailable Reason"
     },
     "carbon_saving_kgco2e": {
-      "$ref": "#/$defs/Interval"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Interval"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Null if a fuel has no sourced factor"
+    },
+    "carbon_unavailable_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Carbon Unavailable Reason"
     },
     "emission_factors": {
       "additionalProperties": {
         "type": "number"
       },
-      "description": "kgCO2e/kWh used, e.g. {'electricity':0.177,'gas':0.183}",
+      "description": "kgCO2e/kWh from contracts/emission_factors.json, e.g. {'electricity':0.19553,'gas':0.18296}",
       "title": "Emission Factors",
       "type": "object"
     },
@@ -654,7 +798,19 @@
       "$ref": "#/$defs/ScoreResult"
     },
     "score_after": {
-      "$ref": "#/$defs/ScoreResult"
+      "$ref": "#/$defs/ScoreResult",
+      "description": "Uses rating_after (estimated) for the energy-efficiency component"
+    },
+    "rating_after": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RatingEstimate"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "retrofits": {
       "items": {
@@ -715,7 +871,6 @@
     "electricity_saving_kwh",
     "gas_saving_kwh",
     "purchased_energy_saving_kwh",
-    "carbon_saving_kgco2e",
     "emission_factors",
     "emission_factor_source",
     "bill_saving_gbp",

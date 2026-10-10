@@ -1,26 +1,62 @@
 {
-  "_doc": "Retrofit catalogue v0.1. twin_edits are physics parameters applied to the Level-1 twin. U-values are typical engineering assumptions to be checked against RdSAP 10 tables. Costs are TO_SOURCE from 'BEIS Domestic cost assumptions: what does it cost to retrofit homes' (2017) uplifted by CPI, then documented here. Never hard-code savings: savings come from rerunning the twin.",
-  "version": "0.1.0",
+  "_doc": "Retrofit catalogue v0.2. twin_edits are physics parameters applied to the Level-1 twin (U-values are typical engineering assumptions; check against RdSAP 10 tables). Savings are NEVER stored here: they come from rerunning the twin. Cost rule: only items with cost_status 'sourced' or 'secondary_source' produce cost figures; 'unsourced' items return cost = null with a reason and are excluded from cost-based ranking (Pareto net cost) until sourced.",
+  "version": "0.2.0",
+  "cost_method": {
+    "primary_source": {
+      "title": "BEIS (2017) Domestic cost assumptions: what does it cost to retrofit homes? Table 3, Summary findings from literature review (lowest / mean / highest cost per home)",
+      "url": "https://www.gov.uk/government/publications/domestic-cost-assumptions-what-does-it-cost-to-retrofit-homes",
+      "pdf": "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/656866/BEIS_Update_of_Domestic_Cost_Assumptions_031017.pdf"
+    },
+    "uplift": {
+      "index": "ONS CPI INDEX 00: ALL ITEMS 2015=100 (series D7BT, dataset MM23)",
+      "url": "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23",
+      "from": {"period": "2017 annual", "value": 103.4},
+      "to": {"period": "2026 AUG", "value": 143.6},
+      "factor": 1.3888,
+      "rounding": "nearest GBP 10",
+      "accessed": "2026-10-10"
+    },
+    "assumptions": [
+      "BEIS Table 3 costs are per home across literature sources (not dwelling-type specific); dwelling-type scaling is a later refinement.",
+      "CPI is a general price index; construction cost inflation may differ. Stated as a limitation."
+    ]
+  },
   "items": [
-    {"id": "draught_proofing", "name": "Draught proofing", "category": "airtightness", "twin_edits": {"ach_reduction": 0.15}, "lifetime_years": 10, "source": "TO_SOURCE"},
-    {"id": "loft_insulation", "name": "Loft insulation to 270 mm", "category": "fabric", "twin_edits": {"roof_u_value": 0.16}, "lifetime_years": 40, "grants": ["ECO4", "GBIS"], "source": "TO_SOURCE"},
-    {"id": "cavity_wall_insulation", "name": "Cavity wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.55}, "lifetime_years": 40, "grants": ["ECO4", "GBIS"], "source": "TO_SOURCE"},
-    {"id": "internal_wall_insulation", "name": "Internal wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.30, "floor_area_factor": 0.97}, "excludes": ["external_wall_insulation"], "lifetime_years": 36, "source": "TO_SOURCE"},
-    {"id": "external_wall_insulation", "name": "External wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.30}, "excludes": ["internal_wall_insulation"], "lifetime_years": 36, "source": "TO_SOURCE"},
-    {"id": "floor_insulation", "name": "Suspended floor insulation", "category": "fabric", "twin_edits": {"floor_u_value": 0.25}, "lifetime_years": 40, "source": "TO_SOURCE"},
-    {"id": "double_glazing", "name": "Double glazing (A-rated)", "category": "glazing", "twin_edits": {"window_u_value": 1.4}, "excludes": ["triple_glazing", "secondary_glazing"], "lifetime_years": 30, "source": "TO_SOURCE"},
-    {"id": "triple_glazing", "name": "Triple glazing", "category": "glazing", "twin_edits": {"window_u_value": 0.8}, "excludes": ["double_glazing", "secondary_glazing"], "lifetime_years": 30, "source": "TO_SOURCE"},
-    {"id": "secondary_glazing", "name": "Secondary glazing", "category": "glazing", "twin_edits": {"window_u_value": 2.4}, "excludes": ["double_glazing", "triple_glazing"], "lifetime_years": 20, "source": "TO_SOURCE"},
-    {"id": "smart_thermostat", "name": "Smart thermostat + TRVs", "category": "controls", "twin_edits": {"setpoint_reduction_c": 0.5, "heating_hours_factor": 0.93}, "lifetime_years": 12, "source": "TO_SOURCE"},
-    {"id": "air_source_heat_pump", "name": "Air-source heat pump", "category": "heating", "twin_edits": {"main_system": "air_source_heat_pump", "scop": 2.9}, "depends_on": ["loft_insulation", "cavity_wall_insulation", "internal_wall_insulation", "external_wall_insulation"], "lifetime_years": 18, "grants": ["BUS_7500", "BUS_9000_off_gas"], "sizing": {"kw_min": 4, "kw_max": 12}, "source": "SCOP prior from the Electrification of Heat trial (verify); cost TO_SOURCE"},
-    {"id": "hhr_storage_heaters", "name": "High-heat-retention storage heaters", "category": "heating", "twin_edits": {"main_system": "electric_storage_hhr", "controllability_gain": 0.15}, "lifetime_years": 20, "source": "TO_SOURCE"},
-    {"id": "solar_pv", "name": "Rooftop solar PV", "category": "renewables", "twin_edits": {"pv_kwp": 3.5}, "lifetime_years": 25, "sizing": {"kwp_min": 1, "kwp_max": 6}, "source": "Yield from PVGIS; cost TO_SOURCE"},
-    {"id": "battery", "name": "Home battery", "category": "renewables", "twin_edits": {"battery_kwh": 5}, "depends_on": ["solar_pv"], "lifetime_years": 12, "source": "TO_SOURCE"}
+    {"id": "draught_proofing", "name": "Draught proofing", "category": "airtightness", "twin_edits": {"ach_reduction": 0.15}, "lifetime_years": 10,
+     "cost_gbp_low": 120, "cost_gbp_central": 250, "cost_gbp_high": 380, "cost_basis": "per_home", "cost_price_year": "2026-08", "cost_status": "sourced", "source": "BEIS 2017 Table 3 'Draught-stripping' GBP 85/180/275 x CPI 1.3888"},
+    {"id": "loft_insulation", "name": "Loft insulation to 270 mm", "category": "fabric", "twin_edits": {"roof_u_value": 0.16}, "lifetime_years": 40, "grants": ["ECO4", "GBIS"],
+     "cost_gbp_low": 260, "cost_gbp_central": 620, "cost_gbp_high": 930, "cost_basis": "per_home", "cost_price_year": "2026-08", "cost_status": "sourced", "source": "BEIS 2017 Table 3 'Loft Insulation' GBP 185/450/670 (GBP 2,000 hard-to-treat) x CPI 1.3888"},
+    {"id": "cavity_wall_insulation", "name": "Cavity wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.55}, "lifetime_years": 40, "grants": ["ECO4", "GBIS"],
+     "cost_gbp_low": 670, "cost_gbp_central": 1040, "cost_gbp_high": 1940, "cost_basis": "per_home", "cost_price_year": "2026-08", "cost_status": "sourced", "source": "BEIS 2017 Table 3 'Cavity Wall Insulation' GBP 480/750/1,400 (GBP 2,500 hard-to-treat) x CPI 1.3888"},
+    {"id": "internal_wall_insulation", "name": "Internal wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.30, "floor_area_factor": 0.97}, "excludes": ["external_wall_insulation"], "lifetime_years": 36,
+     "cost_gbp_low": 9440, "cost_gbp_central": 10970, "cost_gbp_high": 12360, "cost_basis": "per_home", "cost_price_year": "2026-08", "cost_status": "sourced", "source": "BEIS 2017 Table 3 'Internal Wall Insulation' GBP 6,800/7,900/8,900 x CPI 1.3888"},
+    {"id": "external_wall_insulation", "name": "External wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.30}, "excludes": ["internal_wall_insulation"], "lifetime_years": 36,
+     "cost_gbp_low": 9860, "cost_gbp_central": 16390, "cost_gbp_high": 20830, "cost_basis": "per_home", "cost_price_year": "2026-08", "cost_status": "sourced", "source": "BEIS 2017 Table 3 'External Wall Insulation' GBP 7,100/11,800/15,000 x CPI 1.3888"},
+    {"id": "floor_insulation", "name": "Suspended floor insulation", "category": "fabric", "twin_edits": {"floor_u_value": 0.25}, "lifetime_years": 40,
+     "cost_gbp_low": 4860, "cost_gbp_central": 8050, "cost_gbp_high": 11530, "cost_basis": "per_home", "cost_price_year": "2026-08", "cost_status": "sourced", "source": "BEIS 2017 Table 3 'Underfloor Insulation' GBP 3,500/5,800/8,300 x CPI 1.3888"},
+    {"id": "double_glazing", "name": "Double glazing (panes and frames)", "category": "glazing", "twin_edits": {"window_u_value": 1.4}, "excludes": ["triple_glazing", "secondary_glazing"], "lifetime_years": 30,
+     "cost_gbp_low": 5420, "cost_gbp_central": 8890, "cost_gbp_high": 14860, "cost_basis": "per_home", "cost_price_year": "2026-08", "cost_status": "sourced", "source": "BEIS 2017 Table 3 'Replacement Double Glazing (panes & frames)' GBP 3,900/6,400/10,700 x CPI 1.3888"},
+    {"id": "triple_glazing", "name": "Triple glazing", "category": "glazing", "twin_edits": {"window_u_value": 0.8}, "excludes": ["double_glazing", "secondary_glazing"], "lifetime_years": 30,
+     "cost_status": "unsourced", "source": "No cost source yet (not in BEIS 2017 Table 3)"},
+    {"id": "secondary_glazing", "name": "Secondary glazing", "category": "glazing", "twin_edits": {"window_u_value": 2.4}, "excludes": ["double_glazing", "triple_glazing"], "lifetime_years": 20,
+     "cost_status": "unsourced", "source": "BEIS 2017 Table 3 lists secondary glazing with no data"},
+    {"id": "smart_thermostat", "name": "Heating controls upgrade (smart thermostat + TRVs)", "category": "controls", "twin_edits": {"setpoint_reduction_c": 0.5, "heating_hours_factor": 0.93}, "lifetime_years": 12,
+     "cost_gbp_low": null, "cost_gbp_central": 620, "cost_gbp_high": null, "cost_basis": "per_home", "cost_price_year": "2026-08", "cost_status": "sourced", "source": "BEIS 2017 Table 3 'Heating controls' mean GBP 450 x CPI 1.3888 (no range given)"},
+    {"id": "air_source_heat_pump", "name": "Air-source heat pump", "category": "heating", "twin_edits": {"main_system": "air_source_heat_pump", "scop": 2.9}, "depends_on": ["loft_insulation", "cavity_wall_insulation", "internal_wall_insulation", "external_wall_insulation"], "lifetime_years": 18, "grants": ["BUS_7500", "BUS_9000_off_gas"], "sizing": {"kw_min": 4, "kw_max": 12},
+     "cost_gbp_low": null, "cost_gbp_central": 12500, "cost_gbp_high": null, "cost_basis": "per_home", "cost_price_year": "2025-Q2", "cost_status": "secondary_source",
+     "source": "Mean installed cost GBP 12,500 for an average 8.0 kW unit, Apr-Jun 2025, DESNZ Boiler Upgrade Scheme statistics as reported by Which? (https://www.which.co.uk/reviews/ground-and-air-source-heat-pumps/article/air-source-heat-pump-costs-and-savings-akySY6N5Y6Dd). TO CONFIRM in the DESNZ BUS statistics tables. SCOP 2.9 is an assumption to check against the Electrification of Heat trial."},
+    {"id": "hhr_storage_heaters", "name": "High-heat-retention storage heaters", "category": "heating", "twin_edits": {"main_system": "electric_storage_hhr", "controllability_gain": 0.15}, "lifetime_years": 20,
+     "cost_status": "unsourced", "source": "No cost source yet"},
+    {"id": "solar_pv", "name": "Rooftop solar PV", "category": "renewables", "twin_edits": {"pv_kwp": 3.5}, "lifetime_years": 25, "sizing": {"kwp_min": 1, "kwp_max": 6},
+     "cost_gbp_low": null, "cost_gbp_central": 1876, "cost_gbp_high": null, "cost_basis": "per_kwp", "cost_price_year": "2024/25", "cost_status": "secondary_source",
+     "source": "Median GBP 1,876 per kW for installations up to 4 kW, DESNZ small-scale solar PV cost data 2024/25, as reported by pv magazine (https://www.pv-magazine.com/2025/06/12/uk-small-scale-solar-costs-tumble-as-competition-heats-up-for-installers/). TO CONFIRM in the DESNZ publication. Yield from PVGIS."},
+    {"id": "battery", "name": "Home battery", "category": "renewables", "twin_edits": {"battery_kwh": 5}, "depends_on": ["solar_pv"], "lifetime_years": 12,
+     "cost_status": "unsourced", "source": "No cost source yet"}
   ],
   "grants": {
-    "BUS_7500": "Boiler Upgrade Scheme: GBP 7,500 for air/ground source heat pumps, England & Wales, MCS installer. Source: Energy Saving Trust.",
-    "BUS_9000_off_gas": "GBP 9,000 for eligible off-gas-grid homes, 21 Jul 2026 to 31 Mar 2027. Source: Energy Saving Trust (verify).",
-    "ECO4": "Energy Company Obligation 4 (eligibility-based). Verify current status.",
-    "GBIS": "Great British Insulation Scheme. Verify current status."
+    "BUS_7500": "Boiler Upgrade Scheme: GBP 7,500 for air/ground source heat pumps, England & Wales, MCS installer. Source: Energy Saving Trust (https://www.energysavingtrust.org.uk/grants-and-schemes/boiler-upgrade-scheme/).",
+    "BUS_9000_off_gas": "GBP 9,000 for eligible off-gas-grid (oil/LPG) homes, 21 Jul 2026 to 31 Mar 2027, as reported by Energy Saving Trust and installers. TO CONFIRM on gov.uk.",
+    "ECO4": "Energy Company Obligation 4 (eligibility-based). Status to confirm; not used in net-cost figures until confirmed.",
+    "GBIS": "Great British Insulation Scheme. Status to confirm; not used in net-cost figures until confirmed."
   }
 }

@@ -20,7 +20,7 @@ MONTHS = [f"2025-{m:02d}" for m in range(1, 13)]
 
 HOMES = [
     {
-        "schema_version": "0.1.0",
+        "schema_version": "0.2.0",
         "property_id": "SH1",
         "customer_id": "C-SH1",
         "source": "showcase",
@@ -51,7 +51,7 @@ HOMES = [
         "_story": "Victorian solid-wall mid-terrace in a conservation area: EWI blocked -> internal wall insulation; classic 'fabric first, then heat pump' path; one missing month.",
     },
     {
-        "schema_version": "0.1.0",
+        "schema_version": "0.2.0",
         "property_id": "SH2",
         "customer_id": "C-SH2",
         "source": "showcase",
@@ -81,7 +81,7 @@ HOMES = [
         "_story": "1970s cavity semi: every common retrofit feasible; the best Pareto and green-loan demo; shows electricity rising after a heat pump.",
     },
     {
-        "schema_version": "0.1.0",
+        "schema_version": "0.2.0",
         "property_id": "SH3",
         "customer_id": "C-SH3",
         "source": "showcase",
@@ -136,10 +136,20 @@ def iv(mean, lo, hi, unit):
     return {"mean": mean, "lo": lo, "hi": hi, "level": 0.9, "unit": unit}
 
 
+BASIS = "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills"
+
+
 def mock_result() -> dict:
     """Shape-only example for UI/LLM development. All numbers are placeholders."""
+    res = _mock_result()
+    for e in res["element_heat_loss_before"]:
+        e.update({"estimated": True, "basis": BASIS})
+    return res
+
+
+def _mock_result() -> dict:
     return {
-        "schema_version": "0.1.0", "scenario_id": "SH2-pkg-mock", "property_id": "SH2",
+        "schema_version": "0.2.0", "scenario_id": "SH2-pkg-mock", "property_id": "SH2",
         "provenance": {"engine": "mock", "model_version": "mock-0", "data_version": "mock-0", "seed": 42, "n_samples": 0},
         "baseline": {"electricity_import_kwh": iv(3400, 3250, 3550, "kWh/yr"), "gas_kwh": iv(12800, 12300, 13300, "kWh/yr"),
                      "purchased_total_kwh": iv(16200, 15600, 16800, "kWh/yr"), "intensity_kwh_m2": iv(171, 164, 177, "kWh/m2/yr")},
@@ -149,17 +159,20 @@ def mock_result() -> dict:
         "gas_saving_kwh": iv(12800, 12300, 13300, "kWh/yr"),
         "purchased_energy_saving_kwh": iv(11100, 10400, 11800, "kWh/yr"),
         "improvement_potential_pct": iv(68.5, 64.0, 72.0, "%"),
-        "carbon_saving_kgco2e": iv(2040, 1900, 2170, "kgCO2e/yr"),
-        "emission_factors": {"electricity": 0.177, "gas": 0.183},
-        "emission_factor_source": "MOCK - replace with DESNZ 2025 GHG conversion factors (verify gross/net CV)",
+        "carbon_saving_kgco2e": iv(2010, 1880, 2140, "kgCO2e/yr"),
+        "emission_factors": {"electricity": 0.19553, "gas": 0.18296},
+        "emission_factor_source": "contracts/emission_factors.json (DESNZ 2025: elec generation + T&D; gas gross CV)",
         "bill_saving_gbp": iv(560, 420, 690, "GBP/yr"),
         "score_before": {"score": 46, "band": "Poor", "band_probabilities": {"Poor": 0.8, "Moderate": 0.2},
                          "components": [], "key_issues": ["Unfilled cavity walls", "Gas boiler", "No renewables"]},
         "score_after": {"score": 78, "band": "Good", "band_probabilities": {"Good": 0.7, "Highly efficient": 0.3},
                         "components": [], "key_issues": []},
         "retrofits": [],
-        "value": {"current_value_gbp": 325000, "uplift_pct": iv(3.0, 1.5, 4.5, "%"),
-                  "value_after_gbp": iv(334750, 329875, 339625, "GBP"), "method": "hedonic_quantile", "label": "indicative"},
+        "rating_after": {"sap": iv(77, 73, 81, "SAP points"), "band": "C", "band_probabilities": {"C": 0.8, "B": 0.15, "D": 0.05},
+                         "anchored_to_recorded_sap": True, "method": "sap2012_ecf_delta", "label": "estimated rating, not an EPC"},
+        "value": {"current_value_gbp": 325000, "band_before": "D", "band_after": "C", "uplift_pct": iv(3.0, 1.5, 4.5, "%"),
+                  "value_after_gbp": iv(334750, 329875, 339625, "GBP"), "method": "hedonic_quantile", "label": "indicative",
+                  "wording": "Indicative range based on historical associations in sales data; not a promised or proven increase."},
         "element_heat_loss_before": [
             {"element": "walls", "heat_loss_w_per_k": 110, "share_pct": 37},
             {"element": "roof", "heat_loss_w_per_k": 45, "share_pct": 15},
@@ -181,7 +194,7 @@ def main() -> None:
         (OUT / f"{h['property_id']}_usage_2025.json").write_text(json.dumps(usage_rows, indent=2), encoding="utf-8")
         print(h["property_id"], "-", story)
     (OUT / "SH2_scenario_spec.json").write_text(json.dumps({
-        "schema_version": "0.1.0", "scenario_id": "SH2-pkg-1", "property_id": "SH2",
+        "schema_version": "0.2.0", "scenario_id": "SH2-pkg-1", "property_id": "SH2",
         "retrofits": [{"retrofit_id": "cavity_wall_insulation", "size": None, "stage_year": 0},
                       {"retrofit_id": "loft_insulation", "size": None, "stage_year": 0},
                       {"retrofit_id": "air_source_heat_pump", "size": 7, "stage_year": 1},

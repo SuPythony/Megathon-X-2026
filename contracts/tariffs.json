@@ -1,0 +1,25 @@
+{
+  "_doc": "Energy prices used for bill savings and for the post-retrofit SAP estimator's cost terms. Verified 10 Oct 2026 on the Ofgem announcement page. Averages for England, Scotland and Wales, standard variable tariff, Direct Debit.",
+  "version": "2026Q4",
+  "source": {
+    "publisher": "Ofgem",
+    "title": "Changes to energy price cap between 1 October and 31 December 2026",
+    "url": "https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-october-and-31-december-2026",
+    "accessed": "2026-10-10"
+  },
+  "period": {"start": "2026-10-01", "end": "2026-12-31"},
+  "electricity": {
+    "unit_rate_p_per_kwh": 26.32,
+    "standing_charge_p_per_day": 54.83,
+    "vat_note": "Ofgem states the figure does not include VAT from 1 October 2026 to 31 March 2027 (no VAT applies in that period)."
+  },
+  "gas": {
+    "unit_rate_p_per_kwh": 7.97,
+    "standing_charge_p_per_day": 29.68,
+    "vat_note": "Includes VAT at 5%."
+  },
+  "rules": [
+    "Bill saving = sum over fuels of delta_kWh x unit rate. Standing charges change only if a fuel supply is removed entirely (e.g. gas disconnected after a heat pump); that case is reported separately and labelled.",
+    "Export tariff for PV is not included until a sourced value is added."
+  ]
+}

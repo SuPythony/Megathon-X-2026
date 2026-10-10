@@ -1,0 +1,24 @@
+{
+  "_doc": "Post-retrofit rating estimator (fix for: projected score/value need a post-retrofit EPC rating). The 'energy efficiency' sub-score and the value model's band-after both come from this documented estimator. Output is labelled 'estimated rating, not an EPC'. Owner: P2.",
+  "version": "0.1.0",
+  "method": "sap2012_ecf_delta",
+  "reference": "BRE, The Government's Standard Assessment Procedure for Energy Rating of Dwellings, SAP 2012, section 13 (SAP rating from Energy Cost Factor). Verify the formula against the published SAP 2012 specification before submission.",
+  "formula": {
+    "ecf": "ECF = deflator * total_standard_energy_cost_gbp / (total_floor_area_m2 + 45)",
+    "deflator": 0.42,
+    "sap_if_ecf_ge_3_5": "SAP = 117 - 121 * log10(ECF)",
+    "sap_if_ecf_lt_3_5": "SAP = 100 - 13.95 * ECF",
+    "clamp": [1, 100]
+  },
+  "procedure": [
+    "1. Run the Level-1 twin under STANDARD conditions (SAP-style fixed heating pattern and occupancy by floor area), not the home's calibrated behaviour, before and after the retrofit package.",
+    "2. Price the modelled energy with contracts/tariffs.json (documented deviation: SAP uses its own fuel price table; we use current prices and say so).",
+    "3. Compute SAP_model_before and SAP_model_after with the formula above.",
+    "4. Anchor to the recorded rating: SAP_after = SAP_recorded + (SAP_model_after - SAP_model_before). If no recorded SAP exists, SAP_after = SAP_model_after and the result is flagged 'no recorded EPC'.",
+    "5. Propagate posterior samples of the twin parameters -> SAP_after interval and band probabilities.",
+    "6. band_after from the thresholds below; the value model uses band_after (and its probabilities) for the 'after' prediction."
+  ],
+  "band_thresholds": {"A": 92, "B": 81, "C": 69, "D": 55, "E": 39, "F": 21, "G": 1},
+  "validation": "On homes with two EPCs before/after a recorded measure (EPC register history), compare predicted vs lodged SAP change; report MAE and interval coverage.",
+  "label": "Estimated rating, not an EPC. Only an accredited assessor can lodge an EPC."
+}

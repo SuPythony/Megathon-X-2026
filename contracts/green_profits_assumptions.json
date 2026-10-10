@@ -1,0 +1,23 @@
+{
+  "_doc": "Green Profits is a SCENARIO calculator, not a trained model. No take-up model is trained on synthetic labels (problem statement section 9). Take-up comes from the documented rule below; every coefficient is an explicit assumption shown as a slider and labelled as such. Results are Monte Carlo ranges over the slider ranges. Replace with an estimated model only if real take-up data becomes available.",
+  "version": "0.1.0",
+  "take_up_rule": {
+    "form": "p_take_up = sigmoid(b0 + b1*(improvement_potential_pct/10) + b2*ln(1 + annual_bill_saving_gbp/100) + b3*owner_occupier + b4*((deprivation_decile - 5)/5))",
+    "inputs_from_models": ["improvement_potential_pct (twin)", "annual_bill_saving_gbp (twin + tariffs)", "owner_occupier (property)", "deprivation_decile (IMD, public)"],
+    "coefficients": {
+      "b0": {"default": -3.0, "range": [-4.0, -2.0], "status": "assumption"},
+      "b1": {"default": 0.25, "range": [0.0, 0.5], "status": "assumption"},
+      "b2": {"default": 0.4, "range": [0.0, 0.8], "status": "assumption"},
+      "b3": {"default": 0.8, "range": [0.0, 1.5], "status": "assumption"},
+      "b4": {"default": 0.2, "range": [0.0, 0.5], "status": "assumption"}
+    },
+    "rationale": "Directional assumptions only: higher potential and savings, owner-occupation and lower deprivation are expected to raise take-up. Magnitudes are not estimated from data."
+  },
+  "profit_terms": {
+    "lending": "loan_balance x net_interest_margin x term_years (discounted) + fees",
+    "retention": "customers_retained x customer_lifetime_value x churn_reduction",
+    "acquisition": "new_customers x customer_lifetime_value - acquisition_cost - agent_visit_cost",
+    "all_parameters": "sliders with stated ranges; status = assumption"
+  },
+  "label": "Illustrative scenario on a synthetic customer base. Not a forecast."
+}

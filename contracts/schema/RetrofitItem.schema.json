@@ -71,6 +71,18 @@
       "default": null,
       "title": "Cost Gbp Low"
     },
+    "cost_gbp_central": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cost Gbp Central"
+    },
     "cost_gbp_high": {
       "anyOf": [
         {
@@ -87,6 +99,29 @@
       "default": "per_home",
       "description": "per_home | per_m2 | per_kwp | per_window",
       "title": "Cost Basis",
+      "type": "string"
+    },
+    "cost_price_year": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cost Price Year"
+    },
+    "cost_status": {
+      "default": "unsourced",
+      "description": "unsourced -> no cost figure is ever shown (cost = null + reason)",
+      "enum": [
+        "sourced",
+        "secondary_source",
+        "unsourced"
+      ],
+      "title": "Cost Status",
       "type": "string"
     },
     "lifetime_years": {

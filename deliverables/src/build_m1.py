@@ -308,7 +308,7 @@ def build():
         ["2 · Green Home Score", "Shareable headline score that starts every conversation"],
         ["3 · Poorly performing homes", "Finds homes and areas with the most improvement potential, i.e. loan demand"],
         ["4 · Retrofit recommendations", "The prioritised feasible package becomes the loan's purpose and amount"],
-        ["7 · Property value", "Indicative value range strengthens the case for borrowing"],
+        ["7 · Property value", "Indicative value range, based on historical associations in sales data, shown for information only, never as a promised increase or a reason to borrow"],
         ["10 · Customer memory", "Keeps each customer's plan, constraints and responses so follow-ups improve"],
     ], [52 * mm, 118 * mm])
     H2("Two channels")
@@ -332,7 +332,8 @@ def build():
         "adviser requests), estimated retrofit finance demand, carbon reduction potential, heat-pump grant eligibility "
         "(off-gas-grid) and density of existing customers.",
         "<b>Segments</b>, e.g. \"1930s semi, gas boiler, owner-occupier, low loan-to-value\", with size, average loan need, "
-        "take-up probability from an uplift model and carbon potential, ranked for outreach.",
+        "take-up from a documented scenario rule (every coefficient a labelled assumption on a slider; no model trained "
+        "on synthetic labels) and carbon potential, ranked for outreach.",
         "<b>Green Profits view</b>: profit from green lending (balances × net interest margin, plus fees), retention "
         "(lower churn among customers who retrofit, valued as customer lifetime value) and acquisition (app users who "
         "become customers, net of acquisition and visit costs), with financed-emissions reduction alongside. Every "
@@ -366,18 +367,32 @@ def build():
       "before classification.", "lead")
     table([
         ["Component (weight)", "Input", "Mapping (summary)"],
-        ["Energy efficiency (25%)", "EPC SAP score / band", "SAP 1–100 directly; band midpoints A 96 … G 10 if only the band is known"],
-        ["Energy intensity (20%)", "Weather-normalised metered purchased energy per m²", "Piecewise linear: 50 kWh/m² → 100, 150 → 70, 250 → 40, 400 → 0"],
+        ["Energy efficiency (25%)", "Recorded EPC SAP score / band; after a retrofit, the documented rating estimator", "SAP 1–100 directly; band midpoints A 96 … G 10 if only the band is known"],
+        ["Energy intensity (20%)", "Annualised metered energy (grid import + gas) per m², as the brief defines", "Piecewise linear: 50 kWh/m² → 100, 150 → 70, 250 → 40, 400 → 0"],
         ["Insulation (15%)", "Roof, walls, floor", "Roof 40% / walls 45% / floor 15%, re-normalised for flats; loft depth 0–270 mm → 0–100; solid uninsulated 0 … as-built 100"],
-        ["Heating system (15%)", "Main system and age", "Ground/air-source heat pump 100/95 … condensing gas 55 … oil 20, solid fuel 5; old boilers lose points"],
+        ["Heating system (15%)", "Main system and age", "Ground-source HP 100, air-source HP 95, district 70, condensing gas 55, communal boiler 50, high-heat-retention storage 50, electric storage 35, non-condensing gas 30, direct electric 30, LPG 25, oil 20, solid fuel 5; boilers over 12 years lose 1 point a year"],
         ["Windows and glazing (10%)", "Glazing types by share", "Single 0, secondary 50, double pre-2002 60, post-2002 80, triple 100"],
         ["Renewable energy (10%)", "PV kWp, battery, solar thermal", "0–5 kWp → 0–100, plus small bonuses, capped"],
         ["Smart energy management (5%)", "Controls present", "None 0 → programmer + thermostat 40 → smart + TRVs 90 → smart + zoning + smart meter 100"],
     ], [42 * mm, 46 * mm, 82 * mm], zebra=True)
-    P("<b>Double counting.</b> Energy efficiency reflects the recorded rating (a modelled overall outcome) and energy "
-      "intensity reflects metered use per m², as the brief requires. Insulation, heating, glazing, renewables and "
-      "controls are the levers a customer can change, so their overlap with the rating is accepted and documented. "
-      "Using kWh/m² (weather-normalised, with peer context) stops large homes being classed as inefficient for size alone.")
+    P("<b>Intensity definition.</b> Energy intensity is annualised metered energy (grid import plus gas) per m², exactly "
+      "as the brief defines it. Months are annualised from those available using typical monthly shares; missing months "
+      "are never zero; with no metered data the intensity is marked unavailable and the twin-modelled value is used with "
+      "a warning. A weather-normalised intensity is reported only as a sensitivity. Using kWh/m² stops large homes being "
+      "classed as inefficient for size alone.")
+    P("<b>Inputs that affect two components.</b> Energy efficiency reflects the recorded rating (a modelled overall "
+      "outcome); insulation, heating, glazing, renewables and controls are the levers a customer can change, so their "
+      "overlap with the rating is accepted and documented. Solar PV affects two components: renewable energy credits "
+      "installed generation, and intensity falls because self-consumed solar reduces metered import. We keep both "
+      "because the brief defines intensity on metered energy and renewables as a separate lever: intensity measures what "
+      "the home buys, renewables rewards generation the meter does not see. The evaluation reports the score with and "
+      "without self-consumption added back, so the size of the overlap is visible.")
+    P("<b>Post-retrofit rating.</b> A retrofitted home has no new EPC, so the projected score and the value model's "
+      "band after retrofit use a documented estimator. The twin is run under standard conditions before and after the "
+      "package, energy is priced with current Ofgem rates, and the SAP 2012 energy-cost-factor formula "
+      "(ECF = 0.42 × cost ÷ (floor area + 45); SAP = 117 − 121·log<sub>10</sub>ECF, or 100 − 13.95·ECF below ECF 3.5) "
+      "gives a modelled change that is added to the recorded SAP. Posterior samples give a rating interval and band "
+      "probabilities. It is always labelled 'estimated rating, not an EPC', and is validated on homes with repeat EPCs.")
     P("<b>Classification:</b> 80–100 Highly efficient · 65–79 Good · 50–64 Moderate · 30–49 Poor · 0–29 Very poor. "
       "With Bayesian inputs we also report the score interval and band probabilities, e.g. 38 (90% CI 33–44), P(Poor) = 0.81. "
       "Poor and Very poor homes are flagged with their key issues and ranked by improvement potential "
@@ -395,13 +410,12 @@ def build():
         "<b>Synthetic generator.</b> Samples homes from EPC / English Housing Survey joint distributions, attaches real "
         "weather, runs the twin and adds behaviour noise from NEED-calibrated priors. It produces monthly usage, "
         "per-retrofit reference labels and (for synthetic homes) property values from a hedonic model fitted on real "
-        "sales plus an explicit, documented green-premium term. All rules are disclosed; agreement with synthetic targets "
-        "is not claimed as real-world accuracy, and the generator is validated against real NEED distributions.",
+        "sales plus an explicit green-premium term we choose. Recovering that premium is reported only as a method check, "
+        "never as evidence of real uplift. All rules are disclosed; agreement with synthetic targets is not claimed as "
+        "real-world accuracy, and the generator is validated against real NEED distributions.",
         "<b>Extrapolation</b> (new retrofit combinations, future climate) is done only by the physics twin; an "
         "out-of-distribution flag warns when a home is far from the training data.",
     ])
-    story.append(PageBreak())
-
     # 6 Bayesian
     H1("6. Bayesian confidence in every output")
     P("NumPyro calibrates each home's heat-loss coefficient, heating setpoint, baseload and heat-pump efficiency against "
@@ -413,7 +427,7 @@ def build():
         ["Green Home Score", "38 (90% CI 33–44); P(Poor) = 0.81", "Deterministic formula on posterior samples of uncertain inputs"],
         ["Per-fuel savings", "Gas +6,100 kWh/yr (CI …); electricity −1,900 kWh/yr", "Twin rerun on each posterior sample, before vs after"],
         ["Carbon", "tCO<sub>2</sub>e/yr with CI", "Per-fuel savings × documented emission factors"],
-        ["Value impact", "+2–5% range, indicative", "Posterior predictive of the value model, before vs after"],
+        ["Value impact", "+2–5% range, indicative (historical association, not a promised increase)", "Posterior predictive of the value model, recorded band vs estimated band after"],
         ["Retrofit suitability", "High / Medium / Low", "P(suitable) = P(feasible) × P(net benefit): ≥ 0.8 High, 0.5–0.8 Medium"],
         ["Data confidence", "High / Medium / Low", "Months of meter data, EPC age, imputed fields; drives interval width"],
     ], [36 * mm, 58 * mm, 76 * mm], zebra=True)
@@ -438,11 +452,18 @@ def build():
     H1("8. Energy savings and carbon")
     P("Savings are estimated per retrofit (marginal, in sequence) and for the package, separately for electricity and gas, "
       "against one consistent baseline. An increase is a negative saving: a heat pump removes gas use and adds electricity. "
-      "Carbon is ΔC = Σ<sub>f</sub> ΔE<sub>f</sub> × EF<sub>f</sub> with DESNZ 2025 conversion factors (electricity about "
-      "0.177 kgCO<sub>2</sub>e/kWh; gas on a gross calorific basis to match meter readings; both to be confirmed against the "
-      "official tables, with units and source recorded). All savings are labelled estimates, not guarantees.")
-    story.append(PageBreak())
-
+      "All savings are labelled estimates, not guarantees.")
+    table([
+        ["Input", "Value used", "Source (verified 10 Oct 2026)"],
+        ["Electricity factor", "0.19553 kgCO<sub>2</sub>e/kWh = generation 0.177 + transmission and distribution 0.01853", "DESNZ GHG conversion factors 2025, flat file rows 7_400_4000_5_1 and 13_402_4000_5_1"],
+        ["Gas factor", "0.18296 kgCO<sub>2</sub>e/kWh, gross calorific value (matches meter kWh)", "DESNZ 2025, row 1_100_1004_6_1"],
+        ["Tariffs", "Electricity 26.32 p/kWh, gas 7.97 p/kWh (1 Oct – 31 Dec 2026)", "Ofgem price cap announcement"],
+        ["Retrofit costs", "BEIS 2017 Table 3 low / mean / high per home × CPI 1.3888 (ONS D7BT, 2017 → Aug 2026)", "BEIS Domestic cost assumptions (2017); ONS CPI"],
+        ["Heat pump, PV costs", "£12,500 per 8 kW heat pump; £1,876 per kW PV (up to 4 kW)", "DESNZ data as reported by Which? and pv magazine; marked secondary until confirmed"],
+    ], [30 * mm, 70 * mm, 70 * mm], zebra=True)
+    P("Carbon is ΔC = Σ<sub>f</sub> ΔE<sub>f</sub> × EF<sub>f</sub>. Any figure without a documented source is not shown: "
+      "unsourced retrofit costs (triple and secondary glazing, storage heaters, batteries) return no cost and are left out "
+      "of cost-based ranking, and a fuel without a sourced factor returns no carbon figure, each with the reason.", "small")
     # 9 Value
     H1("9. Property value impact")
     P("Value impact is always a range and always labelled an indicative estimate based on historical and market "
@@ -452,7 +473,8 @@ def build():
         "rooms and energy information) plus the UK House Price Index for market conditions. The current valuation used "
         "as baseline is kept separate from historical sale prices.",
         "<b>Hedonic quantile model.</b> Price quantiles from location, size, type, age, period and EPC band; predict the "
-        "same home before and after the proposed improvements, holding everything else constant.",
+        "same home before and after the proposed improvements, holding everything else constant; the band after "
+        "retrofit comes from the documented rating estimator (section 4).",
         "<b>Green-twin matching.</b> Pairs of real homes that match on type, built form, age band, tenure, LSOA, sale "
         "quarter and floor area (±10%) but differ by at least 15 score points; balance checked (standardised mean "
         "difference &lt; 0.1). Measures the price and running-cost difference per 10 points, benchmarked against "
@@ -497,6 +519,7 @@ def build():
     table([
         ["Model", "Kind", "Purpose", "Baseline"],
         ["Green Home Score", "Deterministic", "Score, band, contributions", "—"],
+        ["Post-retrofit rating estimator", "SAP 2012 ECF on twin", "Estimated rating and band after retrofit", "No change"],
         ["Level-1 twin + synthetic generator", "Physics / simulator", "Per-fuel energy, element heat loss, labels", "NEED medians"],
         ["Energy-intensity EBM", "Glass-box ML", "Expected kWh/m² per fuel; prior and residual", "XGBoost; NEED median"],
         ["Bayesian calibration", "NumPyro hierarchical", "Posterior parameters → intervals", "LightGBM quantile; conformal"],
@@ -536,7 +559,9 @@ def build():
         "Level-1 heat loss per element. Every retrofit can be added and appears on the model: insulation layers in the "
         "loft and walls, new windows, the heat-pump unit outside and cylinder inside, panels on the best roof face, a "
         "thermostat on the wall. Infeasible items are greyed out with the reason. A live panel shows score, per-fuel kWh, "
-        "carbon, bills and value with intervals; a timeline plays the staged retrofit path year by year.",
+        "carbon, bills and value with intervals; a timeline plays the staged retrofit path year by year. Element colours "
+        "are labelled 'estimated from home type and EPC descriptions; only the total heat loss is calibrated to your bills', "
+        "because monthly bills cannot identify losses element by element.",
         "<b>Customer app.</b> Home profile, score and contribution waterfall, retrofit plan, Pareto chart, green-loan "
         "view, \"green twins of your home\" (matched greener homes shown as ranges, never addresses), what-if chat and "
         "plan history.",
@@ -554,7 +579,7 @@ def build():
         ["Calibration", "Coverage ≈ 90%; flat PIT; R-hat &lt; 1.01", "Quantile regression; conformal"],
         ["Improvement ranking", "Spearman / NDCG", "Rank by total consumption"],
         ["Recommendations", "Precision@k vs feasibility labels; zero infeasible recommended", "Recommend everything"],
-        ["Value", "Interval coverage on held-out sales; recovery of a known synthetic premium", "Hedonic OLS"],
+        ["Value", "Interval coverage on held-out sales; method check only: recovery of a premium we inserted into synthetic values", "Hedonic OLS"],
         ["Score", "Monotonicity sweep: 0 violations; reproducibility", "—"],
         ["LLM", "Groundedness ≥ 90%, accuracy ≥ 90%, unsupported &lt; 5% on 30–100 adversarial scenarios", "LLM without validator"],
         ["Pareto", "Hypervolume", "Greedy kWh per £"],
@@ -575,10 +600,25 @@ def build():
         "becomes a survey, not an automatic answer.",
         "<b>Limits stated.</b> Synthetic labels, observational value effects and vendor model claims are labelled as such.",
     ])
+    H1("17. Compliance with the brief")
+    table([
+        ["Constraint (brief section)", "How GreenTwin meets it"],
+        ["Figures only from documented models (core rule)", "Level-1 twin, score mapping, rating estimator, value models; LLM is tool-only with a numeric validator"],
+        ["Projected score and value need a rating after retrofit (2, 7)", "Documented SAP 2012 ECF estimator anchored to the recorded SAP; labelled 'estimated rating, not an EPC'"],
+        ["Intensity = annualised metered energy per m² (2)", "Exactly that; weather-normalised only as a sensitivity"],
+        ["Justify inputs affecting two components (2)", "Fabric/heating vs rating and PV vs intensity justified; PV overlap size reported"],
+        ["Documented, monotonic sub-score mappings (2)", "Every heating system mapped (test-enforced); monotonicity tests"],
+        ["Per-fuel savings, interactions, negative savings (3, 5)", "Twin reruns on packages; electricity and gas reported separately"],
+        ["Documented emission factors with units and source (6)", "DESNZ 2025 rows quoted; electricity incl. T&amp;D, gas gross CV"],
+        ["Retrofit catalogue source and assumptions (4)", "BEIS 2017 + ONS CPI; secondary and unsourced items flagged; no unsourced cost shown"],
+        ["Value as a range, indicative, causal limits (7, 9)", "Three methods, fixed wording, never a reason to borrow; sensitivity and refutation tests"],
+        ["Synthetic labels plausible, rules disclosed (9)", "Physics generator validated on NEED; synthetic premium only a method check; Green Profits is a scenario with no model trained on synthetic labels"],
+        ["No real personal or customer data (9)", "Public and synthetic data only; synthetic customer base labelled"],
+    ], [62 * mm, 108 * mm], zebra=True)
     story.append(PageBreak())
 
-    # 17 Plan
-    H1("17. Build plan and team")
+    # 18 Plan
+    H1("18. Build plan and team")
     P("Five members with clear ownership: Data & Geography; Physics & Bayesian; ML, Value & Causal; LLM, Knowledge base, "
       "Jev & API; Front-end & 3D. We build a thin end-to-end path first, then deepen in order of rubric weight × "
       "confidence; each checkpoint leaves a submittable system.", "lead")

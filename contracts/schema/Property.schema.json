@@ -403,6 +403,7 @@
         "air_source_heat_pump",
         "ground_source_heat_pump",
         "district_heating",
+        "communal_boiler",
         "solid_fuel"
       ],
       "title": "HeatingSystem",
@@ -656,7 +657,7 @@
   },
   "properties": {
     "schema_version": {
-      "default": "0.1.0",
+      "default": "0.2.0",
       "title": "Schema Version",
       "type": "string"
     },

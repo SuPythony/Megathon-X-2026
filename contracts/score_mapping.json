@@ -23,14 +23,17 @@
       "input": "EPC SAP score (1-100); if only band is known use band midpoint",
       "rule": "sub_score = SAP score (already 1-100, monotonic)",
       "band_midpoints": {"A": 96, "B": 86, "C": 75, "D": 62, "E": 47, "F": 30, "G": 10},
-      "justification": "Problem statement: energy efficiency must reflect the recorded energy rating."
+      "post_retrofit": "After a retrofit there is no lodged EPC: the sub-score uses the documented post-retrofit rating estimator (contracts/sap_estimator.json), labelled 'estimated rating, not an EPC'.",
+      "justification": "Problem statement: energy efficiency must reflect the recorded energy rating (or a documented rating-based measure)."
     },
     "energy_intensity": {
-      "input": "Annualised metered purchased energy (grid electricity import + gas) / floor area, kWh/m2/yr, weather-normalised to a typical year",
+      "input": "Annualised metered energy per m2, as defined in the problem statement: (grid electricity import + gas, kWh over the available months, annualised) / total floor area. NOT weather-normalised.",
+      "annualisation": "Sum of available months scaled to 12 months using each missing month's typical share of annual use (degree-day shares for gas, flat shares for electricity); months with no data are never treated as zero; < 6 months -> flagged low confidence; 0 months -> intensity unavailable, sub-score taken from the twin-modelled intensity with a warning and a wider interval.",
+      "sensitivity": "A weather-normalised intensity (typical-year degree days) is reported alongside as a sensitivity, not used in the score.",
       "points": [[50, 100], [100, 85], [150, 70], [200, 55], [250, 40], [300, 25], [400, 0]],
       "direction": "lower is better",
-      "missing_rule": "If < 6 months metered data: impute from twin posterior and flag; if none: use twin-modelled intensity, widen interval, add warning.",
-      "justification": "Metered, per m2, so large homes are not penalised for size; distinct from the rating-based component."
+      "justification": "Metered and per m2, so large homes are not penalised for size alone; distinct from the rating-based energy-efficiency component.",
+      "overlap_with_renewables": "Solar PV affects two components: renewable_energy credits installed generation capacity, and energy_intensity falls because PV self-consumption reduces metered grid import. We keep both because the problem statement defines intensity on metered energy and renewables as a separate lever. Justification: intensity measures what the home actually buys; renewables rewards on-site generation the meter does not see (exports and capacity). Disclosure: the evaluation reports the score with and without PV self-consumption added back to intensity, so the size of the overlap is visible."
     },
     "insulation": {
       "input": "Roof, walls, floor states",
@@ -49,7 +52,7 @@
       "input": "Main heating system (+ age for boilers)",
       "map": {
         "ground_source_heat_pump": 100, "air_source_heat_pump": 95, "district_heating": 70,
-        "gas_boiler_condensing": 55, "electric_storage_hhr": 50, "electric_storage": 35,
+        "gas_boiler_condensing": 55, "communal_boiler": 50, "electric_storage_hhr": 50, "electric_storage": 35,
         "gas_boiler_non_condensing": 30, "electric_direct": 30, "lpg_boiler": 25, "oil_boiler": 20, "solid_fuel": 5
       },
       "age_adjustment": "Boilers: -1 point per year over 12 years old, floor 0.",

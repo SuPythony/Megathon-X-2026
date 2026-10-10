@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "scenario_id": "SH2-pkg-mock",
   "property_id": "SH2",
   "provenance": {
@@ -98,17 +98,17 @@
     "unit": "%"
   },
   "carbon_saving_kgco2e": {
-    "mean": 2040,
-    "lo": 1900,
-    "hi": 2170,
+    "mean": 2010,
+    "lo": 1880,
+    "hi": 2140,
     "level": 0.9,
     "unit": "kgCO2e/yr"
   },
   "emission_factors": {
-    "electricity": 0.177,
-    "gas": 0.183
+    "electricity": 0.19553,
+    "gas": 0.18296
   },
-  "emission_factor_source": "MOCK - replace with DESNZ 2025 GHG conversion factors (verify gross/net CV)",
+  "emission_factor_source": "contracts/emission_factors.json (DESNZ 2025: elec generation + T&D; gas gross CV)",
   "bill_saving_gbp": {
     "mean": 560,
     "lo": 420,
@@ -141,8 +141,28 @@
     "key_issues": []
   },
   "retrofits": [],
+  "rating_after": {
+    "sap": {
+      "mean": 77,
+      "lo": 73,
+      "hi": 81,
+      "level": 0.9,
+      "unit": "SAP points"
+    },
+    "band": "C",
+    "band_probabilities": {
+      "C": 0.8,
+      "B": 0.15,
+      "D": 0.05
+    },
+    "anchored_to_recorded_sap": true,
+    "method": "sap2012_ecf_delta",
+    "label": "estimated rating, not an EPC"
+  },
   "value": {
     "current_value_gbp": 325000,
+    "band_before": "D",
+    "band_after": "C",
     "uplift_pct": {
       "mean": 3.0,
       "lo": 1.5,
@@ -158,33 +178,44 @@
       "unit": "GBP"
     },
     "method": "hedonic_quantile",
-    "label": "indicative"
+    "label": "indicative",
+    "wording": "Indicative range based on historical associations in sales data; not a promised or proven increase."
   },
   "element_heat_loss_before": [
     {
       "element": "walls",
       "heat_loss_w_per_k": 110,
-      "share_pct": 37
+      "share_pct": 37,
+      "estimated": true,
+      "basis": "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills"
     },
     {
       "element": "roof",
       "heat_loss_w_per_k": 45,
-      "share_pct": 15
+      "share_pct": 15,
+      "estimated": true,
+      "basis": "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills"
     },
     {
       "element": "windows",
       "heat_loss_w_per_k": 60,
-      "share_pct": 20
+      "share_pct": 20,
+      "estimated": true,
+      "basis": "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills"
     },
     {
       "element": "floor",
       "heat_loss_w_per_k": 35,
-      "share_pct": 12
+      "share_pct": 12,
+      "estimated": true,
+      "basis": "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills"
     },
     {
       "element": "ventilation",
       "heat_loss_w_per_k": 48,
-      "share_pct": 16
+      "share_pct": 16,
+      "estimated": true,
+      "basis": "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills"
     }
   ],
   "element_heat_loss_after": [],

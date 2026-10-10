@@ -1,0 +1,30 @@
+{
+  "_doc": "Emission factors used for ALL carbon figures. Verified 10 Oct 2026 against the DESNZ 2025 GHG conversion factors flat file (rows quoted by ID). Carbon = sum over fuels of delta_kWh x factor. Electricity at the meter = generation (Scope 2) + transmission & distribution (Scope 3) so that a kWh saved at the home is valued consistently. Gas uses the Gross CV factor because meter/bill kWh are on a gross calorific value basis. Well-to-tank factors are excluded (documented choice).",
+  "version": "2025.1",
+  "source": {
+    "publisher": "Department for Energy Security and Net Zero (DESNZ)",
+    "title": "Greenhouse gas reporting: conversion factors 2025 (flat format)",
+    "url": "https://assets.publishing.service.gov.uk/media/6846b6ea57f3515d9611f0dd/ghg-conversion-factors-2025-flat-format.xlsx",
+    "page": "https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025",
+    "accessed": "2026-10-10"
+  },
+  "units": "kgCO2e per kWh",
+  "factors": {
+    "electricity": {
+      "value": 0.19553,
+      "components": {
+        "generation_scope2": {"value": 0.177, "row_id": "7_400_4000_5_1", "label": "UK electricity, Electricity generated, Electricity: UK, kWh, kg CO2e"},
+        "transmission_distribution_scope3": {"value": 0.01853, "row_id": "13_402_4000_5_1", "label": "T&D- UK electricity, Electricity: UK, kWh, kg CO2e"}
+      }
+    },
+    "gas": {
+      "value": 0.18296,
+      "basis": "kWh (Gross CV)",
+      "row_id": "1_100_1004_6_1",
+      "label": "Fuels, Gaseous fuels, Natural gas, kWh (Gross CV), kg CO2e",
+      "net_cv_alternative": {"value": 0.2027, "row_id": "1_100_1004_7_1", "note": "Only if consumption is reported on a net CV basis"}
+    }
+  },
+  "not_yet_supported": ["oil", "lpg", "solid_fuel", "district_heating"],
+  "not_yet_supported_rule": "Homes whose main fuel is not electricity or mains gas get carbon_saving = null with a warning until a sourced factor is added here."
+}

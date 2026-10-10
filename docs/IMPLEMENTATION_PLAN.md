@@ -73,6 +73,10 @@ All modules exchange the Pydantic models in `contracts/models.py`. JSON on the w
   - `SaleRecord.price_gbp` is historical only.
   - They are never interchanged.
 - **Privacy:** location is the postcode district + LSOA, with lat/lon rounded to 3 dp. No full addresses, no names.
+- **Sourced inputs only:** carbon from `emission_factors.json`, bills from `tariffs.json`, costs only where `cost_status != unsourced`; otherwise the field is `null` with a reason.
+- **Post-retrofit rating:** `RatingEstimate` from `sap_estimator.json`, labelled "estimated rating, not an EPC"; it feeds the projected score and the value model's band-after.
+- **Value wording:** every value range shows `ValueImpact.wording` (indicative, historical association, not a promised increase).
+- See `AGENTS.md` → Compliance fixes for the full binding list.
 
 ### 3.2 Entities
 
@@ -153,12 +157,12 @@ The front end develops against `contracts/examples/*` and a mock server (`/scena
 
 ### 4.6 Economics and policy
 - Tariffs: Ofgem cap unit rates and standing charges (verify VAT basis); export tariff.
-- Retrofit costs (BEIS 2017 + CPI), lifetimes and maintenance.
+- Retrofit costs: `contracts/retrofit_catalogue.json` (BEIS 2017 Table 3 × ONS CPI 1.3888; heat pump and PV from secondary reports of DESNZ data; unsourced items return no cost). Lifetimes and maintenance.
 - Grants: BUS £7,500, or £9,000 off-gas to 31 Mar 2027; ECO4/GBIS, to verify.
 - Discount rate for NPV; loan APR and term for the green-finance view; MEES / EPC C context.
 
 ### 4.7 Carbon
-- DESNZ 2025 factors: electricity about 0.177 kgCO2e/kWh (verify).
+- `contracts/emission_factors.json`, verified against the DESNZ 2025 flat file: electricity 0.19553 kgCO2e/kWh (generation 0.177 + T&D 0.01853); gas 0.18296 kgCO2e/kWh (gross CV, matching meter kWh).
 - Gas: gross vs net CV, about 0.183 vs 0.2049. Meter kWh are gross CV, so use the gross factor (verify).
 - Projected grid factors for lifetime carbon.
 
@@ -189,20 +193,21 @@ The front end develops against `contracts/examples/*` and a mock server (`/scena
 
 | ID | Model | Kind | Inputs → Target | Data | Method / lib | Metric (held-out) | Baseline | Owner | Tier |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M01 | Green Home Score | Deterministic | Property + annualised intensity → score, band, contributions | — | `score_mapping.json` | Monotonicity sweep: 0 violations; reproducibility | — | P2 | A |
+| M01 | Green Home Score | Deterministic | Property + annualised **metered** intensity (brief definition, not weather-normalised) → score, band, contributions | — | `score_mapping.json` | Monotonicity sweep: 0 violations; reproducibility; PV-overlap sensitivity | — | P2 | A |
+| M01b | Post-retrofit rating estimator | Deterministic + posterior | Twin under standard conditions before/after × tariffs → SAP 2012 ECF → ΔSAP anchored to recorded SAP → `RatingEstimate` (SAP interval, band, band probabilities) | EPC + twin | `sap_estimator.json` | Predicted vs lodged ΔSAP on homes with repeat EPCs: MAE, coverage | No-change baseline | P2 | A |
 | M02 | Twin v1 (steady-state RC element model) | Physics | U·A per element, ventilation, degree days, system efficiency/COP, PV yield → per-fuel kWh, element heat loss | RdSAP defaults, PVGIS | numpy | Error vs NEED intensity distributions | NEED medians | P2 | A |
 | M03 | Synthetic generator | Simulator | Sampled homes (EPC/EHS joint dists) + weather + behaviour noise → monthly usage, per-retrofit reference labels, synthetic values | EPC, EHS, NEED priors, M10 | numpy | Distribution match vs NEED (KS test, quantiles) | — | P2 | A |
 | M04 | Energy-intensity model | ML | Property + weather/geo features → annual elec & gas kWh/m2 (homes without meters; prior mean) | NEED 50k (real) + EPC | **EBM** (InterpretML), XGBoost baseline | MAE/MAPE per fuel, 90% coverage (conformal) | NEED median by type/age/region | P3 | A |
 | M05 | Improvement-potential ranking | Derived + check | Twin before/after feasible package → % purchased-energy reduction | Synthetic labels | Twin + LightGBM ranker (ablation) | Spearman/NDCG vs reference | Rank by total kWh | P3 | A |
-| M06 | Value model | ML | Size, type, age, location, period, HPI, EPC band → price quantiles | UCL EPC–PPD linked | EBM / LightGBM quantile + conformal | Interval coverage, pinball loss | Hedonic OLS without band | P3 | A |
+| M06 | Value model | ML | Size, type, age, location, period, HPI, EPC band → price quantiles; 'after' uses `band_after` from M01b | UCL EPC–PPD linked | EBM / LightGBM quantile + conformal | Interval coverage, pinball loss | Hedonic OLS without band | P3 | A |
 | M07 | Retrofit relevance prior | ML | Property features → P(EPC would recommend measure X) | EPC recommendations table | EBM classifier per measure | AUC, precision@k vs EPC recs | Rules only | P3 | B |
 | M08 | Missing-month imputation | Stats | Available months + HDD → missing months | NEED/London subsample (masked) | Degree-day regression (GP stretch) | MAE on masked months | ×12 seasonal-naive | P2 | C |
 | M09 | Bayesian calibration | Bayesian | Priors on UA, setpoint, baseload, COP + monthly meter data → posterior samples | Showcase + NEED-like synthetic + real where meters exist | NumPyro NUTS offline, SVI per home; hierarchy type×region | 90% coverage ≈ 90%, CRPS, R-hat < 1.01 | LightGBM quantile; conformal | P2 | C |
 | M10 | Green-twin matching | Causal (design) | Matched pairs on type/form/age/tenure/LSOA/quarter/area → Δlog price, Δcost per 10 score pts | UCL linked | CEM + NN matching, bootstrap | SMD < 0.1, CI width, vs Nationwide/DECC | Hedonic coefficient | P3 | C |
-| M11 | DR-learner value uplift | Causal ML | Repeat sales, treatment = band improved → CATE on Δlog price | UCL linked | EconML DRLearner (+ BCF optional) | Recovery of known synthetic premium; BLP/GATES; refutations | Matching (M10) | P3 | C |
+| M11 | DR-learner value uplift | Causal ML | Repeat sales, treatment = band improved → CATE on Δlog price | UCL linked | EconML DRLearner (+ BCF optional) | Method check only: recovery of the premium we inserted into synthetic values (not evidence of real uplift); BLP/GATES; refutations | Matching (M10) | P3 | C |
 | M12 | Pareto optimiser | Optimisation | Feasible subsets × posterior samples → front, P(on front), knee, staging | M02/M09 | Enumeration + non-dominated sort; DP staging | Hypervolume vs greedy | Greedy kWh/£ | P3 | C |
 | M13 | Jev threshold calibration | Calibration | Jev confidences on labelled routes/feasibility → calibrated P | ~50 prompts, ~200 home×retrofit pairs | Isotonic regression | ECE, reliability, routing accuracy ≥ 95% above τ | Claude structured output | P4 | C |
-| M14 | Lloyds take-up / uplift | ML (synthetic) | Synthetic customer features → P(take-up), uplift | Synthetic customer base | EconML/CausalML uplift | Qini/AUUC | Random targeting | P3 | Could |
+| M14 | Green Profits take-up | **Scenario rule, not trained** | Improvement potential, bill saving, tenure, deprivation decile → P(take-up) via documented logistic rule with assumed coefficients (sliders) | `green_profits_assumptions.json` | Monte Carlo over assumption ranges | Sensitivity of profit to each assumption | — | P3 | C |
 | M15 | NEED savings CATE | Causal ML | Insulation installed (treatment) → Δgas | NEED 50k | DR/X-learner | vs twin predictions by archetype | Twin only | P3 | Could |
 | M16 | Differentiable RC graph (twin v2) | Physics-ML | EPC element features → conductances/capacitances (MLP/GNN) → hourly ODE | Meter data + synthetic | PyTorch + torchdiffeq (GPU) | Per-fuel MAE, monotonic sweep | Twin v1 | P2 | D |
 | M17 | DeepONet surrogate | Neural operator | Weather series + twin params → hourly series | Synthetic from M16 | DeepXDE/PyTorch (GPU) | Rel. L2, speed-up, 0 monotonic violations | GP emulator | P2 | D |
@@ -229,7 +234,7 @@ Order follows the build order in the strategy report. Each checkpoint leaves a s
 | A1 | Env: `uv` + Python 3.12; `uv sync`; CI runs `pytest` | P4 | Fresh clone → tests green |
 | A2 | Data downloads: EPC (regions: North West, South West, London), NEED 50k, UCL linked (854942 / 857911), UK HPI, Open-Meteo/HadUK-Grid HDD, ONS postcode→LSOA. Record licences in `docs/DATA.md` | P1 | Parquet + meta.json present; licences documented |
 | A3 | Splits by customer/property; leakage field audit | P1 | `splits.py` + test that no id spans splits |
-| A4 | Score module (M01) from `score_mapping.json` + monotonic sweep test | P2 | Showcase scores computed; tests pass |
+| A4 | Score module (M01) from `score_mapping.json` + monotonic sweep test; post-retrofit rating estimator (M01b) | P2 | Showcase scores computed; score_after uses `RatingEstimate`; tests pass |
 | A5 | Twin v1 (M02): element heat loss, per-fuel conversion, PV via PVGIS, emission factors config | P2 | SH1–SH3 baselines within ±15% of their metered annual totals |
 | A6 | Rules engine + catalogue loader + ordering (`feasibility_rules.json`) | P4 | SH1 blocks EWI; SH3 blocks loft/PV, ASHP = needs_survey |
 | A7 | `run_scenario` assembling `ScenarioResult`; DuckDB store; mock server for UI | P4 | Real result for SH1–SH3 validates against contracts |
@@ -261,7 +266,7 @@ Order follows the build order in the strategy report. Each checkpoint leaves a s
 | C9 | Customer memory + agent capture v1 (photo upload, manual tags, agent confirmation) | P4 + P5 |
 
 ### Tier D — stretch (only after Checkpoint C)
-M16 → M17 → M18/M19/M20, UKCP18 lifetime savings and the overheating flag, GP discrepancy, M14/M15.
+M16 → M17 → M18/M19/M20, UKCP18 lifetime savings and the overheating flag, GP discrepancy, M15. (No take-up model is trained on synthetic labels.)
 
 ### Parallel start
 - **P1:** A2 → A3 → C1 → C4.
@@ -340,7 +345,7 @@ M16 → M17 → M18/M19/M20, UKCP18 lifetime savings and the overheating flag, G
 | --- | --- | --- |
 | Onboarding / home profile | EPC lookup by postcode (EPC API) or manual form; optional photos; constraints and preferences | `Property` draft → `POST /homes` |
 | Score | Score + band with interval, band probabilities, **waterfall of 7 component contributions**, key issues, data-confidence badge, warnings | `ScoreResult` |
-| 3D twin | Outside/inside cutaway, thermal X-ray (element heat-loss share), before/after split, retrofit palette (feasible / needs survey / blocked with reason), live numbers panel, timeline scrubber, sun path, weather slider | `ScenarioResult.element_heat_loss_*`, `retrofits[]`, cached packages |
+| 3D twin | Outside/inside cutaway, thermal X-ray (element heat-loss share, always labelled "estimated from home type and EPC descriptions; only the total is calibrated to bills"), before/after split, retrofit palette (feasible / needs survey / blocked with reason), live numbers panel, timeline scrubber, sun path, weather slider | `ScenarioResult.element_heat_loss_*`, `retrofits[]`, cached packages |
 | Retrofit plan | Prioritised list with suitability, per-fuel marginal savings (negative shown red), carbon, bills, cost, grants; staged roadmap | `RetrofitEffect[]` |
 | Pareto | Cost vs CO2 scatter (colour = value uplift, size = P(on front)), knee highlighted, budget slider; click → loads the package into 3D | `ParetoPoint[]` |
 | Green loan | Package cost − grants = indicative loan; repayment vs monthly bill saving; value range; "book adviser". Disclaimer: illustrative, not an offer | `ScenarioResult` + loan assumptions |
@@ -366,7 +371,7 @@ M16 → M17 → M18/M19/M20, UKCP18 lifetime savings and the overheating flag, G
   - Grant eligibility (off-gas).
   - Lloyds customer density (synthetic).
 - **Segments table**: size, average loan need, take-up probability, carbon potential.
-- **Green Profits view**: lending margin + retention + acquisition − costs. Sliders for assumptions; Monte Carlo ranges; financed-emissions reduction alongside.
+- **Green Profits view**: lending margin + retention + acquisition − costs. Take-up from the documented scenario rule (`green_profits_assumptions.json`); every coefficient is a labelled assumption on a slider; Monte Carlo ranges; financed-emissions reduction alongside; labelled "illustrative scenario, not a forecast".
 - **Funnel**: users → profiles → plans → visits → applications → loans; cost per acquired customer.
 - Everything is labelled "synthetic customer base".
 

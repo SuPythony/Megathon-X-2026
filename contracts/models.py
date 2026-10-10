@@ -24,7 +24,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
-SCHEMA_VERSION = "0.1.0"
+SCHEMA_VERSION = "0.2.0"
 
 
 # --------------------------------------------------------------------------- #
@@ -43,7 +43,7 @@ class Interval(BaseModel):
 class Provenance(BaseModel):
     """Where a number came from. Every result carries one."""
 
-    engine: Literal["physics_l1", "surrogate_deeponet", "ebm", "xgboost", "hedonic", "dr_learner", "rules", "mock"]
+    engine: Literal["physics_l1", "surrogate_deeponet", "sap_estimator", "ebm", "xgboost", "hedonic", "dr_learner", "rules", "mock"]
     model_version: str
     data_version: str
     seed: Optional[int] = None
@@ -117,6 +117,7 @@ class HeatingSystem(str, Enum):
     air_source_heat_pump = "air_source_heat_pump"
     ground_source_heat_pump = "ground_source_heat_pump"
     district_heating = "district_heating"
+    communal_boiler = "communal_boiler"
     solid_fuel = "solid_fuel"
 
 
@@ -293,8 +294,13 @@ class RetrofitItem(BaseModel):
     depends_on: list[str] = Field(default_factory=list, description="Should come after these (ordering)")
     excludes: list[str] = Field(default_factory=list, description="Mutually exclusive retrofits")
     cost_gbp_low: Optional[float] = None
+    cost_gbp_central: Optional[float] = None
     cost_gbp_high: Optional[float] = None
     cost_basis: str = Field("per_home", description="per_home | per_m2 | per_kwp | per_window")
+    cost_price_year: Optional[str] = None
+    cost_status: Literal["sourced", "secondary_source", "unsourced"] = Field(
+        "unsourced", description="unsourced -> no cost figure is ever shown (cost = null + reason)"
+    )
     lifetime_years: Optional[int] = None
     grants: list[str] = Field(default_factory=list)
     sizing: Optional[dict[str, float]] = Field(None, description="Continuous sizing bounds, e.g. {'kwp_min':1,'kwp_max':6}")
@@ -331,7 +337,12 @@ class EnergyBreakdown(BaseModel):
     space_heating_kwh: Optional[Interval] = None
     hot_water_kwh: Optional[Interval] = None
     pv_generation_kwh: Optional[Interval] = None
-    intensity_kwh_m2: Interval
+    intensity_kwh_m2: Interval = Field(
+        description="Annualised METERED energy (grid import + gas) / floor area, as defined in the brief; used by the score"
+    )
+    intensity_weather_normalised_kwh_m2: Optional[Interval] = Field(
+        None, description="Sensitivity only; never used in the score"
+    )
 
 
 class ScoreComponent(BaseModel):
@@ -371,18 +382,36 @@ class RetrofitEffect(BaseModel):
     carbon_saving_kgco2e: Interval
     bill_saving_gbp: Interval
     cost_gbp: Optional[Interval] = None
+    cost_unavailable_reason: Optional[str] = Field(None, description="Set when the catalogue cost is unsourced")
     p_net_benefit: float = Field(ge=0, le=1)
     p_suitable: float = Field(ge=0, le=1, description="p_feasible * p_net_benefit")
     suitability: Literal["High", "Medium", "Low"]
     reason: str = Field(description="Short human-readable reason built from rule codes/KB, not LLM")
 
 
+class RatingEstimate(BaseModel):
+    """Post-retrofit EPC-style rating from contracts/sap_estimator.json. Never presented as an EPC."""
+
+    sap: Interval
+    band: Literal["A", "B", "C", "D", "E", "F", "G"]
+    band_probabilities: dict[str, float] = Field(default_factory=dict)
+    anchored_to_recorded_sap: bool = Field(description="False when the home has no recorded EPC")
+    method: Literal["sap2012_ecf_delta"] = "sap2012_ecf_delta"
+    label: Literal["estimated rating, not an EPC"] = "estimated rating, not an EPC"
+
+
 class ValueImpact(BaseModel):
     current_value_gbp: Optional[float]
+    band_before: Optional[str] = Field(None, description="Recorded EPC band")
+    band_after: Optional[str] = Field(None, description="From RatingEstimate (sap_estimator), not a lodged EPC")
     uplift_pct: Optional[Interval] = None
     value_after_gbp: Optional[Interval] = None
     method: Literal["hedonic_quantile", "dr_learner", "green_twin_matching", "unavailable"]
     label: Literal["indicative"] = "indicative"
+    wording: str = Field(
+        "Indicative range based on historical associations in sales data; not a promised or proven increase.",
+        description="Must accompany every display of the value range",
+    )
     unavailable_reason: Optional[str] = None
 
 
@@ -394,6 +423,11 @@ class ElementHeatLoss(BaseModel):
     share_pct: float
     u_value: Optional[float] = None
     area_m2: Optional[float] = None
+    estimated: bool = Field(True, description="Per-element split comes from priors, not measurement")
+    basis: str = Field(
+        "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills",
+        description="Label shown wherever element colours/values are displayed",
+    )
 
 
 class ParetoPoint(BaseModel):
@@ -420,12 +454,16 @@ class ScenarioResult(BaseModel):
         None, description="100*(E_base - E_after)/E_base on purchased energy; null if baseline 0/unavailable"
     )
     improvement_potential_unavailable_reason: Optional[str] = None
-    carbon_saving_kgco2e: Interval
-    emission_factors: dict[str, float] = Field(description="kgCO2e/kWh used, e.g. {'electricity':0.177,'gas':0.183}")
+    carbon_saving_kgco2e: Optional[Interval] = Field(None, description="Null if a fuel has no sourced factor")
+    carbon_unavailable_reason: Optional[str] = None
+    emission_factors: dict[str, float] = Field(
+        description="kgCO2e/kWh from contracts/emission_factors.json, e.g. {'electricity':0.19553,'gas':0.18296}"
+    )
     emission_factor_source: str
     bill_saving_gbp: Interval
     score_before: ScoreResult
-    score_after: ScoreResult
+    score_after: ScoreResult = Field(description="Uses rating_after (estimated) for the energy-efficiency component")
+    rating_after: Optional[RatingEstimate] = None
     retrofits: list[RetrofitEffect] = Field(default_factory=list)
     value: ValueImpact
     element_heat_loss_before: list[ElementHeatLoss] = Field(default_factory=list)

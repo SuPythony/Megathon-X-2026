@@ -57,3 +57,55 @@ def test_classification_covers_0_to_100():
     for b in MAPPING["classification"]:
         covered.update(range(b["min"], b["max"] + 1))
     assert covered == set(range(0, 101))
+
+
+# --------------------------------------------------------------------------- compliance checks
+from contracts.models import HeatingSystem, RetrofitItem  # noqa: E402
+
+CONTRACTS = ROOT / "contracts"
+
+
+def _load(name):
+    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
+
+
+def test_heating_mapping_covers_every_heating_system():
+    mapped = set(MAPPING["components"]["heating_system"]["map"])
+    assert {h.value for h in HeatingSystem} <= mapped
+
+
+def test_emission_factors_are_sourced_and_consistent():
+    ef = _load("emission_factors.json")
+    assert ef["source"]["url"].startswith("https://assets.publishing.service.gov.uk/")
+    elec = ef["factors"]["electricity"]
+    comp = sum(c["value"] for c in elec["components"].values())
+    assert abs(comp - elec["value"]) < 1e-9
+    assert ef["factors"]["gas"]["basis"] == "kWh (Gross CV)"
+
+
+def test_catalogue_costs_are_gated_by_status():
+    cat = _load("retrofit_catalogue.json")
+    for item in cat["items"]:
+        it = RetrofitItem.model_validate(item)
+        has_cost = any(v is not None for v in (it.cost_gbp_low, it.cost_gbp_central, it.cost_gbp_high))
+        if it.cost_status == "unsourced":
+            assert not has_cost, f"{it.id}: unsourced item must not carry a cost"
+        else:
+            assert has_cost and it.source and "TO_SOURCE" not in it.source, it.id
+
+
+def test_intensity_definition_is_metered_not_weather_normalised():
+    c = MAPPING["components"]["energy_intensity"]
+    assert "NOT weather-normalised" in c["input"]
+    assert "overlap_with_renewables" in c
+
+
+def test_sap_estimator_documented():
+    sap = _load("sap_estimator.json")
+    assert sap["label"].startswith("Estimated rating, not an EPC")
+    assert set(sap["band_thresholds"]) == set("ABCDEFG")
+
+
+def test_green_profits_is_scenario_not_trained():
+    gp = _load("green_profits_assumptions.json")
+    assert all(v["status"] == "assumption" for v in gp["take_up_rule"]["coefficients"].values())
