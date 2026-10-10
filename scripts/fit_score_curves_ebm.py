@@ -40,6 +40,7 @@ def main() -> None:
     ap.add_argument("--epc-dir", default="data/interim/epc25")
     ap.add_argument("--n", type=int, default=300_000)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--target", default="sap", choices=["sap", "eir"], help="sap = cost rating, eir = carbon rating")
     a = ap.parse_args()
     from interpret.glassbox import ExplainableBoostingRegressor
 
@@ -56,9 +57,10 @@ def main() -> None:
             "pv_kwp_est": 1, "low_energy_lighting_pct": 1}
     ebm = ExplainableBoostingRegressor(random_state=a.seed, interactions=0,
                                        monotone_constraints=[mono.get(c, 0) for c in RAW])
-    ebm.fit(X(tr), tr["sap"])
+    y = a.target
+    ebm.fit(X(tr), tr[y])
     pred = ebm.predict(X(te))
-    r2 = 1 - np.sum((te["sap"] - pred) ** 2) / np.sum((te["sap"] - te["sap"].mean()) ** 2)
+    r2 = 1 - np.sum((te[y] - pred) ** 2) / np.sum((te[y] - te[y].mean()) ** 2)
 
     terms = ebm.eval_terms(X(te))  # per-home additive contribution of each term
     contrib = pd.DataFrame(terms, columns=ebm.term_names_, index=te.index)
@@ -73,11 +75,19 @@ def main() -> None:
     heat = (pd.DataFrame({"h": te["heating_system"], "ebm": contrib["heating_system"], "ours": te["s_heating_system"]})
             .groupby("h").agg(ebm_points=("ebm", "mean"), our_sub_score=("ours", "mean"), n=("ebm", "size"))
             .sort_values("ebm_points").round(2))
-    out = ROOT / "artifacts" / "score_curves" / "v1"
+    # learned loft curve: mean EBM points per recorded depth (does the benefit saturate?)
+    loft = (pd.DataFrame({"mm": te["loft_mm"], "ebm": contrib["loft_mm"], "ours": te["s_roof"]}).dropna()
+            .groupby("mm").agg(ebm_points=("ebm", "mean"), our_sub_score=("ours", "mean"), n=("ebm", "size"))
+            .query("n >= 50").round(2))
+    out = ROOT / "artifacts" / "score_curves" / "v1" / y
     out.mkdir(parents=True, exist_ok=True)
-    res = {"n_train": len(tr), "n_test": len(te), "r2_test_sap": round(float(r2), 4), "term_importance": imp,
-           "spearman_ebm_term_vs_our_subscore": agree, "heating_system_ebm_vs_ours": heat.reset_index().to_dict("records"),
-           "seed": a.seed}
+    res = {"target": y, "n_train": len(tr), "n_test": len(te), "r2_test": round(float(r2), 4), "term_importance": imp,
+           "spearman_ebm_term_vs_our_subscore": agree,
+           "tautological_terms": ["s_walls", "s_floor", "s_windows_glazing", "s_smart_energy_management"],
+           "tautology_note": "these terms take our sub-score as input, so a monotone EBM preserves its rank by "
+                             "construction; only loft_mm, heating_system and pv_kwp_est are independent checks",
+           "heating_system_ebm_vs_ours": heat.reset_index().to_dict("records"),
+           "loft_curve_ebm_vs_ours": loft.reset_index().to_dict("records"), "seed": a.seed}
     (out / "metrics.json").write_text(json.dumps(res, indent=2, default=float))
     print(json.dumps(res, indent=2, default=float))
 

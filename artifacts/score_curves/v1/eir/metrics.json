@@ -1,0 +1,199 @@
+{
+  "target": "eir",
+  "n_train": 210454,
+  "n_test": 44762,
+  "r2_test": 0.6133,
+  "term_importance": {
+    "loft_mm": 1.535,
+    "s_walls": 4.258,
+    "s_floor": 4.108,
+    "s_windows_glazing": 0.806,
+    "heating_system": 1.815,
+    "s_smart_energy_management": 1.634,
+    "pv_kwp_est": 1.424,
+    "low_energy_lighting_pct": 1.535
+  },
+  "spearman_ebm_term_vs_our_subscore": {
+    "loft_mm": 0.56,
+    "s_walls": 1.0,
+    "s_floor": 1.0,
+    "s_windows_glazing": 1.0,
+    "heating_system": 0.912,
+    "s_smart_energy_management": 1.0,
+    "pv_kwp_est": 0.932
+  },
+  "tautological_terms": [
+    "s_walls",
+    "s_floor",
+    "s_windows_glazing",
+    "s_smart_energy_management"
+  ],
+  "tautology_note": "these terms take our sub-score as input, so a monotone EBM preserves its rank by construction; only loft_mm, heating_system and pv_kwp_est are independent checks",
+  "heating_system_ebm_vs_ours": [
+    {
+      "h": "oil_boiler",
+      "ebm_points": -15.45,
+      "our_sub_score": 20.0,
+      "n": 1268
+    },
+    {
+      "h": "gas_boiler_non_condensing",
+      "ebm_points": -8.15,
+      "our_sub_score": 30.0,
+      "n": 189
+    },
+    {
+      "h": "electric_storage",
+      "ebm_points": -7.32,
+      "our_sub_score": 35.0,
+      "n": 1402
+    },
+    {
+      "h": "electric_storage_hhr",
+      "ebm_points": -6.25,
+      "our_sub_score": 50.0,
+      "n": 541
+    },
+    {
+      "h": "lpg_boiler",
+      "ebm_points": -4.99,
+      "our_sub_score": 25.0,
+      "n": 255
+    },
+    {
+      "h": "solid_fuel",
+      "ebm_points": -4.98,
+      "our_sub_score": 5.0,
+      "n": 104
+    },
+    {
+      "h": "electric_direct",
+      "ebm_points": -1.33,
+      "our_sub_score": 30.0,
+      "n": 3066
+    },
+    {
+      "h": "gas_boiler_unknown_condensing",
+      "ebm_points": 0.54,
+      "our_sub_score": 42.5,
+      "n": 33329
+    },
+    {
+      "h": "gas_boiler_condensing",
+      "ebm_points": 1.53,
+      "our_sub_score": 55.0,
+      "n": 995
+    },
+    {
+      "h": "ground_source_heat_pump",
+      "ebm_points": 4.69,
+      "our_sub_score": 100.0,
+      "n": 71
+    },
+    {
+      "h": "district_heating",
+      "ebm_points": 4.7,
+      "our_sub_score": 70.0,
+      "n": 2228
+    },
+    {
+      "h": "air_source_heat_pump",
+      "ebm_points": 7.9,
+      "our_sub_score": 95.0,
+      "n": 1314
+    }
+  ],
+  "loft_curve_ebm_vs_ours": [
+    {
+      "mm": 0.0,
+      "ebm_points": -9.92,
+      "our_sub_score": 0.0,
+      "n": 2272
+    },
+    {
+      "mm": 25.0,
+      "ebm_points": -5.12,
+      "our_sub_score": 12.5,
+      "n": 110
+    },
+    {
+      "mm": 50.0,
+      "ebm_points": -2.51,
+      "our_sub_score": 25.0,
+      "n": 517
+    },
+    {
+      "mm": 75.0,
+      "ebm_points": -1.5,
+      "our_sub_score": 35.0,
+      "n": 771
+    },
+    {
+      "mm": 100.0,
+      "ebm_points": -1.41,
+      "our_sub_score": 45.0,
+      "n": 4071
+    },
+    {
+      "mm": 125.0,
+      "ebm_points": -0.77,
+      "our_sub_score": 55.0,
+      "n": 225
+    },
+    {
+      "mm": 150.0,
+      "ebm_points": -0.77,
+      "our_sub_score": 65.0,
+      "n": 3072
+    },
+    {
+      "mm": 175.0,
+      "ebm_points": -0.08,
+      "our_sub_score": 72.5,
+      "n": 217
+    },
+    {
+      "mm": 200.0,
+      "ebm_points": -0.08,
+      "our_sub_score": 80.0,
+      "n": 4841
+    },
+    {
+      "mm": 225.0,
+      "ebm_points": 0.25,
+      "our_sub_score": 87.14,
+      "n": 216
+    },
+    {
+      "mm": 250.0,
+      "ebm_points": 0.25,
+      "our_sub_score": 94.29,
+      "n": 3120
+    },
+    {
+      "mm": 270.0,
+      "ebm_points": 0.26,
+      "our_sub_score": 100.0,
+      "n": 1785
+    },
+    {
+      "mm": 300.0,
+      "ebm_points": 0.49,
+      "our_sub_score": 100.0,
+      "n": 3478
+    },
+    {
+      "mm": 350.0,
+      "ebm_points": 0.62,
+      "our_sub_score": 100.0,
+      "n": 535
+    },
+    {
+      "mm": 400.0,
+      "ebm_points": 1.45,
+      "our_sub_score": 100.0,
+      "n": 583
+    }
+  ],
+  "seed": 42
+}

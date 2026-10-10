@@ -30,6 +30,7 @@ Branch: `worktree-p3-green-score`. Research background: `docs/score/GREEN_SCORE_
 | D-20 | EPC targets are era-specific (fuel prices, carbon factors): fit final weights on the RdSAP 10 era only; other eras = stability check | Decided (raised by user, 11 Oct 2026) |
 | D-21 | Priors fitted from real data (band mix, loft depth by age, NEED peer kWh/m²) | Done |
 | D-22 | Missing `PHOTO_SUPPLY` = unknown PV, not "no PV" (bug found in v1 results) | Fixed |
+| D-23 | EBM curve check: loft curve too linear (data + physics: diminishing returns); heating map between cost and carbon orderings | Findings; loft change **proposed** |
 
 ---
 
@@ -144,6 +145,22 @@ Dev evidence of the effect (10% sample): SAP-target heating weight 0.590 in the 
 
 ## D-22 Missing PV field is unknown, not zero
 The first full v1 run gave renewables a weight of 0.020, and exactly 0 on both carbon targets. Investigation (2026 certificates, 25% sample, n = 345,722): `PHOTO_SUPPLY` is null on 14.8% of rows, and on **100% of new-build SAP certificates** (report type 3) vs 4.1% of RdSAP ones. Those homes average SAP 84.5 vs 68.3. The parser had turned null into 0 kWp, so the greenest homes looked like "no PV", which pulled the renewables weight down. This broke our own "missing ≠ 0" rule. Fix: null ⇒ NaN; such rows are excluded from the weight fits instead of being scored as having no PV (test `test_missing_pv_is_unknown_not_zero`). Separately, a genuinely lower carbon weight for PV under SAP 10.2 is expected: the low grid-electricity factor means PV displaces less carbon.
+
+## D-23 EBM curve check (does each sub-score curve rank homes like the data?)
+`uv run python scripts/fit_score_curves_ebm.py --target sap` and `--target eir` → `artifacts/score_curves/v1/{sap,eir}/metrics.json`. EBM (InterpretML, monotone, no interactions) on raw parameters of the latest certificate per property, 4 most recent years, 300k sample, split by property (210k train / 45k test). Held-out R²: SAP 0.632, EIR 0.613.
+
+**Tautology disclosed:** walls, floor, glazing and smart terms were fed our own sub-score, so their Spearman of 1.0 is by construction and is not evidence. The independent checks are loft (raw mm), heating (category) and PV (kWp).
+
+| Independent term | Spearman vs our sub-score (SAP / EIR) |
+| --- | --- |
+| PV kWp | 0.932 / 0.932 |
+| Heating system (per home) | 0.705 / 0.912 |
+| Heating system (12 category means) | 0.837 / 0.739 |
+| Loft depth | 0.578 / 0.560 |
+
+**Loft: diminishing returns.** Mean EBM points by recorded depth (SAP; EIR similar): 0 mm −6.6, 50 mm −1.7, 100 mm −0.5, 200 mm +0.1, 270 mm +0.4, 400 mm +1.3. About 78% (SAP) / 74% (EIR) of the 0→400 mm gain is reached by 100 mm. RdSAP 10 Table 16 says the same: U falls 2.3 → 0.40 W/m²K by 100 mm, 87% of the possible reduction. Our curve gives 45 of 100 points at 100 mm. Ranking is preserved (both monotone), but the spacing over-rewards top-ups and under-rewards the first insulation. **Proposal (not applied):** loft sub-score = 100 × (U₀ − U(mm)) / (U₀ − U_min) with U from Table 16 (0 mm 0; 50 mm 74; 100 mm 87; 200 mm 95; 270 mm 99; 400 mm 100). Still monotone, physics-based, consistent with the roof U-value path (D-15).
+
+**Heating: our order sits between cost and carbon.** Cost (SAP) ranks condensing gas top, heat pumps near neutral, LPG worst. Carbon (EIR, SAP 10.2 factors) ranks ASHP best (+7.9), district heating and GSHP next, oil worst (−15.5). Our map (heat pumps top, solid fuel / oil bottom) follows the carbon end and the reformed-EPC heating-metric principles (§1.2 of the standards doc). Mismatches on carbon: direct electric −1.3 (ours 30, low), storage −7.3 / HHR −6.3 (ours 35 / 50, high), and "solid fuel" mixes coal and biomass (no biomass enum value). Left as is for now; noted for the heating-map backlog item.
 
 ---
 
