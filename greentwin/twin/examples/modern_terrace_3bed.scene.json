@@ -1,0 +1,1131 @@
+{
+  "scene_version": "room_scene/0.1",
+  "property_id": "EXAMPLE_modern_terrace_3bed",
+  "archetype_id": "modern_terrace_3bed",
+  "archetype_name": "Post-2000 terrace",
+  "built_form": "mid_terrace",
+  "storeys": 2,
+  "footprint_m": [
+    5.0,
+    8.5
+  ],
+  "ceiling_height_m": 2.4,
+  "front_azimuth_deg": 180.0,
+  "style": {
+    "wall_material": "orange_brick",
+    "wall_colour": "#b5603f",
+    "wall_upper_colour": null,
+    "frame_colour": "#ffffff",
+    "window_style": "upvc",
+    "door_colour": "#1f3b5a"
+  },
+  "rooms": [
+    {
+      "room_id": "kitchen",
+      "label": "Kitchen",
+      "room_type": "kitchen",
+      "storey": 0,
+      "polygon_m": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          3.0,
+          0.0
+        ],
+        [
+          3.0,
+          3.5
+        ],
+        [
+          0.0,
+          3.5
+        ]
+      ],
+      "area_m2": 10.5,
+      "floor_z_m": 0.0,
+      "height_m": 2.4
+    },
+    {
+      "room_id": "hall",
+      "label": "Hall",
+      "room_type": "hall",
+      "storey": 0,
+      "polygon_m": [
+        [
+          3.0,
+          0.0
+        ],
+        [
+          5.0,
+          0.0
+        ],
+        [
+          5.0,
+          3.5
+        ],
+        [
+          3.0,
+          3.5
+        ]
+      ],
+      "area_m2": 7.0,
+      "floor_z_m": 0.0,
+      "height_m": 2.4
+    },
+    {
+      "room_id": "living",
+      "label": "Living room",
+      "room_type": "living",
+      "storey": 0,
+      "polygon_m": [
+        [
+          0.0,
+          3.5
+        ],
+        [
+          5.0,
+          3.5
+        ],
+        [
+          5.0,
+          8.5
+        ],
+        [
+          0.0,
+          8.5
+        ]
+      ],
+      "area_m2": 25.0,
+      "floor_z_m": 0.0,
+      "height_m": 2.4
+    },
+    {
+      "room_id": "bed2",
+      "label": "Bedroom 2",
+      "room_type": "bedroom",
+      "storey": 1,
+      "polygon_m": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2.8,
+          0.0
+        ],
+        [
+          2.8,
+          3.0
+        ],
+        [
+          0.0,
+          3.0
+        ]
+      ],
+      "area_m2": 8.4,
+      "floor_z_m": 2.4,
+      "height_m": 2.4
+    },
+    {
+      "room_id": "bed3",
+      "label": "Bedroom 3",
+      "room_type": "bedroom",
+      "storey": 1,
+      "polygon_m": [
+        [
+          2.8,
+          0.0
+        ],
+        [
+          5.0,
+          0.0
+        ],
+        [
+          5.0,
+          3.0
+        ],
+        [
+          2.8,
+          3.0
+        ]
+      ],
+      "area_m2": 6.6,
+      "floor_z_m": 2.4,
+      "height_m": 2.4
+    },
+    {
+      "room_id": "bath",
+      "label": "Bathroom",
+      "room_type": "bathroom",
+      "storey": 1,
+      "polygon_m": [
+        [
+          0.0,
+          3.0
+        ],
+        [
+          2.5,
+          3.0
+        ],
+        [
+          2.5,
+          5.0
+        ],
+        [
+          0.0,
+          5.0
+        ]
+      ],
+      "area_m2": 5.0,
+      "floor_z_m": 2.4,
+      "height_m": 2.4
+    },
+    {
+      "room_id": "landing",
+      "label": "Landing",
+      "room_type": "landing",
+      "storey": 1,
+      "polygon_m": [
+        [
+          2.5,
+          3.0
+        ],
+        [
+          5.0,
+          3.0
+        ],
+        [
+          5.0,
+          5.0
+        ],
+        [
+          2.5,
+          5.0
+        ]
+      ],
+      "area_m2": 5.0,
+      "floor_z_m": 2.4,
+      "height_m": 2.4
+    },
+    {
+      "room_id": "bed1",
+      "label": "Bedroom 1",
+      "room_type": "bedroom",
+      "storey": 1,
+      "polygon_m": [
+        [
+          0.0,
+          5.0
+        ],
+        [
+          5.0,
+          5.0
+        ],
+        [
+          5.0,
+          8.5
+        ],
+        [
+          0.0,
+          8.5
+        ]
+      ],
+      "area_m2": 17.5,
+      "floor_z_m": 2.4,
+      "height_m": 2.4
+    }
+  ],
+  "walls": [
+    {
+      "wall_id": "kitchen:front",
+      "room_id": "kitchen",
+      "storey": 0,
+      "side": "front",
+      "kind": "exterior",
+      "start_m": [
+        0.0,
+        0.0
+      ],
+      "end_m": [
+        3.0,
+        0.0
+      ],
+      "length_m": 3.0,
+      "height_m": 2.4,
+      "orientation_deg": 180.0,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "kitchen:back",
+      "room_id": "kitchen",
+      "storey": 0,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        3.0,
+        3.5
+      ],
+      "end_m": [
+        0.0,
+        3.5
+      ],
+      "length_m": 3.0,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "kitchen:left",
+      "room_id": "kitchen",
+      "storey": 0,
+      "side": "left",
+      "kind": "party",
+      "start_m": [
+        0.0,
+        3.5
+      ],
+      "end_m": [
+        0.0,
+        0.0
+      ],
+      "length_m": 3.5,
+      "height_m": 2.4,
+      "orientation_deg": 270.0,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "kitchen:right",
+      "room_id": "kitchen",
+      "storey": 0,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        3.0,
+        0.0
+      ],
+      "end_m": [
+        3.0,
+        3.5
+      ],
+      "length_m": 3.5,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "hall:front",
+      "room_id": "hall",
+      "storey": 0,
+      "side": "front",
+      "kind": "exterior",
+      "start_m": [
+        3.0,
+        0.0
+      ],
+      "end_m": [
+        5.0,
+        0.0
+      ],
+      "length_m": 2.0,
+      "height_m": 2.4,
+      "orientation_deg": 180.0,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "hall:back",
+      "room_id": "hall",
+      "storey": 0,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        5.0,
+        3.5
+      ],
+      "end_m": [
+        3.0,
+        3.5
+      ],
+      "length_m": 2.0,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "hall:left",
+      "room_id": "hall",
+      "storey": 0,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        3.0,
+        3.5
+      ],
+      "end_m": [
+        3.0,
+        0.0
+      ],
+      "length_m": 3.5,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "hall:right",
+      "room_id": "hall",
+      "storey": 0,
+      "side": "right",
+      "kind": "party",
+      "start_m": [
+        5.0,
+        0.0
+      ],
+      "end_m": [
+        5.0,
+        3.5
+      ],
+      "length_m": 3.5,
+      "height_m": 2.4,
+      "orientation_deg": 90.0,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "living:front",
+      "room_id": "living",
+      "storey": 0,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        0.0,
+        3.5
+      ],
+      "end_m": [
+        5.0,
+        3.5
+      ],
+      "length_m": 5.0,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "living:back",
+      "room_id": "living",
+      "storey": 0,
+      "side": "back",
+      "kind": "exterior",
+      "start_m": [
+        5.0,
+        8.5
+      ],
+      "end_m": [
+        0.0,
+        8.5
+      ],
+      "length_m": 5.0,
+      "height_m": 2.4,
+      "orientation_deg": 0.0,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "living:left",
+      "room_id": "living",
+      "storey": 0,
+      "side": "left",
+      "kind": "party",
+      "start_m": [
+        0.0,
+        8.5
+      ],
+      "end_m": [
+        0.0,
+        3.5
+      ],
+      "length_m": 5.0,
+      "height_m": 2.4,
+      "orientation_deg": 270.0,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "living:right",
+      "room_id": "living",
+      "storey": 0,
+      "side": "right",
+      "kind": "party",
+      "start_m": [
+        5.0,
+        3.5
+      ],
+      "end_m": [
+        5.0,
+        8.5
+      ],
+      "length_m": 5.0,
+      "height_m": 2.4,
+      "orientation_deg": 90.0,
+      "z0_m": 0.0
+    },
+    {
+      "wall_id": "bed2:front",
+      "room_id": "bed2",
+      "storey": 1,
+      "side": "front",
+      "kind": "exterior",
+      "start_m": [
+        0.0,
+        0.0
+      ],
+      "end_m": [
+        2.8,
+        0.0
+      ],
+      "length_m": 2.8,
+      "height_m": 2.4,
+      "orientation_deg": 180.0,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed2:back",
+      "room_id": "bed2",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        2.8,
+        3.0
+      ],
+      "end_m": [
+        0.0,
+        3.0
+      ],
+      "length_m": 2.8,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed2:left",
+      "room_id": "bed2",
+      "storey": 1,
+      "side": "left",
+      "kind": "party",
+      "start_m": [
+        0.0,
+        3.0
+      ],
+      "end_m": [
+        0.0,
+        0.0
+      ],
+      "length_m": 3.0,
+      "height_m": 2.4,
+      "orientation_deg": 270.0,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed2:right",
+      "room_id": "bed2",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        2.8,
+        0.0
+      ],
+      "end_m": [
+        2.8,
+        3.0
+      ],
+      "length_m": 3.0,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed3:front",
+      "room_id": "bed3",
+      "storey": 1,
+      "side": "front",
+      "kind": "exterior",
+      "start_m": [
+        2.8,
+        0.0
+      ],
+      "end_m": [
+        5.0,
+        0.0
+      ],
+      "length_m": 2.2,
+      "height_m": 2.4,
+      "orientation_deg": 180.0,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed3:back",
+      "room_id": "bed3",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        5.0,
+        3.0
+      ],
+      "end_m": [
+        2.8,
+        3.0
+      ],
+      "length_m": 2.2,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed3:left",
+      "room_id": "bed3",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        2.8,
+        3.0
+      ],
+      "end_m": [
+        2.8,
+        0.0
+      ],
+      "length_m": 3.0,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed3:right",
+      "room_id": "bed3",
+      "storey": 1,
+      "side": "right",
+      "kind": "party",
+      "start_m": [
+        5.0,
+        0.0
+      ],
+      "end_m": [
+        5.0,
+        3.0
+      ],
+      "length_m": 3.0,
+      "height_m": 2.4,
+      "orientation_deg": 90.0,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bath:front",
+      "room_id": "bath",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        0.0,
+        3.0
+      ],
+      "end_m": [
+        2.5,
+        3.0
+      ],
+      "length_m": 2.5,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bath:back",
+      "room_id": "bath",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        2.5,
+        5.0
+      ],
+      "end_m": [
+        0.0,
+        5.0
+      ],
+      "length_m": 2.5,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bath:left",
+      "room_id": "bath",
+      "storey": 1,
+      "side": "left",
+      "kind": "party",
+      "start_m": [
+        0.0,
+        5.0
+      ],
+      "end_m": [
+        0.0,
+        3.0
+      ],
+      "length_m": 2.0,
+      "height_m": 2.4,
+      "orientation_deg": 270.0,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bath:right",
+      "room_id": "bath",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        2.5,
+        3.0
+      ],
+      "end_m": [
+        2.5,
+        5.0
+      ],
+      "length_m": 2.0,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "landing:front",
+      "room_id": "landing",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        2.5,
+        3.0
+      ],
+      "end_m": [
+        5.0,
+        3.0
+      ],
+      "length_m": 2.5,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "landing:back",
+      "room_id": "landing",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        5.0,
+        5.0
+      ],
+      "end_m": [
+        2.5,
+        5.0
+      ],
+      "length_m": 2.5,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "landing:left",
+      "room_id": "landing",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        2.5,
+        5.0
+      ],
+      "end_m": [
+        2.5,
+        3.0
+      ],
+      "length_m": 2.0,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "landing:right",
+      "room_id": "landing",
+      "storey": 1,
+      "side": "right",
+      "kind": "party",
+      "start_m": [
+        5.0,
+        3.0
+      ],
+      "end_m": [
+        5.0,
+        5.0
+      ],
+      "length_m": 2.0,
+      "height_m": 2.4,
+      "orientation_deg": 90.0,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed1:front",
+      "room_id": "bed1",
+      "storey": 1,
+      "side": null,
+      "kind": "internal",
+      "start_m": [
+        0.0,
+        5.0
+      ],
+      "end_m": [
+        5.0,
+        5.0
+      ],
+      "length_m": 5.0,
+      "height_m": 2.4,
+      "orientation_deg": null,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed1:back",
+      "room_id": "bed1",
+      "storey": 1,
+      "side": "back",
+      "kind": "exterior",
+      "start_m": [
+        5.0,
+        8.5
+      ],
+      "end_m": [
+        0.0,
+        8.5
+      ],
+      "length_m": 5.0,
+      "height_m": 2.4,
+      "orientation_deg": 0.0,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed1:left",
+      "room_id": "bed1",
+      "storey": 1,
+      "side": "left",
+      "kind": "party",
+      "start_m": [
+        0.0,
+        8.5
+      ],
+      "end_m": [
+        0.0,
+        5.0
+      ],
+      "length_m": 3.5,
+      "height_m": 2.4,
+      "orientation_deg": 270.0,
+      "z0_m": 2.4
+    },
+    {
+      "wall_id": "bed1:right",
+      "room_id": "bed1",
+      "storey": 1,
+      "side": "right",
+      "kind": "party",
+      "start_m": [
+        5.0,
+        5.0
+      ],
+      "end_m": [
+        5.0,
+        8.5
+      ],
+      "length_m": 3.5,
+      "height_m": 2.4,
+      "orientation_deg": 90.0,
+      "z0_m": 2.4
+    }
+  ],
+  "openings": [
+    {
+      "opening_id": "kitchen:front:window0",
+      "wall_id": "kitchen:front",
+      "room_id": "kitchen",
+      "kind": "window",
+      "width_m": 1.2,
+      "height_m": 1.1,
+      "centre_m": [
+        1.5,
+        0.0
+      ],
+      "sill_m": 0.9,
+      "z0_m": 0.9
+    },
+    {
+      "opening_id": "hall:front:door0",
+      "wall_id": "hall:front",
+      "room_id": "hall",
+      "kind": "door",
+      "width_m": 1.0,
+      "height_m": 2.0,
+      "centre_m": [
+        4.0,
+        0.0
+      ],
+      "sill_m": 0.0,
+      "z0_m": 0.0
+    },
+    {
+      "opening_id": "living:back:patio_door0",
+      "wall_id": "living:back",
+      "room_id": "living",
+      "kind": "patio_door",
+      "width_m": 1.8,
+      "height_m": 2.1,
+      "centre_m": [
+        3.0,
+        8.5
+      ],
+      "sill_m": 0.0,
+      "z0_m": 0.0
+    },
+    {
+      "opening_id": "living:back:window1",
+      "wall_id": "living:back",
+      "room_id": "living",
+      "kind": "window",
+      "width_m": 1.0,
+      "height_m": 1.2,
+      "centre_m": [
+        0.75,
+        8.5
+      ],
+      "sill_m": 0.9,
+      "z0_m": 0.9
+    },
+    {
+      "opening_id": "bed2:front:window0",
+      "wall_id": "bed2:front",
+      "room_id": "bed2",
+      "kind": "window",
+      "width_m": 1.2,
+      "height_m": 1.2,
+      "centre_m": [
+        1.4,
+        0.0
+      ],
+      "sill_m": 0.9,
+      "z0_m": 3.3
+    },
+    {
+      "opening_id": "bed3:front:window0",
+      "wall_id": "bed3:front",
+      "room_id": "bed3",
+      "kind": "window",
+      "width_m": 0.9,
+      "height_m": 1.2,
+      "centre_m": [
+        3.9,
+        0.0
+      ],
+      "sill_m": 0.9,
+      "z0_m": 3.3
+    },
+    {
+      "opening_id": "bed1:back:window0",
+      "wall_id": "bed1:back",
+      "room_id": "bed1",
+      "kind": "window",
+      "width_m": 1.6,
+      "height_m": 1.3,
+      "centre_m": [
+        2.5,
+        8.5
+      ],
+      "sill_m": 0.9,
+      "z0_m": 3.3
+    }
+  ],
+  "roof": {
+    "type": "gable",
+    "pitch_deg": 35.0,
+    "ridge_axis": "x",
+    "eave_z_m": 4.8,
+    "ridge_z_m": 7.776,
+    "colour": "#3f4448",
+    "material": "concrete_tile"
+  },
+  "features": [
+    {
+      "kind": "porch",
+      "position_m": [
+        4.0,
+        -0.4,
+        2.2
+      ],
+      "size_m": [
+        1.6,
+        0.8,
+        0.15
+      ],
+      "side": "front",
+      "room_id": "hall",
+      "style": "canopy",
+      "colour": "#3f4448",
+      "extra": {}
+    }
+  ],
+  "context": [
+    {
+      "relation": "left",
+      "position_m": [
+        -2.5,
+        4.25,
+        0.0
+      ],
+      "size_m": [
+        5.0,
+        8.5,
+        4.8
+      ]
+    },
+    {
+      "relation": "right",
+      "position_m": [
+        7.5,
+        4.25,
+        0.0
+      ],
+      "size_m": [
+        5.0,
+        8.5,
+        4.8
+      ]
+    }
+  ],
+  "appliances": [
+    {
+      "appliance_id": "a1",
+      "type": "fridge_freezer",
+      "label": "Fridge-freezer",
+      "room_id": "kitchen",
+      "placement": "auto",
+      "position_m": [
+        0.35,
+        3.175,
+        0.0
+      ],
+      "rotation_deg": 0.0,
+      "size_m": [
+        0.6,
+        0.65,
+        1.8
+      ],
+      "shape": "tall_box",
+      "mount": "floor",
+      "colour": "#e8ecef",
+      "accent": "#9aa5ad",
+      "icon": "fridge",
+      "warnings": []
+    },
+    {
+      "appliance_id": "a2",
+      "type": "washing_machine",
+      "label": "Washing machine",
+      "room_id": "kitchen",
+      "placement": "auto",
+      "position_m": [
+        1.0,
+        3.2,
+        0.0
+      ],
+      "rotation_deg": 0.0,
+      "size_m": [
+        0.6,
+        0.6,
+        0.85
+      ],
+      "shape": "drum_box",
+      "mount": "floor",
+      "colour": "#f7f7f7",
+      "accent": "#2a6fdb",
+      "icon": "washer",
+      "warnings": []
+    },
+    {
+      "appliance_id": "a3",
+      "type": "microwave",
+      "label": "Microwave",
+      "room_id": "kitchen",
+      "placement": "auto",
+      "position_m": [
+        1.59,
+        3.31,
+        0.9
+      ],
+      "rotation_deg": 0.0,
+      "size_m": [
+        0.48,
+        0.38,
+        0.28
+      ],
+      "shape": "box",
+      "mount": "counter",
+      "colour": "#3a3f44",
+      "accent": "#e0b21f",
+      "icon": "microwave",
+      "warnings": []
+    },
+    {
+      "appliance_id": "a4",
+      "type": "tv",
+      "label": "TV",
+      "room_id": "living",
+      "placement": "auto",
+      "position_m": [
+        0.6,
+        8.47,
+        0.9
+      ],
+      "rotation_deg": 0.0,
+      "size_m": [
+        1.1,
+        0.06,
+        0.65
+      ],
+      "shape": "panel",
+      "mount": "wall",
+      "colour": "#111417",
+      "accent": "#2a6fdb",
+      "icon": "tv",
+      "warnings": []
+    },
+    {
+      "appliance_id": "a5",
+      "type": "tv",
+      "label": "Bedroom TV",
+      "room_id": "bed1",
+      "placement": "auto",
+      "position_m": [
+        0.6,
+        8.47,
+        3.3
+      ],
+      "rotation_deg": 0.0,
+      "size_m": [
+        1.1,
+        0.06,
+        0.65
+      ],
+      "shape": "panel",
+      "mount": "wall",
+      "colour": "#111417",
+      "accent": "#2a6fdb",
+      "icon": "tv",
+      "warnings": []
+    }
+  ],
+  "energy": null,
+  "basis": "Layout from the closest standard UK house type, fitted to this home; room heat loss is estimated, only whole-house totals are calibrated to bills"
+}

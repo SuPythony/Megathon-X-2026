@@ -1,0 +1,1062 @@
+{
+  "$defs": {
+    "ApplianceEnergy": {
+      "properties": {
+        "appliance_id": {
+          "title": "Appliance Id",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "room_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Room Id"
+        },
+        "category": {
+          "enum": [
+            "appliance",
+            "cooking",
+            "hot_water",
+            "secondary_heating",
+            "outdoor",
+            "hot_water_system"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "fuel": {
+          "enum": [
+            "electricity",
+            "mains_gas"
+          ],
+          "title": "Fuel",
+          "type": "string"
+        },
+        "answers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "User's answers, with defaults filled for unanswered questions",
+          "title": "Answers",
+          "type": "object"
+        },
+        "defaulted": {
+          "description": "Questions answered by default",
+          "items": {
+            "type": "string"
+          },
+          "title": "Defaulted",
+          "type": "array"
+        },
+        "kwh_per_year": {
+          "title": "Kwh Per Year",
+          "type": "number"
+        },
+        "monthly_kwh": {
+          "description": "Jan..Dec",
+          "items": {
+            "type": "number"
+          },
+          "title": "Monthly Kwh",
+          "type": "array"
+        },
+        "hourly_profile_kw": {
+          "description": "Average day, kW per hour 0..23",
+          "items": {
+            "type": "number"
+          },
+          "title": "Hourly Profile Kw",
+          "type": "array"
+        },
+        "heat_to_room": {
+          "title": "Heat To Room",
+          "type": "number"
+        },
+        "gains_w_monthly": {
+          "description": "Average internal gain, W, Jan..Dec",
+          "items": {
+            "type": "number"
+          },
+          "title": "Gains W Monthly",
+          "type": "array"
+        },
+        "standing_loss_kwh_per_day": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standing Loss Kwh Per Day"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "appliance_id",
+        "type",
+        "room_id",
+        "category",
+        "fuel",
+        "answers",
+        "kwh_per_year",
+        "monthly_kwh",
+        "hourly_profile_kw",
+        "heat_to_room",
+        "gains_w_monthly",
+        "source"
+      ],
+      "title": "ApplianceEnergy",
+      "type": "object"
+    },
+    "ApplianceSummary": {
+      "description": "What the physics needs, aggregated over all appliances.",
+      "properties": {
+        "occupants": {
+          "title": "Occupants",
+          "type": "number"
+        },
+        "baseload_kwh_per_day": {
+          "description": "Electric appliances + electric cooking (excl. lighting)",
+          "title": "Baseload Kwh Per Day",
+          "type": "number"
+        },
+        "gas_cooking_kwh_per_day": {
+          "title": "Gas Cooking Kwh Per Day",
+          "type": "number"
+        },
+        "shower_electric_kwh_per_day": {
+          "title": "Shower Electric Kwh Per Day",
+          "type": "number"
+        },
+        "secondary_heating_kwh_monthly": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Secondary Heating Kwh Monthly",
+          "type": "array"
+        },
+        "outdoor_kwh_monthly": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Outdoor Kwh Monthly",
+          "type": "array"
+        },
+        "gains_w_mean": {
+          "description": "Average internal gains from appliances, cooking and showers",
+          "title": "Gains W Mean",
+          "type": "number"
+        },
+        "appliance_month_factor": {
+          "description": "Monthly baseload shape, mean 1 (Jan..Dec)",
+          "items": {
+            "type": "number"
+          },
+          "title": "Appliance Month Factor",
+          "type": "array"
+        },
+        "gains_month_factor": {
+          "description": "Monthly appliance-gains shape, mean 1 (Jan..Dec)",
+          "items": {
+            "type": "number"
+          },
+          "title": "Gains Month Factor",
+          "type": "array"
+        },
+        "hourly_profile_kw": {
+          "description": "Average day, all in-home electricity, kW 0..23",
+          "items": {
+            "type": "number"
+          },
+          "title": "Hourly Profile Kw",
+          "type": "array"
+        },
+        "room_kwh_per_year": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Room Kwh Per Year",
+          "type": "object"
+        },
+        "has_electric_shower": {
+          "title": "Has Electric Shower",
+          "type": "boolean"
+        },
+        "has_immersion": {
+          "title": "Has Immersion",
+          "type": "boolean"
+        },
+        "cylinder_standing_loss_kwh_per_day": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cylinder Standing Loss Kwh Per Day"
+        },
+        "appliances": {
+          "items": {
+            "$ref": "#/$defs/ApplianceEnergy"
+          },
+          "title": "Appliances",
+          "type": "array"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "occupants",
+        "baseload_kwh_per_day",
+        "gas_cooking_kwh_per_day",
+        "shower_electric_kwh_per_day",
+        "secondary_heating_kwh_monthly",
+        "outdoor_kwh_monthly",
+        "gains_w_mean",
+        "appliance_month_factor",
+        "gains_month_factor",
+        "hourly_profile_kw",
+        "room_kwh_per_year",
+        "has_electric_shower",
+        "has_immersion",
+        "cylinder_standing_loss_kwh_per_day",
+        "appliances",
+        "status"
+      ],
+      "title": "ApplianceSummary",
+      "type": "object"
+    },
+    "Element": {
+      "properties": {
+        "element": {
+          "title": "Element",
+          "type": "string"
+        },
+        "u_value": {
+          "title": "U Value",
+          "type": "number"
+        },
+        "area_m2": {
+          "title": "Area M2",
+          "type": "number"
+        },
+        "ua_w_per_k": {
+          "title": "Ua W Per K",
+          "type": "number"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "element",
+        "u_value",
+        "area_m2",
+        "ua_w_per_k",
+        "source"
+      ],
+      "title": "Element",
+      "type": "object"
+    },
+    "ExtendedTwinParams": {
+      "description": "TwinParams plus what Part 1 adds for the physics: a separate hot-water system and the household. Still a\nTwinParams (it can go anywhere one is expected); the extra numeric fields are physics_api.EXTRA_PARAM_KEYS.",
+      "properties": {
+        "property_id": {
+          "title": "Property Id",
+          "type": "string"
+        },
+        "wall_area_m2": {
+          "title": "Wall Area M2",
+          "type": "number"
+        },
+        "roof_area_m2": {
+          "title": "Roof Area M2",
+          "type": "number"
+        },
+        "floor_area_m2": {
+          "title": "Floor Area M2",
+          "type": "number"
+        },
+        "window_area_m2": {
+          "title": "Window Area M2",
+          "type": "number"
+        },
+        "door_area_m2": {
+          "default": 3.7,
+          "title": "Door Area M2",
+          "type": "number"
+        },
+        "party_wall_area_m2": {
+          "default": 0.0,
+          "title": "Party Wall Area M2",
+          "type": "number"
+        },
+        "wall_u": {
+          "title": "Wall U",
+          "type": "number"
+        },
+        "roof_u": {
+          "title": "Roof U",
+          "type": "number"
+        },
+        "floor_u": {
+          "title": "Floor U",
+          "type": "number"
+        },
+        "window_u": {
+          "title": "Window U",
+          "type": "number"
+        },
+        "door_u": {
+          "default": 3.0,
+          "title": "Door U",
+          "type": "number"
+        },
+        "thermal_bridging_y": {
+          "default": 0.15,
+          "description": "W/m2K added over exposed area",
+          "title": "Thermal Bridging Y",
+          "type": "number"
+        },
+        "air_changes_per_hour": {
+          "title": "Air Changes Per Hour",
+          "type": "number"
+        },
+        "volume_m3": {
+          "title": "Volume M3",
+          "type": "number"
+        },
+        "heat_loss_multiplier": {
+          "default": 1.0,
+          "description": "Calibrated: scales total fabric + ventilation loss",
+          "title": "Heat Loss Multiplier",
+          "type": "number"
+        },
+        "setpoint_c": {
+          "default": 19.5,
+          "title": "Setpoint C",
+          "type": "number"
+        },
+        "heating_hours_per_day": {
+          "default": 9.0,
+          "title": "Heating Hours Per Day",
+          "type": "number"
+        },
+        "heating_efficiency": {
+          "description": "Boiler seasonal efficiency or heat-pump SCOP",
+          "title": "Heating Efficiency",
+          "type": "number"
+        },
+        "heating_fuel": {
+          "enum": [
+            "mains_gas",
+            "electricity",
+            "oil",
+            "lpg",
+            "solid",
+            "district"
+          ],
+          "title": "Heating Fuel",
+          "type": "string"
+        },
+        "hot_water_kwh_per_day": {
+          "title": "Hot Water Kwh Per Day",
+          "type": "number"
+        },
+        "baseload_kwh_per_day": {
+          "description": "Appliances + lighting + cooking electricity",
+          "title": "Baseload Kwh Per Day",
+          "type": "number"
+        },
+        "lighting_share_of_baseload": {
+          "default": 0.15,
+          "title": "Lighting Share Of Baseload",
+          "type": "number"
+        },
+        "internal_gains_w": {
+          "default": 400.0,
+          "title": "Internal Gains W",
+          "type": "number"
+        },
+        "solar_gain_factor": {
+          "default": 1.0,
+          "title": "Solar Gain Factor",
+          "type": "number"
+        },
+        "pv_kwp": {
+          "default": 0.0,
+          "title": "Pv Kwp",
+          "type": "number"
+        },
+        "pv_azimuth_deg": {
+          "default": 180.0,
+          "title": "Pv Azimuth Deg",
+          "type": "number"
+        },
+        "pv_tilt_deg": {
+          "default": 35.0,
+          "title": "Pv Tilt Deg",
+          "type": "number"
+        },
+        "battery_kwh": {
+          "default": 0.0,
+          "title": "Battery Kwh",
+          "type": "number"
+        },
+        "tariff": {
+          "default": "standard",
+          "enum": [
+            "standard",
+            "time_of_use"
+          ],
+          "title": "Tariff",
+          "type": "string"
+        },
+        "hot_water_fuel": {
+          "enum": [
+            "mains_gas",
+            "electricity",
+            "oil",
+            "lpg",
+            "solid",
+            "district"
+          ],
+          "title": "Hot Water Fuel",
+          "type": "string"
+        },
+        "hot_water_efficiency": {
+          "description": "Delivered hot water / fuel for the main hot-water system",
+          "title": "Hot Water Efficiency",
+          "type": "number"
+        },
+        "hot_water_standing_loss_kwh_per_day": {
+          "default": 0.0,
+          "description": "Cylinder loss; 0 for combi/instantaneous",
+          "title": "Hot Water Standing Loss Kwh Per Day",
+          "type": "number"
+        },
+        "shower_electric_kwh_per_day": {
+          "default": 0.0,
+          "description": "Electric showers: electricity, efficiency 1",
+          "title": "Shower Electric Kwh Per Day",
+          "type": "number"
+        },
+        "occupants": {
+          "title": "Occupants",
+          "type": "number"
+        },
+        "postcode_district": {
+          "title": "Postcode District",
+          "type": "string"
+        }
+      },
+      "required": [
+        "property_id",
+        "wall_area_m2",
+        "roof_area_m2",
+        "floor_area_m2",
+        "window_area_m2",
+        "wall_u",
+        "roof_u",
+        "floor_u",
+        "window_u",
+        "air_changes_per_hour",
+        "volume_m3",
+        "heating_efficiency",
+        "heating_fuel",
+        "hot_water_kwh_per_day",
+        "baseload_kwh_per_day",
+        "hot_water_fuel",
+        "hot_water_efficiency",
+        "occupants",
+        "postcode_district"
+      ],
+      "title": "ExtendedTwinParams",
+      "type": "object"
+    },
+    "HeatingSystemInfo": {
+      "properties": {
+        "system": {
+          "title": "System",
+          "type": "string"
+        },
+        "fuel": {
+          "title": "Fuel",
+          "type": "string"
+        },
+        "efficiency": {
+          "title": "Efficiency",
+          "type": "number"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "system",
+        "fuel",
+        "efficiency",
+        "source"
+      ],
+      "title": "HeatingSystemInfo",
+      "type": "object"
+    },
+    "HotWaterSystem": {
+      "description": "Hot water, separate from space heating: its own equipment, fuel and efficiency.",
+      "properties": {
+        "system": {
+          "enum": [
+            "combi_or_instant_from_main",
+            "cylinder_from_main",
+            "electric_immersion",
+            "heat_pump_cylinder",
+            "instantaneous_electric"
+          ],
+          "title": "System",
+          "type": "string"
+        },
+        "fuel": {
+          "enum": [
+            "mains_gas",
+            "electricity",
+            "oil",
+            "lpg",
+            "solid",
+            "district"
+          ],
+          "title": "Fuel",
+          "type": "string"
+        },
+        "efficiency": {
+          "description": "Delivered hot water / fuel, after any summer-efficiency penalty",
+          "title": "Efficiency",
+          "type": "number"
+        },
+        "standing_loss_kwh_per_day": {
+          "description": "Cylinder heat loss; 0 for combi/instantaneous",
+          "title": "Standing Loss Kwh Per Day",
+          "type": "number"
+        },
+        "electric_shower": {
+          "title": "Electric Shower",
+          "type": "boolean"
+        },
+        "shower_electric_kwh_per_day": {
+          "title": "Shower Electric Kwh Per Day",
+          "type": "number"
+        },
+        "main_useful_kwh_per_day": {
+          "description": "Useful hot water from the main system (after showers)",
+          "title": "Main Useful Kwh Per Day",
+          "type": "number"
+        },
+        "sources": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Sources",
+          "type": "object"
+        }
+      },
+      "required": [
+        "system",
+        "fuel",
+        "efficiency",
+        "standing_loss_kwh_per_day",
+        "electric_shower",
+        "shower_electric_kwh_per_day",
+        "main_useful_kwh_per_day",
+        "sources"
+      ],
+      "title": "HotWaterSystem",
+      "type": "object"
+    },
+    "Meter": {
+      "properties": {
+        "months": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Months",
+          "type": "array"
+        },
+        "electricity_kwh": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Electricity Kwh",
+          "type": "array"
+        },
+        "gas_kwh": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Gas Kwh",
+          "type": "array"
+        },
+        "estimated": {
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Estimated",
+          "type": "array"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "months",
+        "electricity_kwh",
+        "gas_kwh",
+        "estimated",
+        "source"
+      ],
+      "title": "Meter",
+      "type": "object"
+    },
+    "ObservationModel": {
+      "description": "Suggested likelihood for monthly meter readings. The calibration team owns the final choice.",
+      "properties": {
+        "likelihood": {
+          "default": "lognormal on monthly kWh per fuel",
+          "title": "Likelihood",
+          "type": "string"
+        },
+        "relative_noise": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Relative Noise",
+          "type": "object"
+        },
+        "missing_months": {
+          "default": "latent (no likelihood term); never treated as 0",
+          "title": "Missing Months",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        }
+      },
+      "title": "ObservationModel",
+      "type": "object"
+    },
+    "Prior": {
+      "description": "Prior for one calibrated parameter. kind: lognormal -> value = base x exp(N(mu, sigma)); normal -> base + N.",
+      "properties": {
+        "param": {
+          "title": "Param",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "lognormal",
+            "normal_add"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "mu": {
+          "title": "Mu",
+          "type": "number"
+        },
+        "sigma": {
+          "title": "Sigma",
+          "type": "number"
+        },
+        "base": {
+          "title": "Base",
+          "type": "number"
+        },
+        "lower": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lower"
+        },
+        "upper": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upper"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "param",
+        "kind",
+        "mu",
+        "sigma",
+        "base",
+        "rationale"
+      ],
+      "title": "Prior",
+      "type": "object"
+    },
+    "Readiness": {
+      "properties": {
+        "method": {
+          "enum": [
+            "prior_only",
+            "weak",
+            "ready"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "months": {
+          "title": "Months",
+          "type": "integer"
+        },
+        "gas_months": {
+          "title": "Gas Months",
+          "type": "integer"
+        },
+        "electricity_months": {
+          "title": "Electricity Months",
+          "type": "integer"
+        },
+        "winter_months": {
+          "title": "Winter Months",
+          "type": "integer"
+        },
+        "summer_months": {
+          "title": "Summer Months",
+          "type": "integer"
+        },
+        "estimated_months": {
+          "title": "Estimated Months",
+          "type": "integer"
+        },
+        "identifiable": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Identifiable",
+          "type": "array"
+        },
+        "weakly_identified": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Weakly Identified",
+          "type": "array"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "method",
+        "months",
+        "gas_months",
+        "electricity_months",
+        "winter_months",
+        "summer_months",
+        "estimated_months",
+        "identifiable",
+        "weakly_identified",
+        "notes"
+      ],
+      "title": "Readiness",
+      "type": "object"
+    },
+    "Ventilation": {
+      "properties": {
+        "air_changes_per_hour": {
+          "title": "Air Changes Per Hour",
+          "type": "number"
+        },
+        "volume_m3": {
+          "title": "Volume M3",
+          "type": "number"
+        },
+        "heat_loss_w_per_k": {
+          "description": "0.33 x ach x volume",
+          "title": "Heat Loss W Per K",
+          "type": "number"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "air_changes_per_hour",
+        "volume_m3",
+        "heat_loss_w_per_k",
+        "source"
+      ],
+      "title": "Ventilation",
+      "type": "object"
+    },
+    "Weather": {
+      "properties": {
+        "months": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Months",
+          "type": "array"
+        },
+        "arrays": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "title": "Arrays",
+          "type": "object"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "filled": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Filled",
+          "type": "array"
+        }
+      },
+      "required": [
+        "months",
+        "arrays",
+        "source",
+        "filled"
+      ],
+      "title": "Weather",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "inputs_version": {
+      "default": "physics_inputs/0.1",
+      "title": "Inputs Version",
+      "type": "string"
+    },
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "created": {
+      "title": "Created",
+      "type": "string"
+    },
+    "home": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "title": "Home",
+      "type": "object"
+    },
+    "params": {
+      "$ref": "#/$defs/ExtendedTwinParams"
+    },
+    "sources": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Sources",
+      "type": "object"
+    },
+    "fuel": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Fuel",
+      "type": "object"
+    },
+    "fabric": {
+      "items": {
+        "$ref": "#/$defs/Element"
+      },
+      "title": "Fabric",
+      "type": "array"
+    },
+    "ventilation": {
+      "$ref": "#/$defs/Ventilation"
+    },
+    "heating_system": {
+      "$ref": "#/$defs/HeatingSystemInfo"
+    },
+    "hot_water": {
+      "$ref": "#/$defs/HotWaterSystem"
+    },
+    "occupancy": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          }
+        ]
+      },
+      "title": "Occupancy",
+      "type": "object"
+    },
+    "heating_behaviour": {
+      "additionalProperties": true,
+      "title": "Heating Behaviour",
+      "type": "object"
+    },
+    "appliances": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ApplianceSummary"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "weather": {
+      "$ref": "#/$defs/Weather"
+    },
+    "schedules": {
+      "additionalProperties": {
+        "items": {
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "description": "Aligned to weather.months; physics_api.SCHEDULE_KEYS",
+      "title": "Schedules",
+      "type": "object"
+    },
+    "meter": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Meter"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "priors": {
+      "items": {
+        "$ref": "#/$defs/Prior"
+      },
+      "title": "Priors",
+      "type": "array"
+    },
+    "observation_model": {
+      "$ref": "#/$defs/ObservationModel"
+    },
+    "calibration_readiness": {
+      "$ref": "#/$defs/Readiness"
+    },
+    "data_quality": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Data Quality",
+      "type": "object"
+    }
+  },
+  "required": [
+    "property_id",
+    "created",
+    "home",
+    "params",
+    "sources",
+    "fuel",
+    "fabric",
+    "ventilation",
+    "heating_system",
+    "hot_water",
+    "occupancy",
+    "heating_behaviour",
+    "appliances",
+    "weather",
+    "schedules",
+    "meter",
+    "priors",
+    "observation_model",
+    "calibration_readiness",
+    "data_quality"
+  ],
+  "title": "PhysicsInputs",
+  "type": "object"
+}

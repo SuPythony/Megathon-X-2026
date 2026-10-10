@@ -1,0 +1,62 @@
+{
+  "_doc": "Exterior look of each prefit archetype in the 3D twin, so every house type is visually distinct. Visual only: nothing here feeds the physics (U-values and areas come from the property and archetypes.py). Sides use plan coordinates: front = street facade (y = 0), left/right as seen from the street. Features: bay_window, porch, chimney, garage (visual only, unheated), balcony, garden_wall. 'room' ties a feature to an archetype room key.",
+  "version": "0.1.0",
+  "styles": {
+    "victorian_terrace_2bed": {
+      "wall_material": "red_brick", "wall_colour": "#9e4b36", "wall_upper_colour": null,
+      "roof": "gable", "roof_pitch_deg": 35, "ridge_axis": "x", "roof_colour": "#4a525a", "roof_material": "slate",
+      "frame_colour": "#f4f1ea", "window_style": "sash", "door_colour": "#1f4d3a",
+      "features": [
+        {"kind": "bay_window", "side": "front", "room": "living", "width_m": 2.2, "projection_m": 0.6, "storeys": 1},
+        {"kind": "chimney", "position": "left_end", "width_m": 0.9, "depth_m": 0.6, "height_m": 1.2},
+        {"kind": "chimney", "position": "right_end", "width_m": 0.9, "depth_m": 0.6, "height_m": 1.2},
+        {"kind": "garden_wall", "side": "front", "depth_m": 1.5, "height_m": 0.8}
+      ]
+    },
+    "interwar_semi_3bed": {
+      "wall_material": "brick_and_pebbledash", "wall_colour": "#a0553c", "wall_upper_colour": "#e3dccb",
+      "roof": "hip", "roof_pitch_deg": 40, "ridge_axis": "x", "roof_colour": "#8a4b33", "roof_material": "clay_tile",
+      "frame_colour": "#ffffff", "window_style": "casement_leaded", "door_colour": "#7a2e2e",
+      "features": [
+        {"kind": "bay_window", "side": "front", "room": "living", "width_m": 2.4, "projection_m": 0.7, "storeys": 2},
+        {"kind": "porch", "side": "front", "room": "hall", "width_m": 1.4, "depth_m": 0.9, "style": "canopy"},
+        {"kind": "chimney", "position": "party_side", "width_m": 1.0, "depth_m": 0.6, "height_m": 1.3}
+      ]
+    },
+    "postwar_detached_4bed": {
+      "wall_material": "buff_brick", "wall_colour": "#c8a46e", "wall_upper_colour": null,
+      "roof": "gable", "roof_pitch_deg": 25, "ridge_axis": "x", "roof_colour": "#5d5a55", "roof_material": "concrete_tile",
+      "frame_colour": "#4b3a2e", "window_style": "picture", "door_colour": "#c9a227",
+      "features": [
+        {"kind": "garage", "side": "right", "width_m": 3.0, "height_m": 2.6, "roof": "flat", "door_colour": "#e8e4dc"},
+        {"kind": "chimney", "position": "left_end", "width_m": 0.8, "depth_m": 0.6, "height_m": 1.0}
+      ]
+    },
+    "modern_terrace_3bed": {
+      "wall_material": "orange_brick", "wall_colour": "#b5603f", "wall_upper_colour": null,
+      "roof": "gable", "roof_pitch_deg": 35, "ridge_axis": "x", "roof_colour": "#3f4448", "roof_material": "concrete_tile",
+      "frame_colour": "#ffffff", "window_style": "upvc", "door_colour": "#1f3b5a",
+      "features": [
+        {"kind": "porch", "side": "front", "room": "hall", "width_m": 1.6, "depth_m": 0.8, "style": "canopy"}
+      ]
+    },
+    "bungalow_2bed": {
+      "wall_material": "white_render", "wall_colour": "#efeee8", "wall_upper_colour": null,
+      "roof": "hip", "roof_pitch_deg": 30, "ridge_axis": "x", "roof_colour": "#6b4a36", "roof_material": "clay_tile",
+      "frame_colour": "#ffffff", "window_style": "casement", "door_colour": "#2f5d50",
+      "features": [
+        {"kind": "porch", "side": "front", "room": "hall", "width_m": 1.8, "depth_m": 1.2, "style": "enclosed"},
+        {"kind": "chimney", "position": "centre", "width_m": 0.8, "depth_m": 0.6, "height_m": 1.0},
+        {"kind": "garden_wall", "side": "front", "depth_m": 3.0, "height_m": 0.6}
+      ]
+    },
+    "flat_2bed": {
+      "wall_material": "concrete_panel", "wall_colour": "#8c8f91", "wall_upper_colour": null,
+      "roof": "flat", "roof_pitch_deg": 0, "ridge_axis": "x", "roof_colour": "#6f7275", "roof_material": "block_above",
+      "frame_colour": "#3b3f43", "window_style": "aluminium", "door_colour": "#555a5f",
+      "features": [
+        {"kind": "balcony", "side": "front", "room": "living", "width_m": 3.0, "depth_m": 1.2, "balustrade": "glass"}
+      ]
+    }
+  }
+}

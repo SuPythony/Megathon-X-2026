@@ -1,0 +1,316 @@
+{
+  "$defs": {
+    "AppliancePlacement": {
+      "description": "One appliance as the user entered it. Leave u/v empty to auto-place along the room's walls.",
+      "properties": {
+        "appliance_id": {
+          "title": "Appliance Id",
+          "type": "string"
+        },
+        "type": {
+          "description": "Key in appliance_visuals.json",
+          "title": "Type",
+          "type": "string"
+        },
+        "room_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Archetype room key; None or 'outside' = outdoors",
+          "title": "Room Id"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "u": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Indoor: 0..1 across the room's width (x)",
+          "title": "U"
+        },
+        "v": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Indoor: 0..1 across the room's depth (y)",
+          "title": "V"
+        },
+        "x_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Outdoor only: plan x in metres",
+          "title": "X M"
+        },
+        "y_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Outdoor only: plan y in metres (negative = in front)",
+          "title": "Y M"
+        },
+        "rotation_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotation Deg"
+        },
+        "answers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Size questions from appliance_energy.json, e.g. {'size': 'large'}",
+          "title": "Answers",
+          "type": "object"
+        }
+      },
+      "required": [
+        "appliance_id",
+        "type"
+      ],
+      "title": "AppliancePlacement",
+      "type": "object"
+    },
+    "MeterReading": {
+      "description": "One month of bills or smart-meter data as the user entered it. Missing values stay None, never 0.",
+      "properties": {
+        "month": {
+          "description": "YYYY-MM",
+          "title": "Month",
+          "type": "string"
+        },
+        "electricity_kwh": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Electricity Kwh"
+        },
+        "gas_kwh": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "0 only if the home has no gas supply",
+          "title": "Gas Kwh"
+        },
+        "estimated": {
+          "default": false,
+          "description": "Estimated read on the bill",
+          "title": "Estimated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "month"
+      ],
+      "title": "MeterReading",
+      "type": "object"
+    }
+  },
+  "description": "One home's intake. Images travel separately (multipart upload); only their file names are recorded here.",
+  "properties": {
+    "intake_id": {
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "postcode_district": {
+      "description": "Outward code only, e.g. 'M14'. Full postcodes are reduced on entry.",
+      "title": "Postcode District",
+      "type": "string"
+    },
+    "epc_rrn": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "EPC certificate number, '0000-0000-0000-0000-0000'; None if unknown",
+      "title": "Epc Rrn"
+    },
+    "floor_plan_image": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Floor Plan Image"
+    },
+    "fuse_box_image": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fuse Box Image"
+    },
+    "appliances": {
+      "items": {
+        "$ref": "#/$defs/AppliancePlacement"
+      },
+      "title": "Appliances",
+      "type": "array"
+    },
+    "photo_consent": {
+      "default": false,
+      "description": "User agreed to interior photos being processed",
+      "title": "Photo Consent",
+      "type": "boolean"
+    },
+    "occupants": {
+      "anyOf": [
+        {
+          "maximum": 12,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Occupants"
+    },
+    "daytime_occupancy": {
+      "anyOf": [
+        {
+          "enum": [
+            "out_all_day",
+            "part_day",
+            "home_all_day"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Daytime Occupancy"
+    },
+    "thermostat_c": {
+      "anyOf": [
+        {
+          "maximum": 28,
+          "minimum": 10,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Thermostat setting",
+      "title": "Thermostat C"
+    },
+    "heating_periods": {
+      "description": "Heating on periods, e.g. [(6, 9), (17, 22)]",
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Heating Periods",
+      "type": "array"
+    },
+    "meter_readings": {
+      "description": "Monthly bills, ideally 12+ months",
+      "items": {
+        "$ref": "#/$defs/MeterReading"
+      },
+      "title": "Meter Readings",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "intake_id",
+    "postcode_district"
+  ],
+  "title": "TwinIntake",
+  "type": "object"
+}

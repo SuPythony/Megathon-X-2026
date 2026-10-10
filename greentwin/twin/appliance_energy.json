@@ -1,0 +1,121 @@
+{
+  "_doc": "Appliance energy catalogue: the size questions the user answers per appliance, and how each answer becomes annual consumption, a daily/monthly schedule and internal heat gains. Visuals live in appliance_visuals.json (same type keys). STATUS: typical_estimate. Figures are typical UK product values (EU energy label ranges, Energy Saving Trust style guidance) used as PRIOR means; they are not yet individually cited. Verify and cite before submission (AGENTS.md 'Sourced inputs only'). Calibration against meter readings corrects the total (baseload_kwh_per_day), not each appliance.",
+  "version": "0.1.0",
+  "status": "typical_estimate",
+  "occupant_reference": 2.4,
+  "categories": {
+    "appliance": "Electric baseload: counts towards baseload_kwh_per_day and internal gains",
+    "cooking": "Cooking: electricity (baseload) or gas, by the hob/oven fuel answer",
+    "hot_water": "Hot water equipment (electric shower): electricity, part of hot-water demand, not baseload",
+    "secondary_heating": "Plug-in heaters: electric space heating on top of the main system",
+    "outdoor": "Outside the heated envelope (EV charger, hot tub): electricity, no internal gains"
+  },
+  "types": {
+    "fridge_freezer": {
+      "category": "appliance", "heat_to_room": 1.0, "daily_profile": "flat", "monthly_profile": "flat",
+      "questions": [
+        {"key": "size", "label": "Size", "options": [["small", "Small (under 250 L)"], ["medium", "Medium (250-350 L)"], ["large", "Large / American (over 350 L)"]], "default": "medium"},
+        {"key": "age", "label": "Age", "options": [["new", "Under 5 years"], ["mid", "5-10 years"], ["old", "Over 10 years"]], "default": "mid"}
+      ],
+      "model": {"type": "annual", "kwh_by": {"size": {"small": 200, "medium": 280, "large": 420}}, "multiplier_by": {"age": {"new": 1.0, "mid": 1.2, "old": 1.6}}}
+    },
+    "fridge": {
+      "category": "appliance", "heat_to_room": 1.0, "daily_profile": "flat", "monthly_profile": "flat",
+      "questions": [{"key": "age", "label": "Age", "options": [["new", "Under 5 years"], ["mid", "5-10 years"], ["old", "Over 10 years"]], "default": "mid"}],
+      "model": {"type": "annual", "kwh_by": {}, "base_kwh": 120, "multiplier_by": {"age": {"new": 1.0, "mid": 1.2, "old": 1.6}}}
+    },
+    "freezer": {
+      "category": "appliance", "heat_to_room": 1.0, "daily_profile": "flat", "monthly_profile": "flat",
+      "questions": [{"key": "type", "label": "Type", "options": [["chest", "Chest"], ["upright", "Upright"]], "default": "chest"}],
+      "model": {"type": "annual", "kwh_by": {"type": {"chest": 200, "upright": 250}}}
+    },
+    "washing_machine": {
+      "category": "appliance", "heat_to_room": 0.4, "daily_profile": "laundry", "monthly_profile": "flat",
+      "questions": [{"key": "drum_kg", "label": "Drum size", "options": [["6", "6 kg"], ["8", "7-8 kg"], ["10", "9-10 kg"]], "default": "8"}],
+      "model": {"type": "per_use", "kwh_per_use_by": {"drum_kg": {"6": 0.55, "8": 0.70, "10": 0.85}}, "uses_per_week": 4, "scale_with_occupants": true}
+    },
+    "tumble_dryer": {
+      "category": "appliance", "heat_to_room": 0.6, "daily_profile": "laundry", "monthly_profile": "winter_tilt",
+      "questions": [
+        {"key": "type", "label": "Type", "options": [["vented", "Vented"], ["condenser", "Condenser"], ["heat_pump", "Heat pump"]], "default": "condenser"}
+      ],
+      "model": {"type": "per_use", "kwh_per_use_by": {"type": {"vented": 4.2, "condenser": 4.0, "heat_pump": 1.8}}, "uses_per_week": 3, "scale_with_occupants": true},
+      "heat_to_room_by": {"type": {"vented": 0.3, "condenser": 1.0, "heat_pump": 1.0}}
+    },
+    "dishwasher": {
+      "category": "appliance", "heat_to_room": 0.5, "daily_profile": "evening", "monthly_profile": "flat",
+      "questions": [{"key": "size", "label": "Size", "options": [["slimline", "Slimline"], ["full", "Full size"]], "default": "full"}],
+      "model": {"type": "per_use", "kwh_per_use_by": {"size": {"slimline": 0.75, "full": 1.0}}, "uses_per_week": 5, "scale_with_occupants": true}
+    },
+    "electric_oven": {
+      "category": "cooking", "heat_to_room": 1.0, "daily_profile": "cooking", "monthly_profile": "flat",
+      "questions": [
+        {"key": "size", "label": "Oven", "options": [["single", "Single"], ["double", "Double"]], "default": "single"},
+        {"key": "fuel", "label": "Fuel", "options": [["electricity", "Electric"], ["mains_gas", "Gas"]], "default": "electricity"}
+      ],
+      "model": {"type": "per_use", "kwh_per_use_by": {"size": {"single": 0.9, "double": 1.3}}, "uses_per_week": 4, "scale_with_occupants": true},
+      "fuel_question": "fuel", "gas_multiplier": 1.4
+    },
+    "hob": {
+      "category": "cooking", "heat_to_room": 1.0, "daily_profile": "cooking", "monthly_profile": "flat",
+      "questions": [{"key": "type", "label": "Type", "options": [["induction", "Induction"], ["ceramic", "Electric ceramic"], ["gas", "Gas"]], "default": "ceramic"}],
+      "model": {"type": "annual", "kwh_by": {"type": {"induction": 250, "ceramic": 330, "gas": 550}}, "scale_with_occupants": true},
+      "fuel_by": {"type": {"induction": "electricity", "ceramic": "electricity", "gas": "mains_gas"}}
+    },
+    "microwave": {
+      "category": "cooking", "heat_to_room": 1.0, "daily_profile": "cooking", "monthly_profile": "flat", "questions": [],
+      "model": {"type": "annual", "kwh_by": {}, "base_kwh": 55, "scale_with_occupants": true}
+    },
+    "kettle": {
+      "category": "cooking", "heat_to_room": 1.0, "daily_profile": "morning_evening", "monthly_profile": "winter_tilt", "questions": [],
+      "model": {"type": "annual", "kwh_by": {}, "base_kwh": 150, "scale_with_occupants": true}
+    },
+    "electric_shower": {
+      "category": "hot_water", "heat_to_room": 0.1, "daily_profile": "morning_evening", "monthly_profile": "winter_tilt",
+      "questions": [{"key": "rating_kw", "label": "Rating", "options": [["7.5", "7.5 kW"], ["8.5", "8.5 kW"], ["9.5", "9.5 kW"], ["10.5", "10.5 kW"]], "default": "8.5"}],
+      "model": {"type": "shower", "minutes_per_person_per_day": 6}
+    },
+    "immersion_heater": {
+      "category": "hot_water_system", "heat_to_room": 0.0, "daily_profile": "overnight", "monthly_profile": "flat",
+      "questions": [
+        {"key": "tank", "label": "Cylinder size", "options": [["small", "Small (up to 110 L)"], ["medium", "Medium (110-160 L)"], ["large", "Large (over 160 L)"]], "default": "medium"},
+        {"key": "jacket", "label": "Insulation", "options": [["factory", "Factory foam"], ["jacket", "Loose jacket"], ["none", "None"]], "default": "factory"}
+      ],
+      "model": {"type": "system"},
+      "standing_loss_kwh_per_day_by": {"jacket": {"factory": 1.0, "jacket": 1.6, "none": 3.0}}
+    },
+    "tv": {
+      "category": "appliance", "heat_to_room": 1.0, "daily_profile": "evening", "monthly_profile": "winter_tilt",
+      "questions": [{"key": "inches", "label": "Screen size", "options": [["32", "Up to 32\""], ["43", "40-43\""], ["55", "50-55\""], ["65", "65\" or more"]], "default": "43"}],
+      "model": {"type": "power", "watts_by": {"inches": {"32": 50, "43": 75, "55": 100, "65": 140}}, "hours_per_day": 5}
+    },
+    "desktop_pc": {
+      "category": "appliance", "heat_to_room": 1.0, "daily_profile": "daytime", "monthly_profile": "flat",
+      "questions": [{"key": "type", "label": "Use", "options": [["office", "Office / browsing"], ["gaming", "Gaming / workstation"]], "default": "office"}],
+      "model": {"type": "power", "watts_by": {"type": {"office": 90, "gaming": 300}}, "hours_per_day": 4}
+    },
+    "games_console": {
+      "category": "appliance", "heat_to_room": 1.0, "daily_profile": "evening", "monthly_profile": "winter_tilt", "questions": [],
+      "model": {"type": "power", "watts_by": {}, "base_watts": 120, "hours_per_day": 2}
+    },
+    "electric_heater": {
+      "category": "secondary_heating", "heat_to_room": 1.0, "daily_profile": "evening", "monthly_profile": "heating_season",
+      "questions": [{"key": "rating_kw", "label": "Rating", "options": [["1", "1 kW"], ["2", "2 kW"], ["3", "3 kW"]], "default": "2"}],
+      "model": {"type": "power_kw", "kw_question": "rating_kw", "hours_per_day": 2}
+    },
+    "dehumidifier": {
+      "category": "appliance", "heat_to_room": 1.0, "daily_profile": "flat", "monthly_profile": "winter_tilt",
+      "questions": [{"key": "size", "label": "Size", "options": [["small", "Small (10-12 L/day)"], ["large", "Large (20 L/day)"]], "default": "small"}],
+      "model": {"type": "power", "watts_by": {"size": {"small": 180, "large": 350}}, "hours_per_day": 6}
+    },
+    "ev_charger": {
+      "category": "outdoor", "heat_to_room": 0.0, "daily_profile": "overnight", "monthly_profile": "flat",
+      "questions": [{"key": "miles_per_week", "label": "Miles driven per week", "options": [["50", "Up to 50"], ["150", "About 150"], ["300", "About 300"]], "default": "150"}],
+      "model": {"type": "ev", "kwh_per_mile": 0.3}
+    },
+    "hot_tub": {
+      "category": "outdoor", "heat_to_room": 0.0, "daily_profile": "flat", "monthly_profile": "winter_tilt", "questions": [],
+      "model": {"type": "annual", "kwh_by": {}, "base_kwh": 2000}
+    }
+  }
+}
