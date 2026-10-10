@@ -45,3 +45,6 @@ Thumbs.db
 # Organiser brief and early drafts (not shared in repo)
 LLOYDS-ps2.pdf
 Green_Home_Ideas.pdf
+
+# browser automation logs
+.playwright-mcp/
