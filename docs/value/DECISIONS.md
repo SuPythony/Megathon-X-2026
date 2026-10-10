@@ -51,6 +51,16 @@ UK HPI full file to July 2026 (HM Land Registry, OGL) gives a monthly index per 
 - Metrics (brief §11, LLD §10): 90% interval coverage, mean pinball loss at 5/50/95%, MAE of log price, median absolute % error of the median; rating effect vs the published premiums (VALUE_RESEARCH.md §1).
 - Baselines: OLS with LA + type/form + age + year fixed effects, **without** SAP and **with** SAP (does the rating add anything?), and LightGBM quantile (non-linear ceiling for the intervals).
 
+## V-09 First Bayesian result: rating effect larger than published (confounding signal)
+v1 fit (`scripts/train_value_model.py --steps 8000 --version v1`; 712,053 train sales; ELBO 6.53M → −102k; posterior saved in `artifacts/value_model/v1/`):
+- Pooled rating effect **+0.25% per SAP point** (90% 0.20–0.31%), inside the top of the expected 0.1–0.25%/point range.
+- Implied premium vs D: A/B **+7.8%** (6.1–9.4), C +3.4% (2.7–4.0), E −3.7% (−4.5 to −3.0), F/G **−10.0%** (−11.9 to −8.0). Published owner-occupied figures: A/B +1.6% to +3.4%, F/G −1.4% to −4.2%.
+- Our extremes are 2–3× the published ones: likely omitted condition/renovation (refurbished homes are better rated *and* worth more). **Next:** within-LSOA × type × age-band × year comparison and a repeat-sales check, before the β is used in the product; until then the range must be presented as an upper-leaning, indicative association.
+- Evaluation incomplete: the OLS baseline hit a MemoryError at `lstsq` on the 250k design. Fix pending: smaller OLS sample or sparse solver. Smoke run (50 SVI steps, 2k eval rows): OLS without SAP 90% coverage 0.901, median APE 16.2%; with SAP essentially identical (MAE 0.2077 → 0.2078); LightGBM quantile coverage 0.874, median APE 12.2%.
+
+## V-10 Green twins (code written, not yet run)
+`greentwin/value/green_twins.py`: greener comparable sales nearby, as ranges only. Score at sale = Green Home Score without intensity (brief weights renormalised over six components, same EPC parsers as the score); same type, form, age band, floor area ±10%, sold 2019–2024; LSOA → MSOA → LA; tiers +15–25 / +25–35 / +35 points; ≥ 5 sales per tier; HPI-adjusted £/m² as a Distribution.
+
 ---
 
 ## Data on hand
