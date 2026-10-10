@@ -237,19 +237,42 @@ All new list fields default to empty, so existing code and mocks keep validating
 
 ## 7. 3D viewer [F]
 
-Stack (from the plan): React + Vite + TypeScript, react-three-fiber + drei, Zustand, `contracts/types.ts`.
+Stack (from the plan): React + Vite + TypeScript, react-three-fiber + drei, Zustand.
 
-- **House view:** each room's polygon extruded to its ceiling height, per storey. Exterior walls tinted by heat-loss share, windows as glass panes, roof as a separate toggleable mesh. Storeys can be exploded or stacked.
-- **Click a room → isolate:** other rooms fade to ~10% opacity, the camera eases to frame the room, and the roof and upper storeys hide when the room is below them.
-- **Room panel:**
-  - heat loss (W/K + share + interval)
-  - which walls and windows lose the most
-  - each appliance's kWh/yr and £/yr
-  - heating £/yr
-  - retrofits that apply to this room (from `RetrofitSlot`)
-- **Appliances:** simple icon meshes placed inside the room polygon (auto-layout along walls; no exact positions needed).
-- **Labels:** "Estimated from floor plan and home type; only whole-house totals are calibrated to bills."
-- **The scene never calculates.** All numbers come from `TwinScene.room_energy` / `ScenarioResult`.
+### 7.1 Scene JSON (built, `greentwin/twin/scene.py`)
+`build_scene(layout, property_id, appliances)` returns one JSON document (`RoomScene`, version `room_scene/0.1`) that the viewer renders directly. It's internal to Part 1 for now; no shared contract change. Schema: `greentwin/twin/examples/room_scene.schema.json`. One example per archetype: `greentwin/twin/examples/<archetype>.scene.json` (regenerate with `python -m greentwin.twin.scene`).
+
+Contents: rooms (polygon, storey, floor height), walls (exterior / party / internal, outward azimuth), openings (with sill heights), roof (type, pitch, eave and ridge heights), exterior features, faded neighbour blocks, appliances.
+
+Conventions: metres; x across the front, y from front (0) to back; z up. Box positions are bottom-centre. Rotation about z: 0 = front faces -y (street), 90 = +x, 180 = +y, 270 = -x.
+
+### 7.2 Distinct look per house type (`greentwin/twin/house_styles.json`)
+| Archetype | Walls | Roof | Features |
+|---|---|---|---|
+| Victorian terrace | red brick | slate gable | ground-floor bay, two party-wall chimneys, front garden wall, white sash frames |
+| 1930s semi | brick below, pebbledash above | clay-tile hip | two-storey bay, canopy porch, chimney on the party side |
+| 1960s-80s detached | buff brick | low-pitch concrete-tile gable | attached garage (visual only, unheated), picture windows, dark frames |
+| Post-2000 terrace | orange brick | grey gable | canopy porch, white uPVC, no chimney |
+| Bungalow | white render | brown hip | enclosed porch, central chimney, garden wall |
+| Flat | concrete panel | block above | glass balcony, aluminium frames |
+
+Party walls get faded neighbour blocks (left / right / back, and above / below for flats), so terraces, semis and flats read correctly. A garage on a party side moves to the free side, or is dropped for mid-terraces. Visual only: nothing in the style feeds the physics.
+
+### 7.3 Appliances: custom placement (`greentwin/twin/appliance_visuals.json`)
+- Each appliance type has its own size, shape, colours, icon and mounting (floor / counter / wall / outdoor). 19 types.
+- **Custom:** the user drops an appliance in a room: `{"appliance_id", "type", "room_id", "u", "v", "rotation_deg"}`. `u`/`v` are 0..1 across the room's width and depth, so placements survive rescaling. Rotation defaults to facing away from the nearest wall. Out-of-room positions are clamped back in, with a warning.
+- **Auto:** no `u`/`v` → placed along free wall space (back, left, right, front), stepping around custom-placed items. Floor-level and counter/wall-mounted items share walls by height band (hob above oven, TV above a console); tall items (fridge-freezer, cylinder) block both bands.
+- **Outdoor:** `room_id: "outside"`; EV charger auto-mounts on the front wall, hot tub in the garden; custom via `x_m`/`y_m`.
+- Unusual rooms (hob in a bedroom) warn but are allowed. Unknown types or rooms raise.
+- Schema for the input: `greentwin/twin/examples/appliance_placement.schema.json`.
+
+### 7.4 Viewer behaviour
+- **House view:** rooms extruded per storey; exterior walls tinted by heat-loss share once allocation exists; roof toggleable; storeys can be exploded.
+- **Click a room → isolate:** other rooms fade to ~10% opacity, the camera frames the room, roof and upper storeys hide when the room is below them.
+- **Room panel:** heat loss (W/K + share + interval), worst walls and windows, each appliance's kWh/yr and £/yr, heating £/yr, applicable retrofits.
+- **Drag to place:** dragging an appliance writes back `u`/`v`/`rotation_deg`; the backend re-runs `build_scene`.
+- **Labels:** the scene's `basis` text is shown wherever room numbers appear.
+- **The scene never calculates.** Energy numbers come from the twin's results.
 
 ---
 
@@ -265,7 +288,8 @@ Stack (from the plan): React + Vite + TypeScript, react-three-fiber + drei, Zust
 ## 9. Build order (thinnest path first)
 
 1. ✅ **Archetype library + fitting** (`greentwin/twin/archetypes.py`) and **vision extraction** on `claude-sonnet-5-5` with structured outputs + cache (`greentwin/twin/vision.py`). Tests: `tests/test_archetypes.py`.
-2. **`scene()`**: `TwinLayout` → `TwinScene` → 3D viewer with room isolation, starting with the showcase homes. Needs the §6 contract fields, or an internal scene JSON until sign-off.
+2. ✅ **Scene JSON** (`greentwin/twin/scene.py`): distinct look per house type, custom + auto appliance placement, examples + JSON Schema. Tests: `tests/test_scene.py`.
+2b. **3D viewer** (react-three-fiber) rendering the scene JSON, with room isolation and drag-to-place.
 3. **Appliance catalogue** + per-room form → baseload prior.
 4. **Room allocation** on the stub `run_physics` → `RoomEnergy` → room panel.
 5. **Confirm screen:** pick or override the archetype, fix labels, map circuits to rooms.

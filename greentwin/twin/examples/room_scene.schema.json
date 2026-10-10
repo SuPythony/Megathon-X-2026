@@ -1,0 +1,771 @@
+{
+  "$defs": {
+    "ContextBlock": {
+      "description": "A neighbouring dwelling, drawn faded so party walls read clearly.",
+      "properties": {
+        "relation": {
+          "enum": [
+            "left",
+            "right",
+            "back",
+            "above",
+            "below"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "position_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position M",
+          "type": "array"
+        },
+        "size_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Size M",
+          "type": "array"
+        }
+      },
+      "required": [
+        "relation",
+        "position_m",
+        "size_m"
+      ],
+      "title": "ContextBlock",
+      "type": "object"
+    },
+    "SceneAppliance": {
+      "properties": {
+        "appliance_id": {
+          "title": "Appliance Id",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "room_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Room Id"
+        },
+        "placement": {
+          "enum": [
+            "custom",
+            "auto"
+          ],
+          "title": "Placement",
+          "type": "string"
+        },
+        "position_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position M",
+          "type": "array"
+        },
+        "rotation_deg": {
+          "title": "Rotation Deg",
+          "type": "number"
+        },
+        "size_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Size M",
+          "type": "array"
+        },
+        "shape": {
+          "title": "Shape",
+          "type": "string"
+        },
+        "mount": {
+          "title": "Mount",
+          "type": "string"
+        },
+        "colour": {
+          "title": "Colour",
+          "type": "string"
+        },
+        "accent": {
+          "title": "Accent",
+          "type": "string"
+        },
+        "icon": {
+          "title": "Icon",
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "appliance_id",
+        "type",
+        "label",
+        "room_id",
+        "placement",
+        "position_m",
+        "rotation_deg",
+        "size_m",
+        "shape",
+        "mount",
+        "colour",
+        "accent",
+        "icon"
+      ],
+      "title": "SceneAppliance",
+      "type": "object"
+    },
+    "SceneFeature": {
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "position_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position M",
+          "type": "array"
+        },
+        "size_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Size M",
+          "type": "array"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "enum": [
+                "front",
+                "back",
+                "left",
+                "right"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Side"
+        },
+        "room_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Room Id"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "colour": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Colour"
+        },
+        "extra": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Extra",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "position_m",
+        "size_m"
+      ],
+      "title": "SceneFeature",
+      "type": "object"
+    },
+    "SceneOpening": {
+      "properties": {
+        "opening_id": {
+          "title": "Opening Id",
+          "type": "string"
+        },
+        "wall_id": {
+          "title": "Wall Id",
+          "type": "string"
+        },
+        "room_id": {
+          "title": "Room Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "door",
+            "window",
+            "patio_door"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "width_m": {
+          "title": "Width M",
+          "type": "number"
+        },
+        "height_m": {
+          "title": "Height M",
+          "type": "number"
+        },
+        "centre_m": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Centre M",
+          "type": "array"
+        },
+        "sill_m": {
+          "title": "Sill M",
+          "type": "number"
+        },
+        "z0_m": {
+          "title": "Z0 M",
+          "type": "number"
+        }
+      },
+      "required": [
+        "opening_id",
+        "wall_id",
+        "room_id",
+        "kind",
+        "width_m",
+        "height_m",
+        "centre_m",
+        "sill_m",
+        "z0_m"
+      ],
+      "title": "SceneOpening",
+      "type": "object"
+    },
+    "SceneRoof": {
+      "properties": {
+        "type": {
+          "enum": [
+            "gable",
+            "hip",
+            "flat"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "pitch_deg": {
+          "title": "Pitch Deg",
+          "type": "number"
+        },
+        "ridge_axis": {
+          "enum": [
+            "x",
+            "y"
+          ],
+          "title": "Ridge Axis",
+          "type": "string"
+        },
+        "eave_z_m": {
+          "title": "Eave Z M",
+          "type": "number"
+        },
+        "ridge_z_m": {
+          "title": "Ridge Z M",
+          "type": "number"
+        },
+        "colour": {
+          "title": "Colour",
+          "type": "string"
+        },
+        "material": {
+          "title": "Material",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "pitch_deg",
+        "ridge_axis",
+        "eave_z_m",
+        "ridge_z_m",
+        "colour",
+        "material"
+      ],
+      "title": "SceneRoof",
+      "type": "object"
+    },
+    "SceneRoom": {
+      "properties": {
+        "room_id": {
+          "title": "Room Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "room_type": {
+          "enum": [
+            "living",
+            "kitchen",
+            "dining",
+            "bedroom",
+            "bathroom",
+            "wc",
+            "hall",
+            "landing",
+            "utility",
+            "study",
+            "garage",
+            "conservatory",
+            "other"
+          ],
+          "title": "Room Type",
+          "type": "string"
+        },
+        "storey": {
+          "title": "Storey",
+          "type": "integer"
+        },
+        "polygon_m": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Polygon M",
+          "type": "array"
+        },
+        "area_m2": {
+          "title": "Area M2",
+          "type": "number"
+        },
+        "floor_z_m": {
+          "title": "Floor Z M",
+          "type": "number"
+        },
+        "height_m": {
+          "title": "Height M",
+          "type": "number"
+        }
+      },
+      "required": [
+        "room_id",
+        "label",
+        "room_type",
+        "storey",
+        "polygon_m",
+        "area_m2",
+        "floor_z_m",
+        "height_m"
+      ],
+      "title": "SceneRoom",
+      "type": "object"
+    },
+    "SceneStyle": {
+      "properties": {
+        "wall_material": {
+          "title": "Wall Material",
+          "type": "string"
+        },
+        "wall_colour": {
+          "title": "Wall Colour",
+          "type": "string"
+        },
+        "wall_upper_colour": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Wall Upper Colour"
+        },
+        "frame_colour": {
+          "title": "Frame Colour",
+          "type": "string"
+        },
+        "window_style": {
+          "title": "Window Style",
+          "type": "string"
+        },
+        "door_colour": {
+          "title": "Door Colour",
+          "type": "string"
+        }
+      },
+      "required": [
+        "wall_material",
+        "wall_colour",
+        "wall_upper_colour",
+        "frame_colour",
+        "window_style",
+        "door_colour"
+      ],
+      "title": "SceneStyle",
+      "type": "object"
+    },
+    "SceneWall": {
+      "properties": {
+        "wall_id": {
+          "title": "Wall Id",
+          "type": "string"
+        },
+        "room_id": {
+          "title": "Room Id",
+          "type": "string"
+        },
+        "storey": {
+          "title": "Storey",
+          "type": "integer"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "enum": [
+                "front",
+                "back",
+                "left",
+                "right"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Facade side for exterior/party walls; None if internal",
+          "title": "Side"
+        },
+        "kind": {
+          "enum": [
+            "exterior",
+            "party",
+            "internal"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "start_m": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Start M",
+          "type": "array"
+        },
+        "end_m": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "End M",
+          "type": "array"
+        },
+        "length_m": {
+          "title": "Length M",
+          "type": "number"
+        },
+        "height_m": {
+          "title": "Height M",
+          "type": "number"
+        },
+        "orientation_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Outward normal azimuth, 180 = south",
+          "title": "Orientation Deg"
+        },
+        "z0_m": {
+          "title": "Z0 M",
+          "type": "number"
+        }
+      },
+      "required": [
+        "wall_id",
+        "room_id",
+        "storey",
+        "kind",
+        "start_m",
+        "end_m",
+        "length_m",
+        "height_m",
+        "z0_m"
+      ],
+      "title": "SceneWall",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "scene_version": {
+      "default": "room_scene/0.1",
+      "title": "Scene Version",
+      "type": "string"
+    },
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "archetype_id": {
+      "title": "Archetype Id",
+      "type": "string"
+    },
+    "archetype_name": {
+      "title": "Archetype Name",
+      "type": "string"
+    },
+    "built_form": {
+      "title": "Built Form",
+      "type": "string"
+    },
+    "storeys": {
+      "title": "Storeys",
+      "type": "integer"
+    },
+    "footprint_m": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Footprint M",
+      "type": "array"
+    },
+    "ceiling_height_m": {
+      "title": "Ceiling Height M",
+      "type": "number"
+    },
+    "front_azimuth_deg": {
+      "title": "Front Azimuth Deg",
+      "type": "number"
+    },
+    "style": {
+      "$ref": "#/$defs/SceneStyle"
+    },
+    "rooms": {
+      "items": {
+        "$ref": "#/$defs/SceneRoom"
+      },
+      "title": "Rooms",
+      "type": "array"
+    },
+    "walls": {
+      "items": {
+        "$ref": "#/$defs/SceneWall"
+      },
+      "title": "Walls",
+      "type": "array"
+    },
+    "openings": {
+      "items": {
+        "$ref": "#/$defs/SceneOpening"
+      },
+      "title": "Openings",
+      "type": "array"
+    },
+    "roof": {
+      "$ref": "#/$defs/SceneRoof"
+    },
+    "features": {
+      "items": {
+        "$ref": "#/$defs/SceneFeature"
+      },
+      "title": "Features",
+      "type": "array"
+    },
+    "context": {
+      "items": {
+        "$ref": "#/$defs/ContextBlock"
+      },
+      "title": "Context",
+      "type": "array"
+    },
+    "appliances": {
+      "items": {
+        "$ref": "#/$defs/SceneAppliance"
+      },
+      "title": "Appliances",
+      "type": "array"
+    },
+    "basis": {
+      "default": "Layout from the closest standard UK house type, fitted to this home; room heat loss is estimated, only whole-house totals are calibrated to bills",
+      "title": "Basis",
+      "type": "string"
+    }
+  },
+  "required": [
+    "property_id",
+    "archetype_id",
+    "archetype_name",
+    "built_form",
+    "storeys",
+    "footprint_m",
+    "ceiling_height_m",
+    "front_azimuth_deg",
+    "style",
+    "rooms",
+    "walls",
+    "openings",
+    "roof",
+    "features",
+    "context",
+    "appliances"
+  ],
+  "title": "RoomScene",
+  "type": "object"
+}

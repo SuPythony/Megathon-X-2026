@@ -1,0 +1,109 @@
+{
+  "description": "One appliance as the user entered it. Leave u/v empty to auto-place along the room's walls.",
+  "properties": {
+    "appliance_id": {
+      "title": "Appliance Id",
+      "type": "string"
+    },
+    "type": {
+      "description": "Key in appliance_visuals.json",
+      "title": "Type",
+      "type": "string"
+    },
+    "room_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Archetype room key; None or 'outside' = outdoors",
+      "title": "Room Id"
+    },
+    "label": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Label"
+    },
+    "u": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Indoor: 0..1 across the room's width (x)",
+      "title": "U"
+    },
+    "v": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Indoor: 0..1 across the room's depth (y)",
+      "title": "V"
+    },
+    "x_m": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Outdoor only: plan x in metres",
+      "title": "X M"
+    },
+    "y_m": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Outdoor only: plan y in metres (negative = in front)",
+      "title": "Y M"
+    },
+    "rotation_deg": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rotation Deg"
+    }
+  },
+  "required": [
+    "appliance_id",
+    "type"
+  ],
+  "title": "AppliancePlacement",
+  "type": "object"
+}
