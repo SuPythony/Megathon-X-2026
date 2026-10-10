@@ -48,3 +48,6 @@ Green_Home_Ideas.pdf
 
 # browser automation logs
 .playwright-mcp/
+
+# git worktrees (isolated per-task checkouts)
+.worktrees/
