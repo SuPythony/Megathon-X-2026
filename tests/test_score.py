@@ -157,6 +157,21 @@ def test_projected_score_not_lower_for_improvement():
     assert after.score >= before.score
 
 
+def test_learned_alternative_never_changes_headline(tmp_path):
+    prop, usage = load("SH2")
+    energy = energy_from_usage(prop, usage, n=500)
+    lw = {"energy_efficiency": 0.3, "energy_intensity": 0.1, "insulation": 0.15, "heating_system": 0.2,
+          "windows_glazing": 0.05, "renewable_energy": 0.05, "smart_energy_management": 0.15}
+    (tmp_path / "weights.json").write_text(json.dumps({"weights": lw, "method": "test"}))
+    plain = GreenHomeScorer(n_samples=500, learned_weights_dir=None).score(prop, energy)
+    with_alt = GreenHomeScorer(n_samples=500, learned_weights_dir=str(tmp_path)).score(prop, energy)
+    assert plain.alternatives == []
+    assert with_alt.score == plain.score and with_alt.band == plain.band
+    alt = with_alt.alternatives[0]
+    expected = sum(lw[c.name] * c.sub_score for c in with_alt.components)
+    assert abs(alt.score - expected) <= 0.5 + 0.01 and alt.band == m.classify(alt.score)
+
+
 @pytest.mark.parametrize("pid", ["SH1", "SH2", "SH3"])
 def test_showcase_homes_score(pid):
     prop, usage = load(pid)

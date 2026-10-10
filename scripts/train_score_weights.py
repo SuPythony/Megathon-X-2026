@@ -257,6 +257,8 @@ def main() -> None:
         "energy_intensity": np.percentile(boot_ratio[:, 1] * bt, [5, 95]).round(4).tolist(),
         "attribute_block": np.percentile(bt, [5, 95]).round(4).tolist(),
     }
+    for k, v in zip(ATTR, attr_mean):  # block uncertainty x the attribute's share (stage-1 spread is reported separately)
+        metrics["final_weights_boot_p5_p95"][COMP[k]] = np.percentile(bt * v / attr_mean.sum(), [5, 95]).round(4).tolist()
     final = {k: round(v, 4) for k, v in final.items()}
     drift = round(1 - sum(final.values()), 4)
     final["energy_efficiency"] = round(final["energy_efficiency"] + drift, 4)  # exact sum to 1 after rounding

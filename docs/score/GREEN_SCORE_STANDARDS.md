@@ -193,6 +193,8 @@ Recommended pipeline: M5 learns monotone sub-score curves → sub-scores 0–100
 - **Join by archetype**, not by home: type × age band × floor-area band × region cells. Aggregate EPC component means per cell and join NEED metered medians, then fit a cell-level regression (an ecological check, reported as such).
 - **Splits:** by property (EPC: UPRN; NEED: row), 70/15/15, seed 42; held-out test used once. Spatial-block check by local authority.
 
+> **As built (11 Oct 2026):** the per-home NEED fit was tried and rejected (held-out R² 0.04: behaviour dominates single-home meters). The archetype join is what identifies the energy-efficiency and intensity weights. It uses type × age × floor-area band (no region: the EPC sample has no region code yet), compares within floor-area bands, and uses Shapley/LMG R² shares because SAP summarises the attributes. See DECISIONS.md D-18 and the results in LEARNED_WEIGHTS.md.
+
 ### 4.4 Evaluation (what we will report)
 - Held-out R² / MAE of each weighting (learned vs brief vs equal weights) for each target.
 - Rank agreement (Spearman) and band agreement between the learned and the brief score.

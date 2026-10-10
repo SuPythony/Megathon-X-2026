@@ -52,8 +52,11 @@ class GreenHomeScorer:
         if path.is_dir():
             path = path / "weights.json"
         j = json.loads(path.read_text(encoding="utf-8"))
-        return {"weights": j["weights"], "version": str(path.parent.relative_to(root.parents[1])).replace("\\", "/"),
-                "method": j.get("method", "")}
+        try:
+            version = path.parent.relative_to(root.parents[1]).as_posix()
+        except ValueError:  # weights file outside the repo (tests, ad-hoc runs)
+            version = path.parent.as_posix()
+        return {"weights": j["weights"], "version": version, "method": j.get("method", "")}
 
     # ------------------------------------------------------------------ public
     def score(self, prop: Property, energy: EnergyBreakdown, rating: Optional[RatingEstimate] = None,
