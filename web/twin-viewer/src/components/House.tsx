@@ -3,7 +3,8 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { useMemo, useState } from 'react'
 import * as THREE from 'three'
 import { EXPLODE_GAP_M, bbox, northDirection, roofGeometry, toThree, wallPieces } from '../geometry'
-import { useViewer } from '../store'
+import { currentRooms, useViewer } from '../store'
+import { RETROFIT_WALL_RENDER, glazingColour } from './Retrofits'
 import type { RoomScene, SceneFeature, SceneRoom } from '../types'
 
 export type Visibility = 'full' | 'faded' | 'hidden'
@@ -52,15 +53,15 @@ function isClick(e: ThreeEvent<MouseEvent>) {
 // When one room is isolated, the walls nearest the camera (front and right) become see-through: a cutaway.
 const CUTAWAY_SIDES = new Set(['front', 'right'])
 
-function Room({ scene, room, vis, isolated, explode, onHover, tint }: {
+function Room({ scene, room, vis, isolated, explode, onHover, tint, glass, wallFinish }: {
   scene: RoomScene; room: SceneRoom; vis: Visibility; isolated: boolean; explode: boolean
-  onHover: (id: string | null) => void; tint: string | null
+  onHover: (id: string | null) => void; tint: string | null; glass: string; wallFinish: string | null
 }) {
   const selectRoom = useViewer((s) => s.selectRoom)
   const base = storeyOffset(room.storey, explode)
   const [x0, y0, x1, y1] = bbox(room)
   const walls = scene.walls.filter((w) => w.room_id === room.room_id)
-  const upper = room.storey > 0 && scene.style.wall_upper_colour ? scene.style.wall_upper_colour : scene.style.wall_colour
+  const upper = wallFinish ?? (room.storey > 0 && scene.style.wall_upper_colour ? scene.style.wall_upper_colour : scene.style.wall_colour)
 
   const pieces = useMemo(
     () => walls.flatMap((w) => wallPieces(w, scene.openings.filter((o) => o.wall_id === w.wall_id), base + room.floor_z_m,
@@ -87,17 +88,17 @@ function Room({ scene, room, vis, isolated, explode, onHover, tint }: {
       </mesh>
       {pieces.map((p) => {
         const colour =
-          p.fill === 'window' || p.fill === 'patio_door' ? GLASS
+          p.fill === 'window' || p.fill === 'patio_door' ? glass
             : p.fill === 'door' ? scene.style.door_colour
               : p.kind === 'internal' ? '#f3f1ec'
                 : p.kind === 'party' ? '#b9a99a'
                   : upper
-        const glass = p.fill === 'window' || p.fill === 'patio_door'
+        const isGlass = p.fill === 'window' || p.fill === 'patio_door'
         const cut = isolated && CUTAWAY_SIDES.has(p.side)
         return (
           <mesh key={p.key} position={p.position} rotation={[0, p.rotationY, 0]} {...handlers}>
             <boxGeometry args={p.size} />
-            <Mat colour={colour} vis={vis} opacity={cut ? 0.18 : glass ? 0.45 : 1} />
+            <Mat colour={colour} vis={vis} opacity={cut ? 0.18 : isGlass ? 0.45 : 1} />
           </mesh>
         )
       })}
@@ -105,7 +106,7 @@ function Room({ scene, room, vis, isolated, explode, onHover, tint }: {
   )
 }
 
-function Roof({ scene, explode }: { scene: RoomScene; explode: boolean }) {
+function Roof({ scene, explode, opacity = 1 }: { scene: RoomScene; explode: boolean; opacity?: number }) {
   const [w, d] = scene.footprint_m
   const eave = scene.roof.eave_z_m + storeyOffset(scene.storeys - 1, explode)
   const rise = scene.roof.ridge_z_m - scene.roof.eave_z_m
@@ -124,7 +125,8 @@ function Roof({ scene, explode }: { scene: RoomScene; explode: boolean }) {
   return (
     <group>
       <mesh geometry={geo.slopes}>
-        <meshStandardMaterial color={scene.roof.colour} side={THREE.DoubleSide} roughness={0.9} />
+        <meshStandardMaterial key={opacity < 1 ? 't' : 'o'} color={scene.roof.colour} side={THREE.DoubleSide} roughness={0.9}
+          transparent={opacity < 1} opacity={opacity} depthWrite={opacity >= 1} />
       </mesh>
       {geo.gables && (
         <mesh geometry={geo.gables}>
@@ -222,7 +224,11 @@ export function House({ scene }: { scene: RoomScene }) {
   const showRoof = useViewer((s) => s.showRoof)
   const explode = useViewer((s) => s.explode)
   const heatTint = useViewer((s) => s.heatTint)
-  const energy = scene.energy
+  const retrofitIds = useViewer((s) => s.retrofitIds)
+  const afterView = useViewer((s) => s.view === 'after' && s.retrofitIds.length > 0)
+  const energy = useViewer(currentRooms)
+  const glass: string = (afterView ? glazingColour(retrofitIds) : null) ?? GLASS
+  const wallFinish = afterView && retrofitIds.includes('external_wall_insulation') ? RETROFIT_WALL_RENDER : null
   const maxShare = energy ? Math.max(...energy.rooms.map((r) => r.heat_loss_share_pct)) : 0
   const tintFor = (id: string) => {
     const r = heatTint && energy ? energy.rooms.find((x) => x.room_id === id) : undefined
@@ -244,9 +250,10 @@ export function House({ scene }: { scene: RoomScene }) {
       )}
       {scene.rooms.map((room) => (
         <Room key={room.room_id} scene={scene} room={room} vis={roomVisibility(room, selected)}
-          isolated={selected?.room_id === room.room_id} explode={explode} onHover={setHover} tint={tintFor(room.room_id)} />
+          isolated={selected?.room_id === room.room_id} explode={explode} onHover={setHover} tint={tintFor(room.room_id)}
+          glass={glass} wallFinish={wallFinish} />
       ))}
-      {!selected && !explode && showRoof && <Roof scene={scene} explode={explode} />}
+      {!selected && !explode && showRoof && <Roof scene={scene} explode={explode} opacity={afterView ? 0.5 : 1} />}
       {!selected && !explode && scene.features.map((f, i) => <Feature key={`${f.kind}${i}`} f={f} scene={scene} explode={explode} />)}
       {!selected && scene.context.map((c) => {
         const [cx, cy, cz] = c.position_m

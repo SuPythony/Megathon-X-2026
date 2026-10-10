@@ -201,6 +201,14 @@ twin.last_engine                                               # 'physics' or 'p
 
 ## 6. For the UI / Part 5
 
+- **Retrofits in 3D + before/after (built):** `web/twin-viewer` shows every catalogue retrofit on the house and the
+  re-simulated package's numbers. Python side: `greentwin/twin/scenarios.py` (`run_scenario` → `ScenarioView`:
+  before / after / savings per sample for gas, electricity, £ at unit rates and carbon at the DESNZ factors, plus
+  per-room numbers after), `scene.retrofit_options` (geometry applicability, costs with `cost_status`), dev server
+  `scripts/twin_server.py` (`POST /api/twin/run`). The production API (Part 5) can reuse `run_scenario` directly.
+- **Appliance size questions (built):** the viewer asks each appliance's questions; answers are part of
+  `AppliancePlacement` and `SceneAppliance`.
+
 - **3D room viewer:** `web/twin-viewer` (own folder; doesn't touch `web/`). It renders the scene JSON from
   `greentwin/twin/scene.py`. Schemas: `greentwin/twin/examples/*.schema.json`.
 - **Intake:** the viewer's "New home" form produces `TwinIntake` JSON (`greentwin/twin/examples/twin_intake.schema.json`).

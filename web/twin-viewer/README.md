@@ -19,8 +19,25 @@ npm run dev        # copies greentwin/twin/examples/*.scene.json + appliance_vis
   the room; untouched auto-placed items are exported without a position so the backend places them again).
 - **Load scene JSON:** open any scene produced by `build_scene`.
 
+## Retrofits and live numbers
+- The **Retrofits** card lists the catalogue retrofits. The geometry check greys out ones that can't apply (no loft
+  in a flat, cavity fill on solid walls). Ticking one shows it on the house, and **Before / After** switches views:
+  loft layer, PV on the south-facing slope, outdoor heat-pump unit, glazing colour, wall insulation layers, draught
+  seals, LED lights, storage heaters, battery.
+- Numbers: the package is **re-simulated as a whole** (never summed). The table shows before, after and the change
+  per year for gas, electricity, running cost (unit rates only) and carbon, with 90% ranges. Increases are red.
+- **Live:** start the dev twin server, `uv run python scripts/twin_server.py` (port 8765; Vite proxies `/api`). It
+  re-runs any package and any appliance changes in about 1 s.
+- **Offline:** single retrofits come from scenarios precomputed into the scene JSON. Packages and changed
+  appliances need the server, and the panel says so.
+
+## Appliance questions
+Adding an appliance asks its size questions (`appliance_energy.json`: fridge size and age, drum kg, TV inches, shower
+kW...). The answers can be edited for the selected appliance. Answers are exported with placements and drive the
+appliance's energy, schedule and heat gains.
+
 ## Notes
-- No energy numbers yet: the room panel shows geometry only, until the twin's room allocation is wired in.
+- Showcase scenes (SH1-SH3) carry per-room energy from the twin; archetype examples show geometry only.
 - Plan coordinates map to three.js as `(x, z, -y)`, so the plan stays right-handed on screen.
 - `src/data/` is generated and git-ignored; edit the source files in `greentwin/twin/` instead.
 - Lives in its own folder so it doesn't clash with the main web app in `web/`.

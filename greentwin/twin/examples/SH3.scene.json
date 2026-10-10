@@ -833,6 +833,7 @@
       "colour": "#e8ecef",
       "accent": "#9aa5ad",
       "icon": "fridge",
+      "answers": {},
       "warnings": []
     },
     {
@@ -857,6 +858,9 @@
       "colour": "#f7f7f7",
       "accent": "#2a6fdb",
       "icon": "washer",
+      "answers": {
+        "drum_kg": "6"
+      },
       "warnings": []
     },
     {
@@ -881,6 +885,9 @@
       "colour": "#1d2024",
       "accent": "#d64545",
       "icon": "hob",
+      "answers": {
+        "type": "ceramic"
+      },
       "warnings": []
     },
     {
@@ -905,6 +912,9 @@
       "colour": "#c46a2b",
       "accent": "#7a3e14",
       "icon": "cylinder",
+      "answers": {
+        "jacket": "factory"
+      },
       "warnings": []
     },
     {
@@ -929,6 +939,9 @@
       "colour": "#f2f2f2",
       "accent": "#d64545",
       "icon": "heater",
+      "answers": {
+        "rating_kw": "2"
+      },
       "warnings": []
     },
     {
@@ -953,6 +966,7 @@
       "colour": "#111417",
       "accent": "#2a6fdb",
       "icon": "tv",
+      "answers": {},
       "warnings": []
     }
   ],
@@ -1181,6 +1195,4336 @@
       "unit": "kWh/yr"
     },
     "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+  },
+  "retrofits": [
+    {
+      "retrofit_id": "draught_proofing",
+      "name": "Draught proofing",
+      "category": "airtightness",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 120.0,
+      "cost_gbp_central": 250.0,
+      "cost_gbp_high": 380.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "loft_insulation",
+      "name": "Loft insulation to 270 mm",
+      "category": "fabric",
+      "applicable": false,
+      "reason": "No loft: another home or a flat roof is above",
+      "cost_gbp_low": 260.0,
+      "cost_gbp_central": 620.0,
+      "cost_gbp_high": 930.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "cavity_wall_insulation",
+      "name": "Cavity wall insulation",
+      "category": "fabric",
+      "applicable": false,
+      "reason": "Cavity already insulated",
+      "cost_gbp_low": 670.0,
+      "cost_gbp_central": 1040.0,
+      "cost_gbp_high": 1940.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "internal_wall_insulation",
+      "name": "Internal wall insulation",
+      "category": "fabric",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 9440.0,
+      "cost_gbp_central": 10970.0,
+      "cost_gbp_high": 12360.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [
+        "external_wall_insulation"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "external_wall_insulation",
+      "name": "External wall insulation",
+      "category": "fabric",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 9860.0,
+      "cost_gbp_central": 16390.0,
+      "cost_gbp_high": 20830.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [
+        "internal_wall_insulation"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "floor_insulation",
+      "name": "Suspended floor insulation",
+      "category": "fabric",
+      "applicable": false,
+      "reason": "Another home is below",
+      "cost_gbp_low": 4860.0,
+      "cost_gbp_central": 8050.0,
+      "cost_gbp_high": 11530.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "double_glazing",
+      "name": "Double glazing (panes and frames)",
+      "category": "glazing",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 5420.0,
+      "cost_gbp_central": 8890.0,
+      "cost_gbp_high": 14860.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [
+        "triple_glazing",
+        "secondary_glazing"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "triple_glazing",
+      "name": "Triple glazing",
+      "category": "glazing",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [
+        "double_glazing",
+        "secondary_glazing"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "secondary_glazing",
+      "name": "Secondary glazing",
+      "category": "glazing",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [
+        "double_glazing",
+        "triple_glazing"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "smart_thermostat",
+      "name": "Heating controls upgrade (smart thermostat + TRVs)",
+      "category": "controls",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": 620.0,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "air_source_heat_pump",
+      "name": "Air-source heat pump",
+      "category": "heating",
+      "applicable": true,
+      "reason": "Needs outdoor space for the unit (check)",
+      "cost_gbp_low": null,
+      "cost_gbp_central": 12500.0,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "secondary_source",
+      "excludes": [],
+      "depends_on": [
+        "loft_insulation",
+        "cavity_wall_insulation",
+        "internal_wall_insulation",
+        "external_wall_insulation"
+      ]
+    },
+    {
+      "retrofit_id": "hhr_storage_heaters",
+      "name": "High-heat-retention storage heaters",
+      "category": "heating",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "solar_pv",
+      "name": "Rooftop solar PV",
+      "category": "renewables",
+      "applicable": false,
+      "reason": "No own roof for panels",
+      "cost_gbp_low": null,
+      "cost_gbp_central": 1876.0,
+      "cost_gbp_high": null,
+      "cost_basis": "per_kwp",
+      "cost_status": "secondary_source",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "battery",
+      "name": "Home battery",
+      "category": "renewables",
+      "applicable": true,
+      "reason": "Needs solar PV or a time-of-use tariff to pay off",
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [],
+      "depends_on": [
+        "solar_pv"
+      ]
+    },
+    {
+      "retrofit_id": "led_lighting",
+      "name": "LED lighting throughout",
+      "category": "lighting",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "time_of_use_tariff",
+      "name": "Switch to a time-of-use electricity tariff",
+      "category": "tariff",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 0.0,
+      "cost_gbp_central": 0.0,
+      "cost_gbp_high": 0.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    }
+  ],
+  "scenarios": {
+    "": {
+      "key": "",
+      "retrofit_ids": [],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.5,
+              "lo": 9.5,
+              "hi": 21.7,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 546.5,
+              "lo": 223.5,
+              "hi": 1095.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 216.5,
+              "lo": 129.6,
+              "hi": 360.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 10.0,
+              "lo": 6.6,
+              "hi": 15.0,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.6,
+            "space_heating_kwh": {
+              "headline": 378.1,
+              "lo": 154.6,
+              "hi": 757.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 317.6,
+              "lo": 233.0,
+              "hi": 437.9,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 10.1,
+              "lo": 6.6,
+              "hi": 15.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.8,
+            "space_heating_kwh": {
+              "headline": 381.6,
+              "lo": 156.0,
+              "hi": 764.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 363.9,
+              "lo": 304.0,
+              "hi": 465.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.1,
+            "space_heating_kwh": {
+              "headline": 233.7,
+              "lo": 95.6,
+              "hi": 468.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 68.3,
+              "lo": 31.7,
+              "hi": 130.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 4.1,
+              "lo": 2.7,
+              "hi": 6.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.0,
+            "space_heating_kwh": {
+              "headline": 153.6,
+              "lo": 62.8,
+              "hi": 307.9,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 50.8,
+              "lo": 26.6,
+              "hi": 91.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.1,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 231.2,
+              "lo": 94.5,
+              "hi": 463.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 74.7,
+              "lo": 38.4,
+              "hi": 136.4,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "draught_proofing": {
+      "key": "draught_proofing",
+      "retrofit_ids": [
+        "draught_proofing"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 4732.4,
+          "lo": 3487.0,
+          "hi": 6601.6,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1245.6,
+          "lo": 917.8,
+          "hi": 1737.5,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 925.3,
+          "lo": 681.8,
+          "hi": 1290.8,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 297.1,
+          "lo": 148.5,
+          "hi": 549.2,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 78.2,
+          "lo": 39.1,
+          "hi": 144.5,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 58.1,
+          "lo": 29.0,
+          "hi": 107.4,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 13.0,
+              "lo": 8.5,
+              "hi": 19.5,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.2,
+            "space_heating_kwh": {
+              "headline": 458.6,
+              "lo": 178.0,
+              "hi": 939.8,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 193.0,
+              "lo": 117.9,
+              "hi": 319.0,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 8.9,
+              "lo": 5.8,
+              "hi": 13.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.2,
+            "space_heating_kwh": {
+              "headline": 312.7,
+              "lo": 121.4,
+              "hi": 640.9,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 299.8,
+              "lo": 220.1,
+              "hi": 411.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 9.1,
+              "lo": 6.0,
+              "hi": 13.6,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.8,
+            "space_heating_kwh": {
+              "headline": 321.1,
+              "lo": 124.7,
+              "hi": 658.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 348.1,
+              "lo": 296.0,
+              "hi": 436.1,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 5.9,
+              "lo": 3.9,
+              "hi": 8.9,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.8,
+            "space_heating_kwh": {
+              "headline": 208.2,
+              "lo": 80.8,
+              "hi": 426.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 61.5,
+              "lo": 28.1,
+              "hi": 119.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 3.6,
+              "lo": 2.4,
+              "hi": 5.5,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 7.9,
+            "space_heating_kwh": {
+              "headline": 128.4,
+              "lo": 49.8,
+              "hi": 263.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 44.1,
+              "lo": 23.4,
+              "hi": 79.2,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 5.6,
+              "lo": 3.6,
+              "hi": 8.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 195.7,
+              "lo": 76.0,
+              "hi": 401.2,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 65.4,
+              "lo": 33.7,
+              "hi": 119.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "internal_wall_insulation": {
+      "key": "internal_wall_insulation",
+      "retrofit_ids": [
+        "internal_wall_insulation"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 4907.3,
+          "lo": 3612.4,
+          "hi": 6908.4,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1291.6,
+          "lo": 950.8,
+          "hi": 1818.3,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 959.5,
+          "lo": 706.3,
+          "hi": 1350.8,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 117.1,
+          "lo": 59.3,
+          "hi": 216.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 30.8,
+          "lo": 15.6,
+          "hi": 57.0,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 22.9,
+          "lo": 11.6,
+          "hi": 42.3,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.0,
+              "lo": 9.1,
+              "hi": 20.9,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 513.2,
+              "lo": 205.4,
+              "hi": 1036.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 207.6,
+              "lo": 124.7,
+              "hi": 344.9,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 9.6,
+              "lo": 6.3,
+              "hi": 14.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.5,
+            "space_heating_kwh": {
+              "headline": 351.7,
+              "lo": 140.8,
+              "hi": 710.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 310.3,
+              "lo": 228.6,
+              "hi": 427.9,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 9.7,
+              "lo": 6.4,
+              "hi": 14.5,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.7,
+            "space_heating_kwh": {
+              "headline": 356.3,
+              "lo": 142.6,
+              "hi": 719.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 357.3,
+              "lo": 300.7,
+              "hi": 453.1,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.1,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.5,
+            "space_heating_kwh": {
+              "headline": 225.6,
+              "lo": 90.3,
+              "hi": 455.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 66.1,
+              "lo": 30.5,
+              "hi": 127.2,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 3.9,
+              "lo": 2.5,
+              "hi": 5.8,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 7.9,
+            "space_heating_kwh": {
+              "headline": 142.7,
+              "lo": 57.1,
+              "hi": 288.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 47.9,
+              "lo": 25.2,
+              "hi": 86.1,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 5.9,
+              "lo": 3.9,
+              "hi": 8.8,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 216.9,
+              "lo": 86.8,
+              "hi": 437.8,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 70.9,
+              "lo": 36.4,
+              "hi": 129.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "external_wall_insulation": {
+      "key": "external_wall_insulation",
+      "retrofit_ids": [
+        "external_wall_insulation"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 4935.0,
+          "lo": 3627.8,
+          "hi": 6954.8,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1298.9,
+          "lo": 954.8,
+          "hi": 1830.5,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 964.9,
+          "lo": 709.3,
+          "hi": 1359.9,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 90.4,
+          "lo": 45.9,
+          "hi": 167.0,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 23.8,
+          "lo": 12.1,
+          "hi": 44.0,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 17.7,
+          "lo": 9.0,
+          "hi": 32.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.1,
+              "lo": 9.2,
+              "hi": 21.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 521.2,
+              "lo": 209.6,
+              "hi": 1050.2,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 209.7,
+              "lo": 125.8,
+              "hi": 348.6,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 9.7,
+              "lo": 6.3,
+              "hi": 14.5,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.5,
+            "space_heating_kwh": {
+              "headline": 357.6,
+              "lo": 143.9,
+              "hi": 720.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 312.1,
+              "lo": 229.4,
+              "hi": 429.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 9.8,
+              "lo": 6.4,
+              "hi": 14.6,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.7,
+            "space_heating_kwh": {
+              "headline": 361.8,
+              "lo": 145.5,
+              "hi": 729.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 358.8,
+              "lo": 301.4,
+              "hi": 455.8,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.4,
+            "space_heating_kwh": {
+              "headline": 227.9,
+              "lo": 91.7,
+              "hi": 459.2,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 66.7,
+              "lo": 30.8,
+              "hi": 128.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 3.9,
+              "lo": 2.6,
+              "hi": 5.9,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 7.9,
+            "space_heating_kwh": {
+              "headline": 145.0,
+              "lo": 58.3,
+              "hi": 292.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 48.5,
+              "lo": 25.5,
+              "hi": 87.2,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.0,
+              "lo": 3.9,
+              "hi": 8.9,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 220.0,
+              "lo": 88.5,
+              "hi": 443.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 71.8,
+              "lo": 36.8,
+              "hi": 131.0,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "double_glazing": {
+      "key": "double_glazing",
+      "retrofit_ids": [
+        "double_glazing"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 4754.9,
+          "lo": 3501.7,
+          "hi": 6640.7,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1251.5,
+          "lo": 921.6,
+          "hi": 1747.8,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 929.7,
+          "lo": 684.7,
+          "hi": 1298.5,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 273.7,
+          "lo": 136.9,
+          "hi": 506.0,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 72.0,
+          "lo": 36.0,
+          "hi": 133.2,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 53.5,
+          "lo": 26.8,
+          "hi": 98.9,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 12.8,
+              "lo": 8.4,
+              "hi": 19.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 27.5,
+            "space_heating_kwh": {
+              "headline": 454.0,
+              "lo": 177.0,
+              "hi": 928.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 192.0,
+              "lo": 117.6,
+              "hi": 316.2,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 9.2,
+              "lo": 6.1,
+              "hi": 13.8,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.9,
+            "space_heating_kwh": {
+              "headline": 327.2,
+              "lo": 127.6,
+              "hi": 669.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 303.7,
+              "lo": 223.4,
+              "hi": 419.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 9.1,
+              "lo": 6.0,
+              "hi": 13.6,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.6,
+            "space_heating_kwh": {
+              "headline": 322.9,
+              "lo": 125.9,
+              "hi": 660.2,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 348.5,
+              "lo": 296.3,
+              "hi": 436.8,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 13.3,
+            "space_heating_kwh": {
+              "headline": 219.7,
+              "lo": 85.6,
+              "hi": 449.2,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 64.6,
+              "lo": 29.3,
+              "hi": 125.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 3.8,
+              "lo": 2.5,
+              "hi": 5.6,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.1,
+            "space_heating_kwh": {
+              "headline": 132.9,
+              "lo": 51.8,
+              "hi": 271.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 45.3,
+              "lo": 23.9,
+              "hi": 81.6,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 5.4,
+              "lo": 3.5,
+              "hi": 8.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 11.6,
+            "space_heating_kwh": {
+              "headline": 191.7,
+              "lo": 74.7,
+              "hi": 392.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 64.3,
+              "lo": 33.3,
+              "hi": 116.8,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "triple_glazing": {
+      "key": "triple_glazing",
+      "retrofit_ids": [
+        "triple_glazing"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 4476.1,
+          "lo": 3350.3,
+          "hi": 6220.1,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1178.1,
+          "lo": 881.8,
+          "hi": 1637.1,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 875.2,
+          "lo": 655.1,
+          "hi": 1216.2,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 547.4,
+          "lo": 272.9,
+          "hi": 1004.1,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 144.1,
+          "lo": 71.8,
+          "hi": 264.3,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 107.0,
+          "lo": 53.4,
+          "hi": 196.3,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 11.1,
+              "lo": 7.3,
+              "hi": 16.7,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 26.5,
+            "space_heating_kwh": {
+              "headline": 363.7,
+              "lo": 134.2,
+              "hi": 767.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 168.3,
+              "lo": 105.7,
+              "hi": 275.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 8.4,
+              "lo": 5.5,
+              "hi": 12.6,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 20.1,
+            "space_heating_kwh": {
+              "headline": 275.8,
+              "lo": 101.8,
+              "hi": 581.6,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 290.3,
+              "lo": 212.9,
+              "hi": 395.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 8.1,
+              "lo": 5.3,
+              "hi": 12.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.3,
+            "space_heating_kwh": {
+              "headline": 264.8,
+              "lo": 97.7,
+              "hi": 558.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 333.3,
+              "lo": 288.9,
+              "hi": 408.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 14.8,
+            "space_heating_kwh": {
+              "headline": 202.5,
+              "lo": 74.7,
+              "hi": 427.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 60.1,
+              "lo": 26.5,
+              "hi": 119.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 3.4,
+              "lo": 2.2,
+              "hi": 5.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.2,
+            "space_heating_kwh": {
+              "headline": 111.9,
+              "lo": 41.3,
+              "hi": 236.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 39.9,
+              "lo": 21.1,
+              "hi": 71.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 4.7,
+              "lo": 3.1,
+              "hi": 7.0,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 11.2,
+            "space_heating_kwh": {
+              "headline": 153.2,
+              "lo": 56.5,
+              "hi": 323.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 54.2,
+              "lo": 28.6,
+              "hi": 97.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "secondary_glazing": {
+      "key": "secondary_glazing",
+      "retrofit_ids": [
+        "secondary_glazing"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5215.1,
+          "lo": 3819.5,
+          "hi": 7466.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1372.6,
+          "lo": 1005.3,
+          "hi": 1965.2,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 1019.7,
+          "lo": 746.8,
+          "hi": 1459.9,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": -182.9,
+          "lo": -337.3,
+          "hi": -94.7,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": -48.1,
+          "lo": -88.8,
+          "hi": -24.9,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": -35.8,
+          "lo": -66.0,
+          "hi": -18.5,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 15.6,
+              "lo": 10.2,
+              "hi": 23.4,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.9,
+            "space_heating_kwh": {
+              "headline": 609.1,
+              "lo": 256.3,
+              "hi": 1209.5,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 233.2,
+              "lo": 138.7,
+              "hi": 390.2,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 10.6,
+              "lo": 6.9,
+              "hi": 15.8,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.5,
+            "space_heating_kwh": {
+              "headline": 411.7,
+              "lo": 173.3,
+              "hi": 817.6,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 326.3,
+              "lo": 239.3,
+              "hi": 452.0,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 10.8,
+              "lo": 7.1,
+              "hi": 16.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 20.0,
+            "space_heating_kwh": {
+              "headline": 421.0,
+              "lo": 177.2,
+              "hi": 836.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 374.3,
+              "lo": 309.2,
+              "hi": 484.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 11.5,
+            "space_heating_kwh": {
+              "headline": 241.8,
+              "lo": 101.8,
+              "hi": 480.2,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 70.4,
+              "lo": 33.3,
+              "hi": 133.8,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 4.3,
+              "lo": 2.8,
+              "hi": 6.4,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 7.9,
+            "space_heating_kwh": {
+              "headline": 167.4,
+              "lo": 70.4,
+              "hi": 332.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 54.4,
+              "lo": 28.6,
+              "hi": 98.1,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.6,
+              "lo": 4.3,
+              "hi": 9.9,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.2,
+            "space_heating_kwh": {
+              "headline": 257.9,
+              "lo": 108.5,
+              "hi": 512.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 81.6,
+              "lo": 41.5,
+              "hi": 149.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "smart_thermostat": {
+      "key": "smart_thermostat",
+      "retrofit_ids": [
+        "smart_thermostat"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 4868.3,
+          "lo": 3694.3,
+          "hi": 6851.4,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1281.3,
+          "lo": 972.3,
+          "hi": 1803.3,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 951.9,
+          "lo": 722.3,
+          "hi": 1339.6,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 121.8,
+          "lo": -545.6,
+          "hi": 910.3,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 32.1,
+          "lo": -143.6,
+          "hi": 239.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 23.8,
+          "lo": -106.7,
+          "hi": 178.0,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.5,
+              "lo": 9.5,
+              "hi": 21.7,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 512.2,
+              "lo": 230.2,
+              "hi": 962.1,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 207.8,
+              "lo": 133.6,
+              "hi": 326.6,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 10.0,
+              "lo": 6.6,
+              "hi": 15.0,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.6,
+            "space_heating_kwh": {
+              "headline": 354.3,
+              "lo": 159.2,
+              "hi": 665.5,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 312.8,
+              "lo": 231.0,
+              "hi": 414.1,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 10.1,
+              "lo": 6.6,
+              "hi": 15.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.8,
+            "space_heating_kwh": {
+              "headline": 357.6,
+              "lo": 160.7,
+              "hi": 671.8,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 358.1,
+              "lo": 305.9,
+              "hi": 440.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.1,
+            "space_heating_kwh": {
+              "headline": 219.1,
+              "lo": 98.4,
+              "hi": 411.5,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 65.2,
+              "lo": 32.7,
+              "hi": 115.8,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 4.1,
+              "lo": 2.7,
+              "hi": 6.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.0,
+            "space_heating_kwh": {
+              "headline": 144.0,
+              "lo": 64.7,
+              "hi": 270.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 48.5,
+              "lo": 27.4,
+              "hi": 81.6,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.1,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 216.7,
+              "lo": 97.4,
+              "hi": 407.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 71.0,
+              "lo": 39.4,
+              "hi": 121.1,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "air_source_heat_pump": {
+      "key": "air_source_heat_pump",
+      "retrofit_ids": [
+        "air_source_heat_pump"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 2753.4,
+          "lo": 2130.6,
+          "hi": 3653.3,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 724.7,
+          "lo": 560.8,
+          "hi": 961.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 538.4,
+          "lo": 416.6,
+          "hi": 714.3,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 2252.7,
+          "lo": 1436.0,
+          "hi": 3714.6,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 592.9,
+          "lo": 378.0,
+          "hi": 977.7,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 440.5,
+          "lo": 280.8,
+          "hi": 726.3,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.5,
+              "lo": 9.5,
+              "hi": 21.7,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 546.5,
+              "lo": 223.5,
+              "hi": 1095.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 121.8,
+              "lo": 86.0,
+              "hi": 175.6,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 10.0,
+              "lo": 6.6,
+              "hi": 15.0,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.6,
+            "space_heating_kwh": {
+              "headline": 378.1,
+              "lo": 154.6,
+              "hi": 757.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 255.1,
+              "lo": 185.4,
+              "hi": 338.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 10.1,
+              "lo": 6.6,
+              "hi": 15.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.8,
+            "space_heating_kwh": {
+              "headline": 381.6,
+              "lo": 156.0,
+              "hi": 764.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 298.1,
+              "lo": 276.8,
+              "hi": 333.3,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.1,
+            "space_heating_kwh": {
+              "headline": 233.7,
+              "lo": 95.6,
+              "hi": 468.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 28.1,
+              "lo": 15.3,
+              "hi": 49.2,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 4.1,
+              "lo": 2.7,
+              "hi": 6.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.0,
+            "space_heating_kwh": {
+              "headline": 153.6,
+              "lo": 62.8,
+              "hi": 307.9,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 24.3,
+              "lo": 15.6,
+              "hi": 38.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.1,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 231.2,
+              "lo": 94.5,
+              "hi": 463.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 34.8,
+              "lo": 21.9,
+              "hi": 56.0,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "hhr_storage_heaters": {
+      "key": "hhr_storage_heaters",
+      "retrofit_ids": [
+        "hhr_storage_heaters"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 4985.3,
+          "lo": 3657.7,
+          "hi": 7039.1,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1312.1,
+          "lo": 962.7,
+          "hi": 1852.7,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 974.8,
+          "lo": 715.2,
+          "hi": 1376.3,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 43.2,
+          "lo": 20.1,
+          "hi": 90.9,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 11.4,
+          "lo": 5.3,
+          "hi": 23.9,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 8.4,
+          "lo": 3.9,
+          "hi": 17.8,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.5,
+              "lo": 9.5,
+              "hi": 21.7,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 534.4,
+              "lo": 217.1,
+              "hi": 1073.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 213.0,
+              "lo": 128.0,
+              "hi": 354.9,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 10.0,
+              "lo": 6.6,
+              "hi": 15.0,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.6,
+            "space_heating_kwh": {
+              "headline": 369.7,
+              "lo": 150.2,
+              "hi": 742.5,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 315.1,
+              "lo": 230.9,
+              "hi": 434.8,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 10.1,
+              "lo": 6.6,
+              "hi": 15.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.8,
+            "space_heating_kwh": {
+              "headline": 373.1,
+              "lo": 151.6,
+              "hi": 749.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 361.5,
+              "lo": 302.8,
+              "hi": 461.0,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.1,
+            "space_heating_kwh": {
+              "headline": 228.5,
+              "lo": 92.8,
+              "hi": 459.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 67.0,
+              "lo": 31.1,
+              "hi": 127.8,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 4.1,
+              "lo": 2.7,
+              "hi": 6.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.0,
+            "space_heating_kwh": {
+              "headline": 150.2,
+              "lo": 61.0,
+              "hi": 301.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 49.8,
+              "lo": 26.2,
+              "hi": 89.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.1,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 226.0,
+              "lo": 91.8,
+              "hi": 454.0,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 73.2,
+              "lo": 37.7,
+              "hi": 133.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "battery": {
+      "key": "battery",
+      "retrofit_ids": [
+        "battery"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.5,
+              "lo": 9.5,
+              "hi": 21.7,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 546.5,
+              "lo": 223.5,
+              "hi": 1095.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 216.5,
+              "lo": 129.6,
+              "hi": 360.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 10.0,
+              "lo": 6.6,
+              "hi": 15.0,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.6,
+            "space_heating_kwh": {
+              "headline": 378.1,
+              "lo": 154.6,
+              "hi": 757.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 317.6,
+              "lo": 233.0,
+              "hi": 437.9,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 10.1,
+              "lo": 6.6,
+              "hi": 15.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.8,
+            "space_heating_kwh": {
+              "headline": 381.6,
+              "lo": 156.0,
+              "hi": 764.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 363.9,
+              "lo": 304.0,
+              "hi": 465.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.1,
+            "space_heating_kwh": {
+              "headline": 233.7,
+              "lo": 95.6,
+              "hi": 468.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 68.3,
+              "lo": 31.7,
+              "hi": 130.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 4.1,
+              "lo": 2.7,
+              "hi": 6.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.0,
+            "space_heating_kwh": {
+              "headline": 153.6,
+              "lo": 62.8,
+              "hi": 307.9,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 50.8,
+              "lo": 26.6,
+              "hi": 91.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.1,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 231.2,
+              "lo": 94.5,
+              "hi": 463.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 74.7,
+              "lo": 38.4,
+              "hi": 136.4,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "led_lighting": {
+      "key": "led_lighting",
+      "retrofit_ids": [
+        "led_lighting"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 4694.8,
+          "lo": 3407.4,
+          "hi": 6761.9,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1235.7,
+          "lo": 896.8,
+          "hi": 1779.7,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 918.0,
+          "lo": 666.2,
+          "hi": 1322.2,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 329.6,
+          "lo": 234.4,
+          "hi": 456.8,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 86.7,
+          "lo": 61.7,
+          "hi": 120.2,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 64.4,
+          "lo": 45.8,
+          "hi": 89.3,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.5,
+              "lo": 9.5,
+              "hi": 21.7,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 546.5,
+              "lo": 223.5,
+              "hi": 1095.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 33.0,
+              "lo": 23.4,
+              "hi": 45.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 190.0,
+              "lo": 103.4,
+              "hi": 332.9,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 10.0,
+              "lo": 6.6,
+              "hi": 15.0,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.6,
+            "space_heating_kwh": {
+              "headline": 378.1,
+              "lo": 154.6,
+              "hi": 757.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.6,
+              "lo": 18.2,
+              "hi": 35.5,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 296.7,
+              "lo": 216.9,
+              "hi": 414.0,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 10.1,
+              "lo": 6.6,
+              "hi": 15.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.8,
+            "space_heating_kwh": {
+              "headline": 381.6,
+              "lo": 156.0,
+              "hi": 764.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 22.4,
+              "lo": 16.0,
+              "hi": 31.1,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 345.6,
+              "lo": 286.7,
+              "hi": 447.0,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.1,
+            "space_heating_kwh": {
+              "headline": 233.7,
+              "lo": 95.6,
+              "hi": 468.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 6.4,
+              "lo": 4.6,
+              "hi": 8.9,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 63.3,
+              "lo": 27.0,
+              "hi": 124.9,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 4.1,
+              "lo": 2.7,
+              "hi": 6.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.0,
+            "space_heating_kwh": {
+              "headline": 153.6,
+              "lo": 62.8,
+              "hi": 307.9,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 9.6,
+              "lo": 6.8,
+              "hi": 13.3,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 42.9,
+              "lo": 19.2,
+              "hi": 83.8,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.1,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 231.2,
+              "lo": 94.5,
+              "hi": 463.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 12.8,
+              "lo": 9.1,
+              "hi": 17.8,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 64.2,
+              "lo": 28.5,
+              "hi": 125.6,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": []
+    },
+    "time_of_use_tariff": {
+      "key": "time_of_use_tariff",
+      "retrofit_ids": [
+        "time_of_use_tariff"
+      ],
+      "engine": "physics_stub",
+      "calibrated": false,
+      "weather_source": "synthetic",
+      "before": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "after": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 5032.1,
+          "lo": 3695.1,
+          "hi": 7122.5,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 1324.4,
+          "lo": 972.6,
+          "hi": 1874.6,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 983.9,
+          "lo": 722.5,
+          "hi": 1392.7,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "savings": {
+        "gas_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "cost_gbp": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "GBP/yr"
+        },
+        "carbon_kg": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kgCO2e/yr"
+        }
+      },
+      "rooms_after": {
+        "engine": "physics_stub",
+        "calibrated": false,
+        "weather_source": "synthetic",
+        "rooms": [
+          {
+            "room_id": "living",
+            "heat_loss_w_per_k": {
+              "headline": 14.5,
+              "lo": 9.5,
+              "hi": 21.7,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 28.4,
+            "space_heating_kwh": {
+              "headline": 546.5,
+              "lo": 223.5,
+              "hi": 1095.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 140.6,
+              "lo": 98.4,
+              "hi": 191.8,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 131.8,
+              "lo": 93.7,
+              "hi": 182.7,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 216.5,
+              "lo": 129.6,
+              "hi": 360.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "kitchen",
+            "heat_loss_w_per_k": {
+              "headline": 10.0,
+              "lo": 6.6,
+              "hi": 15.0,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.6,
+            "space_heating_kwh": {
+              "headline": 378.1,
+              "lo": 154.6,
+              "hi": 757.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 726.3,
+              "lo": 508.2,
+              "hi": 990.6,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 102.6,
+              "lo": 72.9,
+              "hi": 142.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 317.6,
+              "lo": 233.0,
+              "hi": 437.9,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed1",
+            "heat_loss_w_per_k": {
+              "headline": 10.1,
+              "lo": 6.6,
+              "hi": 15.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 19.8,
+            "space_heating_kwh": {
+              "headline": 381.6,
+              "lo": 156.0,
+              "hi": 764.7,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 89.7,
+              "lo": 63.8,
+              "hi": 124.4,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 363.9,
+              "lo": 304.0,
+              "hi": 465.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {
+              "plug_in_heating": 909.2
+            }
+          },
+          {
+            "room_id": "hall",
+            "heat_loss_w_per_k": {
+              "headline": 6.2,
+              "lo": 4.1,
+              "hi": 9.3,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.1,
+            "space_heating_kwh": {
+              "headline": 233.7,
+              "lo": 95.6,
+              "hi": 468.4,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 25.7,
+              "lo": 18.2,
+              "hi": 35.6,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 68.3,
+              "lo": 31.7,
+              "hi": 130.7,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bath",
+            "heat_loss_w_per_k": {
+              "headline": 4.1,
+              "lo": 2.7,
+              "hi": 6.1,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 8.0,
+            "space_heating_kwh": {
+              "headline": 153.6,
+              "lo": 62.8,
+              "hi": 307.9,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 38.4,
+              "lo": 27.3,
+              "hi": 53.2,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 50.8,
+              "lo": 26.6,
+              "hi": 91.5,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          },
+          {
+            "room_id": "bed2",
+            "heat_loss_w_per_k": {
+              "headline": 6.1,
+              "lo": 4.0,
+              "hi": 9.2,
+              "unit": "W/K"
+            },
+            "heat_loss_share_pct": 12.0,
+            "space_heating_kwh": {
+              "headline": 231.2,
+              "lo": 94.5,
+              "hi": 463.3,
+              "unit": "kWh/yr"
+            },
+            "appliance_kwh": {
+              "headline": 0.0,
+              "lo": 0.0,
+              "hi": 0.0,
+              "unit": "kWh/yr"
+            },
+            "lighting_kwh": {
+              "headline": 51.2,
+              "lo": 36.4,
+              "hi": 71.0,
+              "unit": "kWh/yr"
+            },
+            "running_cost_gbp": {
+              "headline": 74.7,
+              "lo": 38.4,
+              "hi": 136.4,
+              "unit": "GBP/yr"
+            },
+            "other_kwh": {}
+          }
+        ],
+        "unaccounted_electricity_kwh": {
+          "headline": 0.0,
+          "lo": 0.0,
+          "hi": 0.0,
+          "unit": "kWh/yr"
+        },
+        "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
+      },
+      "warnings": [
+        "Time-of-use tariff changes bills, not kWh; no sourced ToU tariff yet, so no bill effect is shown"
+      ]
+    }
   },
   "basis": "Layout from the closest standard UK house type, fitted to this home; room heat loss is estimated, only whole-house totals are calibrated to bills"
 }

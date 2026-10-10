@@ -1,7 +1,10 @@
 import { create } from 'zustand'
+import energyJson from './data/appliance_energy.json'
 import visualsJson from './data/appliance_visuals.json'
 import { bbox, clampToRoom, findFree, findWallSpot, overlaps } from './geometry'
-import type { AppliancePlacement, ApplianceVisual, RoomScene, SceneAppliance, Vec3 } from './types'
+import type {
+  ApplianceQuestion, AppliancePlacement, ApplianceVisual, EnergyOverlay, RoomScene, SceneAppliance, ScenarioView, Vec3,
+} from './types'
 
 const sceneModules = import.meta.glob<RoomScene>('./data/scenes/*.scene.json', { eager: true, import: 'default' })
 // Keyed by file name: archetype examples ('flat_2bed') and showcase homes with energy ('SH1').
@@ -9,6 +12,16 @@ export const EXAMPLE_SCENES: Record<string, RoomScene> = Object.fromEntries(
   Object.entries(sceneModules).map(([path, s]) => [path.split('/').pop()!.replace('.scene.json', ''), s]),
 )
 export const VISUALS = (visualsJson as { types: Record<string, ApplianceVisual> }).types
+export const QUESTIONS: Record<string, ApplianceQuestion[]> = Object.fromEntries(
+  Object.entries((energyJson as unknown as { types: Record<string, { questions: ApplianceQuestion[] }> }).types)
+    .map(([k, v]) => [k, v.questions]),
+)
+
+export function defaultAnswers(type: string): Record<string, string> {
+  return Object.fromEntries((QUESTIONS[type] ?? []).map((q) => [q.key, q.default]))
+}
+
+export type TwinSource = 'live' | 'precomputed' | 'unavailable' | 'idle'
 
 interface ViewerState {
   scenes: Record<string, RoomScene>
@@ -21,6 +34,12 @@ interface ViewerState {
   explode: boolean
   heatTint: boolean
   notice: string | null
+  retrofitIds: string[]
+  view: 'before' | 'after'
+  scenario: ScenarioView | null
+  baselineRooms: EnergyOverlay | null
+  twinSource: TwinSource
+  twinBusy: boolean
   setScene: (key: string) => void
   addScene: (scene: RoomScene) => void
   selectRoom: (roomId: string | null) => void
@@ -29,10 +48,14 @@ interface ViewerState {
   toggleRoof: () => void
   toggleExplode: () => void
   toggleHeatTint: () => void
+  toggleRetrofit: (id: string) => void
+  setView: (v: 'before' | 'after') => void
+  runTwin: () => Promise<void>
+  updateAnswers: (id: string, answers: Record<string, string>) => void
   moveAppliance: (id: string, x: number, y: number) => void
   rotateAppliance: (id: string, by: number) => void
   removeAppliance: (id: string) => void
-  addAppliance: (type: string, roomId: string) => void
+  addAppliance: (type: string, roomId: string, answers?: Record<string, string>) => void
 }
 
 const scene = (s: ViewerState) => s.scenes[s.sceneKey]
@@ -49,9 +72,18 @@ export const useViewer = create<ViewerState>((set, get) => ({
   explode: false,
   heatTint: false,
   notice: null,
+  retrofitIds: [],
+  view: 'before',
+  scenario: null,
+  baselineRooms: EXAMPLE_SCENES[firstKey]?.energy ?? null,
+  twinSource: 'idle',
+  twinBusy: false,
 
   setScene: (key) =>
-    set((s) => ({ sceneKey: key, appliances: s.scenes[key].appliances, selectedRoom: null, selectedAppliance: null, notice: null })),
+    set((s) => ({
+      sceneKey: key, appliances: s.scenes[key].appliances, selectedRoom: null, selectedAppliance: null, notice: null,
+      retrofitIds: [], view: 'before', scenario: null, baselineRooms: s.scenes[key].energy ?? null, twinSource: 'idle',
+    })),
   addScene: (sc) => {
     const key = `${sc.archetype_id}:${sc.property_id}`
     set((s) => ({ scenes: { ...s.scenes, [key]: sc } }))
@@ -63,6 +95,51 @@ export const useViewer = create<ViewerState>((set, get) => ({
   toggleRoof: () => set((s) => ({ showRoof: !s.showRoof })),
   toggleExplode: () => set((s) => ({ explode: !s.explode })),
   toggleHeatTint: () => set((s) => ({ heatTint: !s.heatTint })),
+
+  // Selecting a retrofit drops the ones it excludes (e.g. double vs triple glazing). Packages are re-simulated.
+  toggleRetrofit: (id) =>
+    set((s) => {
+      const options = scene(s).retrofits ?? []
+      if (s.retrofitIds.includes(id)) {
+        const ids = s.retrofitIds.filter((r) => r !== id)
+        return { retrofitIds: ids, view: ids.length ? s.view : 'before' }
+      }
+      const opt = options.find((o) => o.retrofit_id === id)
+      const excluded = new Set([...(opt?.excludes ?? []), ...options.filter((o) => o.excludes.includes(id)).map((o) => o.retrofit_id)])
+      return { retrofitIds: [...s.retrofitIds.filter((r) => !excluded.has(r)), id], view: 'after' }
+    }),
+  setView: (v) => set({ view: v }),
+
+  // Live re-simulation from the dev twin server; offline, the precomputed scenarios in the scene JSON.
+  runTwin: async () => {
+    const s = get()
+    const sc = scene(s)
+    if (!sc.energy) return
+    const key = [...s.retrofitIds].sort().join('+')
+    const appsChanged = applianceKey(s.appliances) !== applianceKey(sc.appliances)
+    set({ twinBusy: true })
+    try {
+      const res = await fetch('/api/twin/run', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ property_id: sc.property_id, retrofit_ids: s.retrofitIds, appliances: exportPlacements(sc, s.appliances) }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const data = await res.json() as { baseline_rooms: EnergyOverlay; scenario: ScenarioView }
+      if (get().sceneKey !== s.sceneKey) return
+      set({ scenario: data.scenario, baselineRooms: data.baseline_rooms, twinSource: 'live' })
+    } catch {
+      if (get().sceneKey !== s.sceneKey) return
+      const pre = !appsChanged ? sc.scenarios?.[key] : undefined
+      set(pre
+        ? { scenario: pre, baselineRooms: sc.energy ?? null, twinSource: 'precomputed' }
+        : { scenario: null, baselineRooms: appsChanged ? null : sc.energy ?? null, twinSource: 'unavailable' })
+    } finally {
+      set({ twinBusy: false })
+    }
+  },
+
+  updateAnswers: (id, answers) =>
+    set((s) => ({ appliances: s.appliances.map((a) => (a.appliance_id === id ? { ...a, answers } : a)) })),
 
   // Dragging slides along whatever it bumps into: try the full move, then each axis alone, else stay put.
   moveAppliance: (id, x, y) =>
@@ -98,7 +175,7 @@ export const useViewer = create<ViewerState>((set, get) => ({
     }),
   removeAppliance: (id) =>
     set((s) => ({ appliances: s.appliances.filter((a) => a.appliance_id !== id), selectedAppliance: null })),
-  addAppliance: (type, roomId) =>
+  addAppliance: (type, roomId, answers) =>
     set((s) => {
       const sc = scene(s)
       const vis = VISUALS[type]
@@ -111,7 +188,7 @@ export const useViewer = create<ViewerState>((set, get) => ({
         appliance_id: `a${n}`, type, label: vis.label, room_id: roomId, placement: 'custom',
         position_m: [(x0 + x1) / 2, (y0 + y1) / 2, room.floor_z_m + vis.mount_height_m], rotation_deg: 0,
         size_m: [vis.w, vis.d, vis.h], shape: vis.shape, mount: vis.mount, colour: vis.colour, accent: vis.accent,
-        icon: vis.icon,
+        icon: vis.icon, answers: answers ?? defaultAnswers(type),
         warnings: vis.rooms.includes(room.room_type) ? [] : [`${vis.label} is unusual in a ${room.room_type}`],
       }
       // New appliances go along free wall space first, then anywhere free nearest the centre; a full room refuses.
@@ -125,10 +202,21 @@ export const useViewer = create<ViewerState>((set, get) => ({
     }),
 }))
 
+/** What changes the energy (not the position): used to tell if appliances differ from the scene's own. */
+export function applianceKey(apps: SceneAppliance[]): string {
+  return JSON.stringify(apps.map((a) => [a.appliance_id, a.type, a.room_id, a.answers ?? {}]))
+}
+
+/** The overlay for the current view: after the package when showing 'after', else the baseline. */
+export function currentRooms(s: Pick<ViewerState, 'view' | 'scenario' | 'baselineRooms'>): EnergyOverlay | null {
+  return s.view === 'after' && s.scenario ? s.scenario.rooms_after : s.baselineRooms
+}
+
 /** The user's appliances in the input format of scene.py's build_scene (u/v within the room). */
 export function exportPlacements(sc: RoomScene, apps: SceneAppliance[]): AppliancePlacement[] {
   return apps.map((a) => {
-    const base = { appliance_id: a.appliance_id, type: a.type, room_id: a.room_id, label: a.label, rotation_deg: a.rotation_deg }
+    const base = { appliance_id: a.appliance_id, type: a.type, room_id: a.room_id, label: a.label,
+      rotation_deg: a.rotation_deg, answers: a.answers ?? {} }
     if (a.placement === 'auto') return { ...base, room_id: a.room_id ?? 'outside' } // backend re-places it
     if (!a.room_id) return { ...base, room_id: 'outside', x_m: a.position_m[0], y_m: a.position_m[1] }
     const room = sc.rooms.find((r) => r.room_id === a.room_id)!

@@ -105,6 +105,46 @@
       "title": "EnergyOverlay",
       "type": "object"
     },
+    "HouseNumbers": {
+      "properties": {
+        "gas_kwh": {
+          "$ref": "#/$defs/Range"
+        },
+        "electricity_kwh": {
+          "$ref": "#/$defs/Range"
+        },
+        "cost_gbp": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Unit rates only (standing charges excluded)"
+        },
+        "carbon_kg": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "DESNZ 2025 factors; None for fuels without a factor"
+        }
+      },
+      "required": [
+        "gas_kwh",
+        "electricity_kwh"
+      ],
+      "title": "HouseNumbers",
+      "type": "object"
+    },
     "Range": {
       "description": "Compact view of a Distribution for the viewer: headline value and 90% interval.",
       "properties": {
@@ -132,6 +172,107 @@
         "unit"
       ],
       "title": "Range",
+      "type": "object"
+    },
+    "RetrofitOption": {
+      "description": "A catalogue retrofit as the viewer offers it. 'applicable' is a geometry check only (e.g. no loft in a flat);\nthe feasibility rules (Part 5) still decide what is recommended.",
+      "properties": {
+        "retrofit_id": {
+          "title": "Retrofit Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "applicable": {
+          "title": "Applicable",
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "cost_gbp_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Gbp Low"
+        },
+        "cost_gbp_central": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Gbp Central"
+        },
+        "cost_gbp_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Gbp High"
+        },
+        "cost_basis": {
+          "default": "per_home",
+          "title": "Cost Basis",
+          "type": "string"
+        },
+        "cost_status": {
+          "default": "unsourced",
+          "title": "Cost Status",
+          "type": "string"
+        },
+        "excludes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excludes",
+          "type": "array"
+        },
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        }
+      },
+      "required": [
+        "retrofit_id",
+        "name",
+        "category",
+        "applicable"
+      ],
+      "title": "RetrofitOption",
       "type": "object"
     },
     "RoomEnergyView": {
@@ -191,6 +332,67 @@
         "lighting_kwh"
       ],
       "title": "RoomEnergyView",
+      "type": "object"
+    },
+    "ScenarioView": {
+      "description": "One retrofit package, re-simulated as a whole (never summed). Savings are per sample: before - after,\nso a negative saving means use goes up (e.g. electricity after a heat pump).",
+      "properties": {
+        "key": {
+          "description": "Sorted retrofit ids joined by '+'; '' = no retrofits",
+          "title": "Key",
+          "type": "string"
+        },
+        "retrofit_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Retrofit Ids",
+          "type": "array"
+        },
+        "engine": {
+          "title": "Engine",
+          "type": "string"
+        },
+        "calibrated": {
+          "title": "Calibrated",
+          "type": "boolean"
+        },
+        "weather_source": {
+          "title": "Weather Source",
+          "type": "string"
+        },
+        "before": {
+          "$ref": "#/$defs/HouseNumbers"
+        },
+        "after": {
+          "$ref": "#/$defs/HouseNumbers"
+        },
+        "savings": {
+          "$ref": "#/$defs/HouseNumbers"
+        },
+        "rooms_after": {
+          "$ref": "#/$defs/EnergyOverlay"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "retrofit_ids",
+        "engine",
+        "calibrated",
+        "weather_source",
+        "before",
+        "after",
+        "savings",
+        "rooms_after"
+      ],
+      "title": "ScenarioView",
       "type": "object"
     },
     "SceneAppliance": {
@@ -283,6 +485,14 @@
         "icon": {
           "title": "Icon",
           "type": "string"
+        },
+        "answers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Size answers (appliance_energy.json)",
+          "title": "Answers",
+          "type": "object"
         },
         "warnings": {
           "items": {
@@ -889,6 +1099,21 @@
       ],
       "default": null,
       "description": "Per-room numbers from the twin, when it has run"
+    },
+    "retrofits": {
+      "items": {
+        "$ref": "#/$defs/RetrofitOption"
+      },
+      "title": "Retrofits",
+      "type": "array"
+    },
+    "scenarios": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ScenarioView"
+      },
+      "description": "Precomputed packages by scenario_key (offline fallback for the viewer)",
+      "title": "Scenarios",
+      "type": "object"
     },
     "basis": {
       "default": "Layout from the closest standard UK house type, fitted to this home; room heat loss is estimated, only whole-house totals are calibrated to bills",

@@ -80,6 +80,26 @@ def element_heat_loss_from_run(run: TwinRun, params: TwinParams) -> list[Element
     return sorted(out, key=lambda e: -e.heat_loss_w_per_k)
 
 
+def retrofit_samples(samples: PosteriorSamples, actions: Sequence[RetrofitAction]) -> PosteriorSamples:
+    """Posterior samples after a retrofit package. Edited fields take the retrofit value in every sample; a field the
+    package scales (e.g. LED on baseload) is scaled per sample, so calibrated spread is kept."""
+    if not actions:
+        return samples
+    base = samples.base
+    new_base = apply_retrofits(base, actions)
+    params = dict(samples.params)
+    for key, value in new_base.model_dump().items():
+        old = getattr(base, key)
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or value == old or key not in params:
+            continue
+        if key in ("baseload_kwh_per_day", "heating_hours_per_day", "volume_m3") and old:
+            params[key] = (np.asarray(params[key]) * (float(value) / float(old))).astype(np.float32)
+        else:
+            params[key] = np.full(samples.n_samples, float(value), dtype=np.float32)
+    return PosteriorSamples(property_id=samples.property_id, n_samples=samples.n_samples, params=params,
+                            base=new_base, seed=samples.seed)
+
+
 class GreenDigitalTwin:
     """Implements ``greentwin.interfaces.DigitalTwin``."""
 
@@ -102,17 +122,7 @@ class GreenDigitalTwin:
         """Retrofit actions are applied to every sample's base parameters, then the package is re-simulated."""
         if weather != "typical" and weather_months is None:
             raise NotImplementedError(f"weather scenario {weather!r} needs Part 0's load_weather; only 'typical' runs today")
-        base = samples.base
-        if actions:
-            new_base = apply_retrofits(base, actions)
-            params = dict(samples.params)
-            for key, value in new_base.model_dump().items():
-                old = getattr(base, key)
-                if isinstance(value, (int, float)) and not isinstance(value, bool) and value != old and key in params:
-                    # Edited fields: set to the retrofit value (calibrated multipliers stay per sample)
-                    params[key] = np.full(samples.n_samples, float(value), dtype=np.float32)
-            samples = PosteriorSamples(property_id=samples.property_id, n_samples=samples.n_samples,
-                                       params=params, base=new_base, seed=samples.seed)
+        samples = retrofit_samples(samples, actions)
         district = getattr(samples.base, "postcode_district", "UNKNOWN")
         arrays, _ = resolve_weather(district, weather_months)
         run, self.last_engine = simulate(samples, arrays, fuel_config(samples.base) if isinstance(samples.base, ExtendedTwinParams)
@@ -195,8 +205,10 @@ class GreenDigitalTwin:
         return build_physics_inputs(prop, layout, appliances, intake, usage, weather_months)
 
     def room_energy(self, prop: Property, layout: TwinLayout, samples: PosteriorSamples,
-                    appliances: Optional[Sequence[AppliancePlacement]] = None) -> RoomAllocation:
-        run = self.simulate(samples, ())
+                    appliances: Optional[Sequence[AppliancePlacement]] = None,
+                    actions: Sequence[RetrofitAction] = ()) -> RoomAllocation:
+        run = self.simulate(samples, actions)
+        samples = retrofit_samples(samples, actions)  # allocation reads post-package efficiency, fuel, baseload
         n = getattr(samples.base, "occupants", None) or 2.4
         summary = summarise_appliances(appliances, n) if appliances else None
         return allocate_rooms(layout, run, samples, summary, engine=self.last_engine)

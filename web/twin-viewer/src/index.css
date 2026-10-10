@@ -123,3 +123,21 @@ button, select { font: inherit; }
 
 .stub-banner { padding: 8px 16px; background: #fff4d6; color: #7a5600; font-size: 13px; border-bottom: 1px solid #f0dfa8; }
 .card h3.sub { margin: 16px 0 8px; font-size: 14px; }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.topbar .seg button { border: 0; border-radius: 0; height: 30px; }
+.topbar .seg button.on { background: var(--blue); color: #fff; }
+.retro-cat h4 { text-transform: capitalize; }
+.retro { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 8px; align-items: center; padding: 4px 0; font-size: 14px; cursor: pointer; }
+.retro.disabled { opacity: 0.5; cursor: default; }
+.retro .reason { grid-column: 2 / 4; }
+.retro-results { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.results { width: 100%; border-collapse: collapse; font-size: 13px; }
+.results th, .results td { text-align: left; padding: 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.results th { color: var(--muted); font-weight: 600; }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.questions { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 8px; }
+.q { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; font-size: 13px; }
+.q select { height: 30px; border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; min-width: 0; }
+.q-none { width: 100%; margin: 0; }

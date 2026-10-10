@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react'
 import { bbox, roomStats } from '../geometry'
-import { VISUALS, exportPlacements, useViewer } from '../store'
+import { QUESTIONS, VISUALS, currentRooms, defaultAnswers, exportPlacements, useViewer } from '../store'
+import { RetrofitPanel } from './RetrofitPanel'
 import type { Range, RoomScene } from '../types'
 
 const fmt = (v: number, dp = 1) => v.toFixed(dp)
@@ -60,13 +61,36 @@ function HouseSummary({ scene }: { scene: RoomScene }) {
   )
 }
 
+/** The appliance's size questions (appliance_energy.json); answers drive its energy and heat gains. */
+function Questions({ type, answers, onChange }: {
+  type: string; answers: Record<string, string>; onChange: (a: Record<string, string>) => void
+}) {
+  const qs = QUESTIONS[type] ?? []
+  if (!qs.length) return <p className="muted q-none">No size questions for this appliance.</p>
+  return (
+    <div className="questions">
+      {qs.map((q) => (
+        <label key={q.key} className="q">
+          <span>{q.label}</span>
+          <select value={answers[q.key] ?? q.default} onChange={(e) => onChange({ ...answers, [q.key]: e.target.value })}>
+            {q.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </label>
+      ))}
+    </div>
+  )
+}
+
 function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
-  const { appliances, selectedAppliance, notice, selectRoom, selectAppliance, rotateAppliance, removeAppliance, addAppliance } =
-    useViewer()
+  const { appliances, selectedAppliance, notice, selectRoom, selectAppliance, rotateAppliance, removeAppliance, addAppliance,
+    updateAnswers } = useViewer()
   const [newType, setNewType] = useState('')
+  const [newAnswers, setNewAnswers] = useState<Record<string, string>>({})
   const room = scene.rooms.find((r) => r.room_id === roomId)!
   const stats = roomStats(room, scene.walls, scene.openings)
-  const energy = scene.energy?.rooms.find((r) => r.room_id === roomId)
+  const overlay = useViewer(currentRooms)
+  const view = useViewer((s) => s.view)
+  const energy = overlay?.rooms.find((r) => r.room_id === roomId)
   const mine = appliances.filter((a) => a.room_id === roomId)
   const sel = mine.find((a) => a.appliance_id === selectedAppliance)
   const types = Object.entries(VISUALS)
@@ -89,7 +113,7 @@ function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
         </dl>
         {energy ? (
           <>
-            <h3 className="sub">Energy (estimated)</h3>
+            <h3 className="sub">Energy (estimated{view === 'after' ? ', after retrofits' : ''})</h3>
             <dl className="facts">
               <dt>Heat loss</dt><dd><RangeText r={energy.heat_loss_w_per_k} /> · {fmt(energy.heat_loss_share_pct)}% of house</dd>
               <dt>Heating</dt><dd><RangeText r={energy.space_heating_kwh} /></dd>
@@ -125,19 +149,23 @@ function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
             <button onClick={() => rotateAppliance(sel.appliance_id, -90)}>⟲ 90°</button>
             <button onClick={() => rotateAppliance(sel.appliance_id, 90)}>⟳ 90°</button>
             <button className="danger" onClick={() => removeAppliance(sel.appliance_id)}>Remove</button>
+            <Questions type={sel.type} answers={{ ...defaultAnswers(sel.type), ...(sel.answers ?? {}) }}
+              onChange={(a) => updateAnswers(sel.appliance_id, a)} />
             {sel.warnings.map((w) => <p key={w} className="warn">{w}</p>)}
           </div>
         )}
         {notice && <p className="warn">{notice}</p>}
         <div className="add-row">
-          <select value={newType} onChange={(e) => setNewType(e.target.value)} aria-label="Appliance type">
+          <select value={newType} onChange={(e) => { setNewType(e.target.value); setNewAnswers(defaultAnswers(e.target.value)) }}
+            aria-label="Appliance type">
             <option value="">Add appliance…</option>
             {types.map(([k, v]) => (
               <option key={k} value={k}>{v.label}{v.rooms.includes(room.room_type) ? '' : ' (unusual here)'}</option>
             ))}
           </select>
-          <button disabled={!newType} onClick={() => { addAppliance(newType, roomId); setNewType('') }}>Add</button>
+          <button disabled={!newType} onClick={() => { addAppliance(newType, roomId, newAnswers); setNewType('') }}>Add</button>
         </div>
+        {newType && <Questions type={newType} answers={newAnswers} onChange={setNewAnswers} />}
       </section>
     </>
   )
@@ -156,6 +184,7 @@ export function Panel({ scene }: { scene: RoomScene }) {
   return (
     <aside className="panel">
       {selectedRoom ? <RoomDetail scene={scene} roomId={selectedRoom} /> : <HouseSummary scene={scene} />}
+      <RetrofitPanel scene={scene} />
       <section className="card actions">
         <button onClick={() => download(`${scene.property_id}_appliances.json`, exportPlacements(scene, appliances))}>
           Export appliance placements

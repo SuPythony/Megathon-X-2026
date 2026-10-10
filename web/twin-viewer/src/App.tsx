@@ -3,11 +3,12 @@ import { Canvas } from '@react-three/fiber'
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { Appliances } from './components/Appliances'
+import { Retrofits } from './components/Retrofits'
 import { House, storeyOffset } from './components/House'
 import { IntakeForm } from './components/IntakeForm'
 import { Panel } from './components/Panel'
 import { bbox } from './geometry'
-import { useViewer } from './store'
+import { applianceKey, useViewer } from './store'
 import type { RoomScene } from './types'
 
 const SCENE_NAMES: Record<string, string> = {
@@ -31,7 +32,7 @@ function frameBox(scene: RoomScene, roomId: string | null, explode: boolean): TH
   }
   const [w, d] = scene.footprint_m
   const top = scene.roof.ridge_z_m + storeyOffset(scene.storeys - 1, explode)
-  return new THREE.Box3(new THREE.Vector3(-1, 0, -d - 1), new THREE.Vector3(w + 1, top, 1.5))
+  return new THREE.Box3(new THREE.Vector3(-1, 0, -d - 1.5), new THREE.Vector3(w + 1, top, 1.5))
 }
 
 function Viewport({ scene }: { scene: RoomScene }) {
@@ -45,7 +46,7 @@ function Viewport({ scene }: { scene: RoomScene }) {
     const centre = box.getCenter(new THREE.Vector3())
     const size = box.getSize(new THREE.Vector3()).length()
     // Look from the front (street side, +z) and above; a closer, steeper view for a single room.
-    const dist = selectedRoom ? size * 1.1 : size * 1.2
+    const dist = selectedRoom ? size * 1.1 : size * 1.5
     const elev = selectedRoom ? 1.0 : 0.55
     c.setLookAt(centre.x + dist * 0.45, centre.y + dist * elev, centre.z + dist * 0.85, centre.x, centre.y, centre.z, true)
   }, [scene, selectedRoom, explode, sceneKey])
@@ -58,6 +59,7 @@ function Viewport({ scene }: { scene: RoomScene }) {
       <directionalLight position={[-6, 8, -10]} intensity={0.4} />
       <House scene={scene} />
       <Appliances scene={scene} />
+      <Retrofits scene={scene} />
       <CameraControls ref={controls} enabled={!dragging} makeDefault minDistance={2} maxDistance={60} />
     </Canvas>
   )
@@ -65,9 +67,17 @@ function Viewport({ scene }: { scene: RoomScene }) {
 
 export default function App() {
   const { scenes, sceneKey, setScene, showRoof, toggleRoof, explode, toggleExplode, selectedRoom, selectRoom,
-    heatTint, toggleHeatTint } = useViewer()
+    heatTint, toggleHeatTint, retrofitIds, view, setView, runTwin, appliances } = useViewer()
   const scene = scenes[sceneKey]
   const [intakeOpen, setIntakeOpen] = useState(false)
+  const energyKey = applianceKey(appliances) + [...retrofitIds].sort().join('+')
+
+  // Re-run the twin when the package or the appliances' energy-relevant fields change (debounced).
+  useEffect(() => {
+    if (!scene?.energy) return
+    const t = setTimeout(() => { void runTwin() }, 350)
+    return () => clearTimeout(t)
+  }, [energyKey, sceneKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -94,6 +104,12 @@ export default function App() {
         <button className={explode ? 'toggle on' : 'toggle'} onClick={toggleExplode}>Explode floors</button>
         <button className={heatTint ? 'toggle on' : 'toggle'} onClick={toggleHeatTint} disabled={!scene?.energy}
           title={scene?.energy ? 'Colour rooms by share of heat loss' : 'No energy results for this scene'}>Heat loss</button>
+        <div className="seg" role="group" aria-label="Before or after retrofits">
+          <button className={view === 'before' ? 'on' : ''} onClick={() => setView('before')}>Before</button>
+          <button className={view === 'after' ? 'on' : ''} disabled={!retrofitIds.length} onClick={() => setView('after')}>
+            After{retrofitIds.length ? ` (${retrofitIds.length})` : ''}
+          </button>
+        </div>
         <button className="primary-btn" onClick={() => setIntakeOpen(true)}>New home</button>
         <span className="hint-inline">{selectedRoom ? 'Esc to return to the whole house' : 'Click a room to isolate it'}</span>
       </header>

@@ -183,6 +183,7 @@ class SceneAppliance(BaseModel):
     colour: str
     accent: str
     icon: str
+    answers: dict[str, str] = Field(default_factory=dict, description="Size answers (appliance_energy.json)")
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -224,6 +225,84 @@ class EnergyOverlay(BaseModel):
     basis: str
 
 
+class RetrofitOption(BaseModel):
+    """A catalogue retrofit as the viewer offers it. 'applicable' is a geometry check only (e.g. no loft in a flat);
+    the feasibility rules (Part 5) still decide what is recommended."""
+
+    retrofit_id: str
+    name: str
+    category: str
+    applicable: bool
+    reason: Optional[str] = None
+    cost_gbp_low: Optional[float] = None
+    cost_gbp_central: Optional[float] = None
+    cost_gbp_high: Optional[float] = None
+    cost_basis: str = "per_home"
+    cost_status: str = "unsourced"
+    excludes: list[str] = Field(default_factory=list)
+    depends_on: list[str] = Field(default_factory=list)
+
+
+class HouseNumbers(BaseModel):
+    gas_kwh: Range
+    electricity_kwh: Range
+    cost_gbp: Optional[Range] = Field(None, description="Unit rates only (standing charges excluded)")
+    carbon_kg: Optional[Range] = Field(None, description="DESNZ 2025 factors; None for fuels without a factor")
+
+
+class ScenarioView(BaseModel):
+    """One retrofit package, re-simulated as a whole (never summed). Savings are per sample: before - after,
+    so a negative saving means use goes up (e.g. electricity after a heat pump)."""
+
+    key: str = Field(description="Sorted retrofit ids joined by '+'; '' = no retrofits")
+    retrofit_ids: list[str]
+    engine: str
+    calibrated: bool
+    weather_source: str
+    before: HouseNumbers
+    after: HouseNumbers
+    savings: HouseNumbers
+    rooms_after: EnergyOverlay
+    warnings: list[str] = Field(default_factory=list)
+
+
+def retrofit_options(layout: TwinLayout, prop=None) -> list[RetrofitOption]:
+    from greentwin.twin.retrofits import catalogue
+
+    style = house_styles()[layout.archetype_id]
+    pitched = layout.roof_exposed and style.roof != "flat"
+    out = []
+    for rid, item in catalogue().items():
+        ok, why = True, None
+        if rid == "loft_insulation" and not pitched:
+            ok, why = False, "No loft: another home or a flat roof is above"
+        elif rid == "solar_pv" and not layout.roof_exposed:
+            ok, why = False, "No own roof for panels"
+        elif rid == "battery" and not layout.roof_exposed:
+            ok, why = True, "Needs solar PV or a time-of-use tariff to pay off"
+        elif rid == "floor_insulation" and not layout.ground_floor_exposed:
+            ok, why = False, "Another home is below"
+        elif rid == "cavity_wall_insulation" and prop is not None:
+            if prop.walls.type.value != "cavity":
+                ok, why = False, f"Walls are {prop.walls.type.value.replace('_', ' ')}, not cavity"
+            elif prop.walls.insulation.value in ("cavity_filled", "as_built"):
+                ok, why = False, "Cavity already insulated"
+        elif rid == "air_source_heat_pump" and prop is not None and prop.property_type.value == "flat":
+            why = "Needs outdoor space for the unit (check)"
+        out.append(RetrofitOption(
+            retrofit_id=rid, name=item["name"], category=item["category"], applicable=ok, reason=why,
+            cost_gbp_low=item.get("cost_gbp_low"), cost_gbp_central=item.get("cost_gbp_central"),
+            cost_gbp_high=item.get("cost_gbp_high"), cost_basis=item.get("cost_basis", "per_home"),
+            cost_status=item.get("cost_status", "unsourced"), excludes=item.get("excludes", []),
+            depends_on=item.get("depends_on", []),
+        ))
+    return out
+
+
+def scenario_key(retrofit_ids) -> str:
+    return "+".join(sorted(retrofit_ids))
+
+
 class RoomScene(BaseModel):
     scene_version: str = SCENE_VERSION
     property_id: str
@@ -243,6 +322,9 @@ class RoomScene(BaseModel):
     context: list[ContextBlock]
     appliances: list[SceneAppliance]
     energy: Optional[EnergyOverlay] = Field(None, description="Per-room numbers from the twin, when it has run")
+    retrofits: list[RetrofitOption] = Field(default_factory=list)
+    scenarios: dict[str, ScenarioView] = Field(
+        default_factory=dict, description="Precomputed packages by scenario_key (offline fallback for the viewer)")
     basis: str = BASIS_LABEL
 
 
@@ -416,7 +498,7 @@ def _place_appliances(
             appliance_id=p.appliance_id, type=p.type, label=p.label or vis.label, room_id=room_id,
             placement=mode, position_m=(_r(x), _r(y), _r(z)), rotation_deg=rot % 360.0,
             size_m=(vis.w, vis.d, vis.h), shape=vis.shape, mount=vis.mount,
-            colour=vis.colour, accent=vis.accent, icon=vis.icon, warnings=warnings,
+            colour=vis.colour, accent=vis.accent, icon=vis.icon, answers=dict(p.answers), warnings=warnings,
         )
     return [results[i] for i in range(len(placements))]
 
@@ -530,6 +612,7 @@ def build_scene(layout: TwinLayout, property_id: str,
         rooms=list(rooms.values()), walls=walls, openings=openings, roof=roof,
         features=_features(layout, style, rooms, roof), context=_context(layout),
         appliances=_place_appliances(appliances or [], rooms, layout.room_types, layout.footprint_m),
+        retrofits=retrofit_options(layout),
     )
 
 

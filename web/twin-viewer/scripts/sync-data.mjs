@@ -14,4 +14,5 @@ for (const f of readdirSync(join(twin, 'examples'))) {
   if (f.endsWith('.scene.json')) cpSync(join(twin, 'examples', f), join(out, 'scenes', f))
 }
 cpSync(join(twin, 'appliance_visuals.json'), join(out, 'appliance_visuals.json'))
+cpSync(join(twin, 'appliance_energy.json'), join(out, 'appliance_energy.json'))
 console.log('synced twin scenes and appliance visuals into src/data')

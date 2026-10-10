@@ -84,6 +84,7 @@ export interface SceneAppliance {
   colour: string
   accent: string
   icon: string
+  answers?: Record<string, string>
   warnings: string[]
 }
 
@@ -123,6 +124,42 @@ export interface EnergyOverlay {
   basis: string
 }
 
+export interface RetrofitOption {
+  retrofit_id: string
+  name: string
+  category: string
+  applicable: boolean
+  reason: string | null
+  cost_gbp_low: number | null
+  cost_gbp_central: number | null
+  cost_gbp_high: number | null
+  cost_basis: string
+  cost_status: string
+  excludes: string[]
+  depends_on: string[]
+}
+
+export interface HouseNumbers {
+  gas_kwh: Range
+  electricity_kwh: Range
+  cost_gbp: Range | null
+  carbon_kg: Range | null
+}
+
+// One retrofit package, re-simulated as a whole. Savings = before - after per sample (negative = use goes up).
+export interface ScenarioView {
+  key: string
+  retrofit_ids: string[]
+  engine: string
+  calibrated: boolean
+  weather_source: string
+  before: HouseNumbers
+  after: HouseNumbers
+  savings: HouseNumbers
+  rooms_after: EnergyOverlay
+  warnings: string[]
+}
+
 export interface RoomScene {
   scene_version: string
   property_id: string
@@ -142,7 +179,17 @@ export interface RoomScene {
   context: ContextBlock[]
   appliances: SceneAppliance[]
   energy?: EnergyOverlay | null
+  retrofits?: RetrofitOption[]
+  scenarios?: Record<string, ScenarioView>
   basis: string
+}
+
+// appliance_energy.json: the size questions per appliance type
+export interface ApplianceQuestion {
+  key: string
+  label: string
+  options: [string, string][]
+  default: string
 }
 
 export interface ApplianceVisual {
@@ -170,4 +217,5 @@ export interface AppliancePlacement {
   x_m?: number
   y_m?: number
   rotation_deg: number
+  answers?: Record<string, string>
 }

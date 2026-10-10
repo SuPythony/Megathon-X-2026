@@ -833,6 +833,7 @@
       "colour": "#e8ecef",
       "accent": "#9aa5ad",
       "icon": "fridge",
+      "answers": {},
       "warnings": []
     },
     {
@@ -857,6 +858,7 @@
       "colour": "#f7f7f7",
       "accent": "#2a6fdb",
       "icon": "washer",
+      "answers": {},
       "warnings": []
     },
     {
@@ -881,6 +883,7 @@
       "colour": "#f2f2f2",
       "accent": "#d64545",
       "icon": "heater",
+      "answers": {},
       "warnings": []
     },
     {
@@ -905,6 +908,7 @@
       "colour": "#f2f2f2",
       "accent": "#d64545",
       "icon": "heater",
+      "answers": {},
       "warnings": []
     },
     {
@@ -929,6 +933,7 @@
       "colour": "#c46a2b",
       "accent": "#7a3e14",
       "icon": "cylinder",
+      "answers": {},
       "warnings": []
     },
     {
@@ -953,9 +958,257 @@
       "colour": "#ffffff",
       "accent": "#2a6fdb",
       "icon": "shower",
+      "answers": {},
       "warnings": []
     }
   ],
   "energy": null,
+  "retrofits": [
+    {
+      "retrofit_id": "draught_proofing",
+      "name": "Draught proofing",
+      "category": "airtightness",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 120.0,
+      "cost_gbp_central": 250.0,
+      "cost_gbp_high": 380.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "loft_insulation",
+      "name": "Loft insulation to 270 mm",
+      "category": "fabric",
+      "applicable": false,
+      "reason": "No loft: another home or a flat roof is above",
+      "cost_gbp_low": 260.0,
+      "cost_gbp_central": 620.0,
+      "cost_gbp_high": 930.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "cavity_wall_insulation",
+      "name": "Cavity wall insulation",
+      "category": "fabric",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 670.0,
+      "cost_gbp_central": 1040.0,
+      "cost_gbp_high": 1940.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "internal_wall_insulation",
+      "name": "Internal wall insulation",
+      "category": "fabric",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 9440.0,
+      "cost_gbp_central": 10970.0,
+      "cost_gbp_high": 12360.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [
+        "external_wall_insulation"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "external_wall_insulation",
+      "name": "External wall insulation",
+      "category": "fabric",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 9860.0,
+      "cost_gbp_central": 16390.0,
+      "cost_gbp_high": 20830.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [
+        "internal_wall_insulation"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "floor_insulation",
+      "name": "Suspended floor insulation",
+      "category": "fabric",
+      "applicable": false,
+      "reason": "Another home is below",
+      "cost_gbp_low": 4860.0,
+      "cost_gbp_central": 8050.0,
+      "cost_gbp_high": 11530.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "double_glazing",
+      "name": "Double glazing (panes and frames)",
+      "category": "glazing",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 5420.0,
+      "cost_gbp_central": 8890.0,
+      "cost_gbp_high": 14860.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [
+        "triple_glazing",
+        "secondary_glazing"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "triple_glazing",
+      "name": "Triple glazing",
+      "category": "glazing",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [
+        "double_glazing",
+        "secondary_glazing"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "secondary_glazing",
+      "name": "Secondary glazing",
+      "category": "glazing",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [
+        "double_glazing",
+        "triple_glazing"
+      ],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "smart_thermostat",
+      "name": "Heating controls upgrade (smart thermostat + TRVs)",
+      "category": "controls",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": 620.0,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "air_source_heat_pump",
+      "name": "Air-source heat pump",
+      "category": "heating",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": 12500.0,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "secondary_source",
+      "excludes": [],
+      "depends_on": [
+        "loft_insulation",
+        "cavity_wall_insulation",
+        "internal_wall_insulation",
+        "external_wall_insulation"
+      ]
+    },
+    {
+      "retrofit_id": "hhr_storage_heaters",
+      "name": "High-heat-retention storage heaters",
+      "category": "heating",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "solar_pv",
+      "name": "Rooftop solar PV",
+      "category": "renewables",
+      "applicable": false,
+      "reason": "No own roof for panels",
+      "cost_gbp_low": null,
+      "cost_gbp_central": 1876.0,
+      "cost_gbp_high": null,
+      "cost_basis": "per_kwp",
+      "cost_status": "secondary_source",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "battery",
+      "name": "Home battery",
+      "category": "renewables",
+      "applicable": true,
+      "reason": "Needs solar PV or a time-of-use tariff to pay off",
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [],
+      "depends_on": [
+        "solar_pv"
+      ]
+    },
+    {
+      "retrofit_id": "led_lighting",
+      "name": "LED lighting throughout",
+      "category": "lighting",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": null,
+      "cost_gbp_central": null,
+      "cost_gbp_high": null,
+      "cost_basis": "per_home",
+      "cost_status": "unsourced",
+      "excludes": [],
+      "depends_on": []
+    },
+    {
+      "retrofit_id": "time_of_use_tariff",
+      "name": "Switch to a time-of-use electricity tariff",
+      "category": "tariff",
+      "applicable": true,
+      "reason": null,
+      "cost_gbp_low": 0.0,
+      "cost_gbp_central": 0.0,
+      "cost_gbp_high": 0.0,
+      "cost_basis": "per_home",
+      "cost_status": "sourced",
+      "excludes": [],
+      "depends_on": []
+    }
+  ],
+  "scenarios": {},
   "basis": "Layout from the closest standard UK house type, fitted to this home; room heat loss is estimated, only whole-house totals are calibrated to bills"
 }

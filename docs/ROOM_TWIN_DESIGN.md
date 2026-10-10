@@ -297,8 +297,9 @@ Party walls get faded neighbour blocks (left / right / back, and above / below f
 1. ✅ **Archetype library + fitting** (`greentwin/twin/archetypes.py`) and **vision extraction** on `claude-sonnet-5-5` with structured outputs + cache (`greentwin/twin/vision.py`). Tests: `tests/test_archetypes.py`.
 2. ✅ **Scene JSON** (`greentwin/twin/scene.py`): distinct look per house type, custom + auto appliance placement, examples + JSON Schema. Tests: `tests/test_scene.py`.
 2b. ✅ **3D viewer** (`web/twin-viewer`, React + react-three-fiber): renders the scene JSON, click-to-isolate rooms with cutaway walls, exploded floors, drag/rotate/add/remove appliances, export placements for `build_scene`.
-3. **Appliance catalogue** + per-room form → baseload prior.
-4. **Room allocation** on the stub `run_physics` → `RoomEnergy` → room panel.
+3. ✅ **Appliance catalogue** + per-room form with size questions → baseload, schedules, gains.
+4. ✅ **Room allocation** on the stub `run_physics` → `RoomEnergy` → room panel.
+4b. ✅ **Retrofits in 3D** with before/after and re-simulated package numbers (live server or precomputed).
 5. **Confirm screen:** pick or override the archetype, fix labels, map circuits to rooms.
 6. Prepare demo photos; hand-check and commit their cached drafts as an eval snapshot.
 7. Swap the stub physics for the teammate's `run_physics`.
