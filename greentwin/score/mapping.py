@@ -193,13 +193,24 @@ def renewables_sub(pv_kwp: float, battery_kwh: float = 0.0, solar_thermal: bool 
 
 
 # --------------------------------------------------------------------------- smart
-def smart_sub(controls: Sequence[Control]) -> float:
+def controls_level(controls: Sequence[Control]) -> float:
+    """Highest controls level whose requirements are all present (0-100)."""
     have = {c.value if hasattr(c, "value") else c for c in controls}
     best = 0.0
     for lvl in mapping()["components"]["smart_energy_management"]["levels"]:
         if set(lvl["requires"]) <= have:
             best = max(best, float(lvl["sub_score"]))
     return best
+
+
+def smart_sub(controls: Sequence[Control], lighting_pct):
+    """Controls and efficient electricity use (D-26): (1 - a) x controls level + a x low-energy lighting %.
+
+    ``lighting_pct`` may be an array of samples; it must be known or sampled, never defaulted to 0.
+    """
+    a = mapping()["components"]["smart_energy_management"]["lighting_share"]
+    light = np.clip(np.asarray(lighting_pct, dtype=float), 0.0, 100.0)
+    return (1 - a) * controls_level(controls) + a * light
 
 
 def classify(score_rounded: int) -> str:

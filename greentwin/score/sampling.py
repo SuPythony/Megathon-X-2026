@@ -56,6 +56,14 @@ def sap_from_band_mix(probs: Mapping[str, float], n: int, rng: np.random.Generat
     return rng.uniform(lo, hi + 1.0)  # uniform over the integer range of the band
 
 
+def lighting_prior(n: int, rng: np.random.Generator) -> np.ndarray:
+    """Unknown low-energy lighting %: sample the EPC distribution (bin centres), never 0 by default (D-26)."""
+    pri = priors()["low_energy_lighting_pct"]["probs"]
+    vals = np.array([float(k) for k in pri])
+    p = np.array(list(pri.values()), dtype=float)
+    return rng.choice(vals, size=n, p=p / p.sum())
+
+
 def loft_mm_prior(age_band: Optional[str], n: int, rng: np.random.Generator) -> np.ndarray:
     """Unknown loft depth: sample from the empirical depth distribution for the age band."""
     from .mapping import age_band_start

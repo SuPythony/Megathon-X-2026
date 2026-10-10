@@ -1,9 +1,10 @@
 {
   "_doc": "Green Home Score sub-score mappings v0.1. Fixed weights from the problem statement. Every mapping is monotonic (better state never lowers the sub-score) and is unit-tested. Piecewise-linear 'points' are [x, sub_score] pairs, linearly interpolated, clamped at the ends. Owner: Physics & Bayesian lead. Changes need a PR + updated tests.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "changelog": {
     "0.2.0": "Added U-value curves (walls, roof, floor) for homes with a known or EPC-reported U-value (decision D-15). Roof U maps through RdSAP 10 Table 16 to an equivalent loft depth, so both paths agree.",
-    "0.3.0": "Loft curve is now physics-based: share of the maximum heat-loss cut, 100 x (U0 - U(mm)) / (U0 - Umin), U from RdSAP 10 Table 16 (U0 = 2.3 at 0 mm, Umin = 0.11 at 400 mm). Replaces the near-linear curve, which the EBM check (decision D-23) showed under-valued the first 100 mm."
+    "0.3.0": "Loft curve is now physics-based: share of the maximum heat-loss cut, 100 x (U0 - U(mm)) / (U0 - Umin), U from RdSAP 10 Table 16 (U0 = 2.3 at 0 mm, Umin = 0.11 at 400 mm). Replaces the near-linear curve, which the EBM check (decision D-23) showed under-valued the first 100 mm.",
+    "0.4.0": "Lighting scored inside smart_energy_management: 0.53 x controls level + 0.47 x low-energy lighting %, share learned from RdSAP 10 data (decision D-26)."
   },
   "weights": {
     "energy_efficiency": 0.25,
@@ -81,7 +82,10 @@
       "cap": 100
     },
     "smart_energy_management": {
-      "input": "Controls present",
+      "input": "Controls present + share of low-energy (LED/CFL) fixed lighting",
+      "lighting_share": 0.47,
+      "combine": "sub_score = (1 - lighting_share) x controls_level + lighting_share x low_energy_lighting_pct (0-100). Missing lighting % is sampled from the EPC prior, never 0.",
+      "lighting_justification": "The brief fixes seven components, so lighting joins this one as 'controls and efficient electricity use'. lighting_share is learned (decision D-26): simplex NNLS on RdSAP 10 certificates, lighting share of this component 0.463 (SAP target) and 0.472 (primary energy); adding lighting raises held-out R2 on all four modelled targets. Overlap with energy efficiency (SAP already counts lighting) is accepted on the same basis as insulation: the rating is an outcome, components are levers.",
       "levels": [
         {"requires": [], "sub_score": 0},
         {"requires": ["programmer"], "sub_score": 20},
@@ -91,7 +95,7 @@
         {"requires": ["smart_thermostat", "trvs"], "sub_score": 90},
         {"requires": ["smart_thermostat", "zoned_control", "smart_meter"], "sub_score": 100}
       ],
-      "rule": "Highest level whose requirements are all present."
+      "rule": "controls_level = highest level whose requirements are all present."
     }
   }
 }

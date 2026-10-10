@@ -54,5 +54,5 @@ def test_glazing_and_controls():
     assert E.glazing_score("Fully double glazed", "double glazing installed during or after 2002", "100") == 80
     assert E.glazing_score("Fully double glazed", "double glazing, unknown install date", "100") == 70
     assert E.glazing_score("Partial double glazing", "double glazing installed before 2002", "50") == 30
-    assert m.smart_sub(E.controls_list("Programmer, room thermostat and TRVs")) == 60
-    assert m.smart_sub(E.controls_list("Programmer, no room thermostat")) == 20
+    assert m.controls_level(E.controls_list("Programmer, room thermostat and TRVs")) == 60
+    assert m.controls_level(E.controls_list("Programmer, no room thermostat")) == 20

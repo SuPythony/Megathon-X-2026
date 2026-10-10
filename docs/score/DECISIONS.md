@@ -32,6 +32,8 @@ Branch: `worktree-p3-green-score`. Research background: `docs/score/GREEN_SCORE_
 | D-22 | Missing `PHOTO_SUPPLY` = unknown PV, not "no PV" (bug found in v1 results) | Fixed |
 | D-23 | EBM curve check: loft curve too linear (data + physics: diminishing returns); heating map between cost and carbon orderings | Findings |
 | D-24 | Loft curve = share of max heat-loss cut (RdSAP Table 16), `score_mapping.json` v0.3.0; insulation key issue judged per element | Decided (user, 11 Oct 2026) |
+| D-25 | Heating map: physics (SAP 10.2 carbon + primary energy per kWh heat) tried and **rejected**: fits the data worse than the current map | Experiment; map unchanged, **open** |
+| D-26 | Lighting scored inside smart management: 0.53 × controls + 0.47 × low-energy lighting % (share learned), mapping v0.4.0 | Decided (user asked to score lighting) |
 
 ---
 
@@ -178,6 +180,31 @@ Effect on the showcase homes (headline, brief weights): SH1 30 → **33** Poor; 
 Side effect fixed: with a better roof score, SH2's insulation average (50.5) no longer triggered `poor_insulation`, hiding its unfilled cavity walls (sub-score 25). The key issue is now raised if the average **or any element** is below 40, and names the weak elements (test `test_good_loft_does_not_hide_unfilled_cavity`).
 
 Learned weights retrained as **v2** on the new sub-scores (v1 kept for the record).
+
+## D-25 Heating map: physics version tried and rejected
+Goal (user, after D-23): fix the heating map. Tried a sourced physics map: per kWh of delivered heat, carbon `C = ef / eff` and primary energy `P = pef / eff`, both from SAP 10.2 (Table 12 factors: mains gas 0.210 kgCO₂e/kWh and PEF 1.130, electricity 0.136 / 1.501, LPG 0.241 / 1.141, heating oil 0.298 / 1.180, house coal 0.395 / 1.064; Table 4a/4b default efficiencies: GSHP 230%, ASHP 170%, electric 100%, gas condensing 84%, non-condensing 74%, oil 80%, LPG 79% (mean), coal appliance 65%), each min-max scaled and averaged.
+
+Result, Spearman across 11 heating categories against the EBM points learned from EPC data (D-23):
+
+| Map | vs cost ordering (SAP) | vs carbon ordering (EIR) |
+| --- | --- | --- |
+| **Current hand-ordered map (kept)** | **0.879** | **0.697** |
+| Physics, carbon only | 0.593 | 0.506 |
+| Physics, carbon + primary energy | 0.556 | 0.533 |
+
+Why physics loses: (1) SAP models storage heaters with poor responsiveness and off-peak tariffs, so per-kWh carbon ties them with direct electric while the data separates them; (2) the EPC "solid fuel" class mixes coal with wood (low carbon), so a coal-only assumption is wrong for the class; (3) the cost and carbon data disagree with each other (storage beats direct on cost and loses on carbon; LPG is worst on cost but mid-table on carbon), so no single physics quantity matches both. Decision: keep the current map (`score_mapping.json` unchanged for heating). The open question is which target defines "green" for heating (see the question to the user).
+
+## D-26 Lighting scored (inside smart energy management)
+The brief fixes seven components, so lighting cannot be an eighth: it joins `smart_energy_management`, documented as "controls and efficient electricity use". `sub = (1 − a) × controls_level + a × low_energy_lighting_pct`, with `a` learned by `scripts/fit_lighting_split.py` (RdSAP 10 era, simplex NNLS with lighting as its own attribute, 100 bootstraps):
+
+| Target | Lighting share of the component | 90% bootstrap | Held-out R² without → with lighting |
+| --- | --- | --- | --- |
+| SAP (cost) | 0.463 | 0.456–0.468 | 0.303 → 0.329 |
+| Primary energy / m² | 0.472 | 0.459–0.479 | 0.274 → 0.294 |
+| EIR (carbon) | 1.0 (controls weight already 0: not informative) | — | 0.224 → 0.242 |
+| CO₂ / m² | 1.0 (same) | — | 0.209 → 0.226 |
+
+`a = 0.47`, the mean of the two targets where the split is identified. Lighting improves fit on every target. Missing lighting % is sampled from the EPC prior (`priors.json`: 60.5% of homes have 100% low-energy lighting, 3.6% have 0%; n = 3,528,294) and widens the interval. The `no_controls` key issue is judged on the controls level alone, so good lighting never hides missing controls. Overlap with energy efficiency (SAP counts lighting) is accepted on the same basis as insulation. Tests: `test_more_low_energy_lighting_never_lowers_score`, `test_missing_lighting_is_sampled_and_controls_issue_ignores_lighting`; the controls monotonicity sweep now runs at lighting 0, 50 and 100%. Learned weights retrained as **v3**.
 
 ---
 

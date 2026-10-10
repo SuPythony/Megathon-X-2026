@@ -95,11 +95,31 @@ def test_glazing_upgrade_never_lowers_score():
 
 def test_adding_controls_never_lowers_score():
     allc = [c for c in Control if c != Control.none]
-    for r in range(len(allc) + 1):
-        for subset in itertools.combinations(allc, r):
-            base = m.smart_sub(subset)
-            for extra in allc:
-                assert m.smart_sub(set(subset) | {extra}) >= base
+    for light in (0, 50, 100):
+        for r in range(len(allc) + 1):
+            for subset in itertools.combinations(allc, r):
+                base = m.smart_sub(subset, light)
+                for extra in allc:
+                    assert m.smart_sub(set(subset) | {extra}, light) >= base
+
+
+def test_more_low_energy_lighting_never_lowers_score():
+    for ctl in ([], [Control.programmer], [Control.smart_thermostat, Control.zoned_control, Control.smart_meter]):
+        assert nondecreasing(m.smart_sub(ctl, np.arange(0, 101)))
+
+
+def test_missing_lighting_is_sampled_and_controls_issue_ignores_lighting():
+    prop, usage = load("SH2")  # lighting not recorded
+    assert prop.low_energy_lighting_pct is None
+    res = GreenHomeScorer(n_samples=500).score(prop, energy_from_usage(prop, usage, n=300))
+    smart = next(c for c in res.components if c.name == "smart_energy_management")
+    assert smart.contribution_distribution is not None  # sampled -> uncertain
+    assert "sampled" in str(smart.inputs_used["low_energy_lighting_pct"])
+    full = prop.model_copy(deep=True)
+    full.low_energy_lighting_pct = 100
+    res2 = GreenHomeScorer(n_samples=500).score(full, energy_from_usage(full, usage, n=300))
+    assert next(c for c in res2.components if c.name == "smart_energy_management").sub_score >= smart.sub_score
+    assert not any(i.code == "no_controls" for i in res2.key_issues)  # programmer + room stat = 40 -> not flagged
 
 
 def test_newer_boiler_never_scores_lower():

@@ -18,7 +18,7 @@ from contracts.summarise import category_probabilities, summarise
 
 from . import mapping as m
 from .issues import key_issues
-from .sampling import from_distribution, loft_mm_prior, peer_band_probs, sap_from_band_mix
+from .sampling import from_distribution, lighting_prior, loft_mm_prior, peer_band_probs, sap_from_band_mix
 
 SCORE_BANDS = ["Very poor", "Poor", "Moderate", "Good", "Highly efficient"]
 PV_SELF_CONSUMPTION_DEFAULT = 0.4  # LLD 4.1.1 default share of PV used on site (for the overlap disclosure)
@@ -90,6 +90,13 @@ class GreenHomeScorer:
             loft = loft_mm_prior(prop.construction_age_band, n, rng)
             missing.append("loft insulation depth")
 
+        # --- lighting (part of smart management, D-26): unknown share is sampled, never 0
+        if prop.low_energy_lighting_pct is None:
+            light = lighting_prior(n, rng)
+            missing.append("low-energy lighting share")
+        else:
+            light = np.full(n, float(prop.low_energy_lighting_pct))
+
         samples = {
             "energy_efficiency": m.ee_from_sap(sap),
             "energy_intensity": m.intensity_sub(intensity),
@@ -98,13 +105,14 @@ class GreenHomeScorer:
             "windows_glazing": np.full(n, m.glazing_sub(prop.glazing)),
             "renewable_energy": np.full(n, m.renewables_sub(prop.renewables.pv_kwp, prop.renewables.battery_kwh,
                                                             prop.renewables.solar_thermal)),
-            "smart_energy_management": np.full(n, m.smart_sub(prop.controls)),
+            "smart_energy_management": np.broadcast_to(m.smart_sub(prop.controls, light), (n,)).astype(float),
         }
         # point sub-scores at the posterior-mean inputs (contract: ScoreResult.score)
         point = {
             "energy_efficiency": float(m.ee_from_sap(sap.mean())),
             "energy_intensity": float(m.intensity_sub(intensity.mean())),
             "insulation": float(m.insulation_sub(prop, None if loft is None else loft.mean())),
+            "smart_energy_management": float(m.smart_sub(prop.controls, light.mean())),
         }
         for k in m.COMPONENTS:
             point.setdefault(k, float(samples[k][0]))
@@ -117,6 +125,10 @@ class GreenHomeScorer:
         _, band_probs = category_probabilities([m.classify(int(s)) for s in rounded], SCORE_BANDS)
 
         inputs = self._inputs(prop, sap, intensity, loft, energy, rating_source)
+        inputs["smart_energy_management"]["controls_level"] = m.controls_level(prop.controls)
+        inputs["smart_energy_management"]["low_energy_lighting_pct"] = (
+            prop.low_energy_lighting_pct if prop.low_energy_lighting_pct is not None
+            else f"sampled, mean {light.mean():.0f}")
         components = []
         for k in m.COMPONENTS:
             s = samples[k]

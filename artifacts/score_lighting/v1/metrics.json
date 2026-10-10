@@ -1,0 +1,78 @@
+{
+  "era": "rdsap10",
+  "n": 446421,
+  "n_train": 312731,
+  "n_test": 66812,
+  "targets": {
+    "sap": {
+      "weights_with_lighting": {
+        "s_insulation": 0.18861,
+        "s_heating_system": 0.392254,
+        "s_windows_glazing": 0.082773,
+        "s_renewable_energy": 0.097442,
+        "s_smart_energy_management": 0.128268,
+        "s_lighting": 0.110654
+      },
+      "lighting_share_of_smart": 0.4631,
+      "lighting_share_boot_p5_p95": [
+        0.4557,
+        0.4684
+      ],
+      "r2_test_with_lighting": 0.329,
+      "r2_test_without_lighting": 0.3028
+    },
+    "eir": {
+      "weights_with_lighting": {
+        "s_insulation": 0.395973,
+        "s_heating_system": 0.341806,
+        "s_windows_glazing": 0.081105,
+        "s_renewable_energy": 0.019894,
+        "s_smart_energy_management": 0.0,
+        "s_lighting": 0.161221
+      },
+      "lighting_share_of_smart": 1.0,
+      "lighting_share_boot_p5_p95": [
+        1.0,
+        1.0
+      ],
+      "r2_test_with_lighting": 0.2424,
+      "r2_test_without_lighting": 0.2244
+    },
+    "co2_m2": {
+      "weights_with_lighting": {
+        "s_insulation": 0.472301,
+        "s_heating_system": 0.219395,
+        "s_windows_glazing": 0.046818,
+        "s_renewable_energy": 0.082695,
+        "s_smart_energy_management": 0.0,
+        "s_lighting": 0.178791
+      },
+      "lighting_share_of_smart": 1.0,
+      "lighting_share_boot_p5_p95": [
+        1.0,
+        1.0
+      ],
+      "r2_test_with_lighting": 0.2255,
+      "r2_test_without_lighting": 0.2092
+    },
+    "pe_m2": {
+      "weights_with_lighting": {
+        "s_insulation": 0.349585,
+        "s_heating_system": 0.215175,
+        "s_windows_glazing": 0.063331,
+        "s_renewable_energy": 0.078345,
+        "s_smart_energy_management": 0.155021,
+        "s_lighting": 0.138543
+      },
+      "lighting_share_of_smart": 0.4719,
+      "lighting_share_boot_p5_p95": [
+        0.4587,
+        0.4786
+      ],
+      "r2_test_with_lighting": 0.2937,
+      "r2_test_without_lighting": 0.2743
+    }
+  },
+  "lighting_share_of_smart_mean": 0.7338,
+  "seed": 42
+}

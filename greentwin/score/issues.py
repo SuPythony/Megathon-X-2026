@@ -79,9 +79,10 @@ def key_issues(prop: Property, subs: Mapping[str, float], intensity_samples: np.
         out.append(KeyIssue(code="no_renewables", label="No renewable generation", severity="low",
                             evidence={"pv_kwp": prop.renewables.pv_kwp}))
 
-    if subs["smart_energy_management"] < POOR_SUB_SCORE:
+    ctl = m.controls_level(prop.controls)  # judged on controls alone: lighting must not hide missing controls
+    if ctl < POOR_SUB_SCORE:
         out.append(KeyIssue(code="no_controls", label="Basic or no heating controls",
-                            severity=_sev(subs["smart_energy_management"]),
+                            severity=_sev(ctl),
                             evidence={"controls": ", ".join(c.value for c in prop.controls) or "none"}))
 
     for c in prop.data_quality.conflicts:

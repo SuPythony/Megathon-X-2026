@@ -407,5 +407,21 @@
         "n": 9712
       }
     }
+  },
+  "low_energy_lighting_pct": {
+    "source": "EPC register 25% property sample, latest certificate lodged in the last 10 years, rounded to 10%, n=3,528,294",
+    "probs": {
+      "0": 0.0363,
+      "10": 0.0126,
+      "20": 0.0231,
+      "30": 0.023,
+      "40": 0.0334,
+      "50": 0.031,
+      "60": 0.0482,
+      "70": 0.0493,
+      "80": 0.0785,
+      "90": 0.06,
+      "100": 0.6046
+    }
   }
 }

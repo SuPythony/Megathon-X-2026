@@ -28,7 +28,7 @@ AGE_KEYS = [(1800, 1899), (1900, 1929), (1930, 1949), (1950, 1966), (1967, 1975)
             (1991, 1995), (1996, 2002), (2003, 2006), (2007, 2011), (2012, 2100)]
 DEPTHS = [0, 12, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 270, 300, 350, 400]
 COLS = ["UPRN", "CERTIFICATE_NUMBER", "LODGEMENT_DATE", "CURRENT_ENERGY_RATING", "ROOF_DESCRIPTION",
-        "CONSTRUCTION_AGE_BAND"]
+        "CONSTRUCTION_AGE_BAND", "LOW_ENERGY_LIGHTING"]
 
 
 def age_key(band) -> str | None:
@@ -72,6 +72,9 @@ def main() -> None:
     bands = valid["CURRENT_ENERGY_RATING"].where(valid["CURRENT_ENERGY_RATING"].isin(list("ABCDEFG")))
     mix = bands.value_counts(normalize=True).reindex(list("ABCDEFG"), fill_value=0.0)
 
+    light = pd.to_numeric(valid["LOW_ENERGY_LIGHTING"], errors="coerce").dropna().clip(0, 100)
+    light_bins = (np.round(light / 10) * 10).astype(int).value_counts(normalize=True).sort_index()
+
     latest = latest.assign(mm=latest["ROOF_DESCRIPTION"].map(loft_mm),
                            age=latest["CONSTRUCTION_AGE_BAND"].map(age_key)).dropna(subset=["mm"])
     loft = {"all": {"source": f"EPC register 25% property sample, latest certificate, n={len(latest):,}",
@@ -93,6 +96,10 @@ def main() -> None:
                   f"{(pd.Timestamp(a.asof) - pd.DateOffset(years=10)).date()}, n={bands.notna().sum():,}",
         "probs": {b: round(float(v), 4) for b, v in mix.items()}}
     pri["loft_mm_by_age"] = loft
+    pri["low_energy_lighting_pct"] = {
+        "source": f"EPC register 25% property sample, latest certificate lodged in the last 10 years, rounded to "
+                  f"10%, n={len(light):,}",
+        "probs": {str(int(k)): round(float(v), 4) for k, v in light_bins.items()}}
     pri["intensity_peer_p50"] = {"source": "NEED 2025 4M sample, valid 2023 meter reads; median (gas+elec)/floor-area "
                                            "band midpoint; key = NEED property type|floor-area band", "cells": peer}
     (ROOT / "greentwin" / "score" / "priors.json").write_text(json.dumps(pri, indent=2), encoding="utf-8")

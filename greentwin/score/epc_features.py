@@ -330,10 +330,14 @@ def build(df: pd.DataFrame) -> pd.DataFrame:
                                  for k, st in zip(kwp, solar_th)]
 
     ctl = _map_unique(df["MAINHEATCONT_DESCRIPTION"], controls_list)
-    out["s_smart_energy_management"] = ctl.map(lambda c: m.smart_sub(c) if c is not None else np.nan)
+    lights = num("LOW_ENERGY_LIGHTING")
+    out["controls_level"] = ctl.map(lambda c: m.controls_level(c) if c is not None else np.nan)
+    # controls + lighting (D-26); unknown lighting or controls -> NaN, never 0
+    out["s_smart_energy_management"] = [float(m.smart_sub(c, li)) if c is not None and not np.isnan(li) else np.nan
+                                        for c, li in zip(ctl, lights)]
 
-    # --- extras (candidate parameters not in the brief's mapping; D-08)
-    out["low_energy_lighting_pct"] = num("LOW_ENERGY_LIGHTING")
+    # --- extras (candidate parameters; lighting is now inside smart management, D-26)
+    out["low_energy_lighting_pct"] = lights
     out["open_fireplaces"] = num("NUMBER_OPEN_FIREPLACES")
     out["mech_vent"] = df["MECHANICAL_VENTILATION"].str.contains("mechanical", na=False).astype(float)
     out["dual_tariff"] = df["ENERGY_TARIFF"].str.contains("dual|off-peak|24 hour", case=False, na=False).astype(float)
