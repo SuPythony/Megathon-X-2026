@@ -1,0 +1,74 @@
+{
+  "properties": {
+    "area_code": {
+      "description": "LSOA or region code",
+      "title": "Area Code",
+      "type": "string"
+    },
+    "month": {
+      "title": "Month",
+      "type": "string"
+    },
+    "hdd_15_5": {
+      "description": "Heating degree days, base 15.5 C",
+      "title": "Hdd 15 5",
+      "type": "number"
+    },
+    "cdd_22": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cdd 22"
+    },
+    "mean_temp_c": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mean Temp C"
+    },
+    "ghi_kwh_m2": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Global horizontal irradiation",
+      "title": "Ghi Kwh M2"
+    },
+    "source": {
+      "enum": [
+        "haduk_grid",
+        "open_meteo_era5",
+        "ukcp18",
+        "met_office_datahub",
+        "synthetic"
+      ],
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "area_code",
+    "month",
+    "hdd_15_5",
+    "source"
+  ],
+  "title": "WeatherMonth",
+  "type": "object"
+}

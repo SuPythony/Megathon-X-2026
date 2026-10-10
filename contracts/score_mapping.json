@@ -1,0 +1,82 @@
+{
+  "_doc": "Green Home Score sub-score mappings v0.1. Fixed weights from the problem statement. Every mapping is monotonic (better state never lowers the sub-score) and is unit-tested. Piecewise-linear 'points' are [x, sub_score] pairs, linearly interpolated, clamped at the ends. Owner: Physics & Bayesian lead. Changes need a PR + updated tests.",
+  "version": "0.1.0",
+  "weights": {
+    "energy_efficiency": 0.25,
+    "energy_intensity": 0.20,
+    "insulation": 0.15,
+    "heating_system": 0.15,
+    "windows_glazing": 0.10,
+    "renewable_energy": 0.10,
+    "smart_energy_management": 0.05
+  },
+  "classification": [
+    {"min": 80, "max": 100, "band": "Highly efficient"},
+    {"min": 65, "max": 79, "band": "Good"},
+    {"min": 50, "max": 64, "band": "Moderate"},
+    {"min": 30, "max": 49, "band": "Poor"},
+    {"min": 0, "max": 29, "band": "Very poor"}
+  ],
+  "rounding": "Round final weighted sum to nearest integer (half up) before classification.",
+  "components": {
+    "energy_efficiency": {
+      "input": "EPC SAP score (1-100); if only band is known use band midpoint",
+      "rule": "sub_score = SAP score (already 1-100, monotonic)",
+      "band_midpoints": {"A": 96, "B": 86, "C": 75, "D": 62, "E": 47, "F": 30, "G": 10},
+      "justification": "Problem statement: energy efficiency must reflect the recorded energy rating."
+    },
+    "energy_intensity": {
+      "input": "Annualised metered purchased energy (grid electricity import + gas) / floor area, kWh/m2/yr, weather-normalised to a typical year",
+      "points": [[50, 100], [100, 85], [150, 70], [200, 55], [250, 40], [300, 25], [400, 0]],
+      "direction": "lower is better",
+      "missing_rule": "If < 6 months metered data: impute from twin posterior and flag; if none: use twin-modelled intensity, widen interval, add warning.",
+      "justification": "Metered, per m2, so large homes are not penalised for size; distinct from the rating-based component."
+    },
+    "insulation": {
+      "input": "Roof, walls, floor states",
+      "element_weights": {"roof": 0.40, "walls": 0.45, "floor": 0.15},
+      "renormalise_when_absent": "Flats with a dwelling above drop 'roof'; with a dwelling below drop 'floor'; remaining weights rescaled to sum to 1.",
+      "roof_loft_mm_points": [[0, 0], [50, 25], [100, 45], [150, 65], [200, 80], [270, 100]],
+      "roof_other": {"flat_uninsulated": 20, "flat_insulated": 85, "room_in_roof_uninsulated": 20, "room_in_roof_insulated": 85},
+      "walls": {
+        "solid_none": 0, "cavity_none": 25, "timber_or_system_none": 30,
+        "cavity_filled": 75, "internal": 85, "external": 90, "as_built": 100
+      },
+      "floor": {"uninsulated": 30, "insulated": 100},
+      "justification": "Insulation is an actionable lever; overlap with the EPC rating is accepted and documented: the rating is an overall modelled outcome, components are the levers customers can change."
+    },
+    "heating_system": {
+      "input": "Main heating system (+ age for boilers)",
+      "map": {
+        "ground_source_heat_pump": 100, "air_source_heat_pump": 95, "district_heating": 70,
+        "gas_boiler_condensing": 55, "electric_storage_hhr": 50, "electric_storage": 35,
+        "gas_boiler_non_condensing": 30, "electric_direct": 30, "lpg_boiler": 25, "oil_boiler": 20, "solid_fuel": 5
+      },
+      "age_adjustment": "Boilers: -1 point per year over 12 years old, floor 0.",
+      "justification": "Ordered by delivered-heat carbon intensity and seasonal efficiency."
+    },
+    "windows_glazing": {
+      "input": "Glazing types weighted by share_pct",
+      "map": {"single": 0, "secondary": 50, "double_pre_2002": 60, "double_post_2002": 80, "triple": 100}
+    },
+    "renewable_energy": {
+      "input": "PV kWp, battery kWh, solar thermal",
+      "pv_kwp_points": [[0, 0], [1, 25], [2, 50], [3, 70], [4, 85], [5, 100]],
+      "bonuses": {"solar_thermal": 15, "battery_any": 10},
+      "cap": 100
+    },
+    "smart_energy_management": {
+      "input": "Controls present",
+      "levels": [
+        {"requires": [], "sub_score": 0},
+        {"requires": ["programmer"], "sub_score": 20},
+        {"requires": ["programmer", "room_thermostat"], "sub_score": 40},
+        {"requires": ["programmer", "room_thermostat", "trvs"], "sub_score": 60},
+        {"requires": ["smart_thermostat"], "sub_score": 75},
+        {"requires": ["smart_thermostat", "trvs"], "sub_score": 90},
+        {"requires": ["smart_thermostat", "zoned_control", "smart_meter"], "sub_score": 100}
+      ],
+      "rule": "Highest level whose requirements are all present."
+    }
+  }
+}

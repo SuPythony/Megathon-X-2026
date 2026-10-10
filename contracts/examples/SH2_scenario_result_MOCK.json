@@ -1,0 +1,196 @@
+{
+  "schema_version": "0.1.0",
+  "scenario_id": "SH2-pkg-mock",
+  "property_id": "SH2",
+  "provenance": {
+    "engine": "mock",
+    "model_version": "mock-0",
+    "data_version": "mock-0",
+    "seed": 42,
+    "n_samples": 0
+  },
+  "baseline": {
+    "electricity_import_kwh": {
+      "mean": 3400,
+      "lo": 3250,
+      "hi": 3550,
+      "level": 0.9,
+      "unit": "kWh/yr"
+    },
+    "gas_kwh": {
+      "mean": 12800,
+      "lo": 12300,
+      "hi": 13300,
+      "level": 0.9,
+      "unit": "kWh/yr"
+    },
+    "purchased_total_kwh": {
+      "mean": 16200,
+      "lo": 15600,
+      "hi": 16800,
+      "level": 0.9,
+      "unit": "kWh/yr"
+    },
+    "intensity_kwh_m2": {
+      "mean": 171,
+      "lo": 164,
+      "hi": 177,
+      "level": 0.9,
+      "unit": "kWh/m2/yr"
+    }
+  },
+  "after": {
+    "electricity_import_kwh": {
+      "mean": 5100,
+      "lo": 4600,
+      "hi": 5700,
+      "level": 0.9,
+      "unit": "kWh/yr"
+    },
+    "gas_kwh": {
+      "mean": 0,
+      "lo": 0,
+      "hi": 0,
+      "level": 0.9,
+      "unit": "kWh/yr"
+    },
+    "purchased_total_kwh": {
+      "mean": 5100,
+      "lo": 4600,
+      "hi": 5700,
+      "level": 0.9,
+      "unit": "kWh/yr"
+    },
+    "intensity_kwh_m2": {
+      "mean": 54,
+      "lo": 48,
+      "hi": 60,
+      "level": 0.9,
+      "unit": "kWh/m2/yr"
+    }
+  },
+  "electricity_saving_kwh": {
+    "mean": -1700,
+    "lo": -2300,
+    "hi": -1200,
+    "level": 0.9,
+    "unit": "kWh/yr"
+  },
+  "gas_saving_kwh": {
+    "mean": 12800,
+    "lo": 12300,
+    "hi": 13300,
+    "level": 0.9,
+    "unit": "kWh/yr"
+  },
+  "purchased_energy_saving_kwh": {
+    "mean": 11100,
+    "lo": 10400,
+    "hi": 11800,
+    "level": 0.9,
+    "unit": "kWh/yr"
+  },
+  "improvement_potential_pct": {
+    "mean": 68.5,
+    "lo": 64.0,
+    "hi": 72.0,
+    "level": 0.9,
+    "unit": "%"
+  },
+  "carbon_saving_kgco2e": {
+    "mean": 2040,
+    "lo": 1900,
+    "hi": 2170,
+    "level": 0.9,
+    "unit": "kgCO2e/yr"
+  },
+  "emission_factors": {
+    "electricity": 0.177,
+    "gas": 0.183
+  },
+  "emission_factor_source": "MOCK - replace with DESNZ 2025 GHG conversion factors (verify gross/net CV)",
+  "bill_saving_gbp": {
+    "mean": 560,
+    "lo": 420,
+    "hi": 690,
+    "level": 0.9,
+    "unit": "GBP/yr"
+  },
+  "score_before": {
+    "score": 46,
+    "band": "Poor",
+    "band_probabilities": {
+      "Poor": 0.8,
+      "Moderate": 0.2
+    },
+    "components": [],
+    "key_issues": [
+      "Unfilled cavity walls",
+      "Gas boiler",
+      "No renewables"
+    ]
+  },
+  "score_after": {
+    "score": 78,
+    "band": "Good",
+    "band_probabilities": {
+      "Good": 0.7,
+      "Highly efficient": 0.3
+    },
+    "components": [],
+    "key_issues": []
+  },
+  "retrofits": [],
+  "value": {
+    "current_value_gbp": 325000,
+    "uplift_pct": {
+      "mean": 3.0,
+      "lo": 1.5,
+      "hi": 4.5,
+      "level": 0.9,
+      "unit": "%"
+    },
+    "value_after_gbp": {
+      "mean": 334750,
+      "lo": 329875,
+      "hi": 339625,
+      "level": 0.9,
+      "unit": "GBP"
+    },
+    "method": "hedonic_quantile",
+    "label": "indicative"
+  },
+  "element_heat_loss_before": [
+    {
+      "element": "walls",
+      "heat_loss_w_per_k": 110,
+      "share_pct": 37
+    },
+    {
+      "element": "roof",
+      "heat_loss_w_per_k": 45,
+      "share_pct": 15
+    },
+    {
+      "element": "windows",
+      "heat_loss_w_per_k": 60,
+      "share_pct": 20
+    },
+    {
+      "element": "floor",
+      "heat_loss_w_per_k": 35,
+      "share_pct": 12
+    },
+    {
+      "element": "ventilation",
+      "heat_loss_w_per_k": 48,
+      "share_pct": 16
+    }
+  ],
+  "element_heat_loss_after": [],
+  "pareto": [],
+  "data_confidence": "high",
+  "warnings": [
+    "MOCK RESULT - shape only, numbers are placeholders, not model output"
+  ]
+}

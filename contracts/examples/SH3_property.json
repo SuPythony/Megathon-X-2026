@@ -1,0 +1,95 @@
+{
+  "schema_version": "0.1.0",
+  "property_id": "SH3",
+  "customer_id": "C-SH3",
+  "source": "showcase",
+  "split": null,
+  "location": {
+    "postcode_district": "CR0",
+    "lsoa_code": null,
+    "local_authority": "Croydon",
+    "region": "London",
+    "lat": 51.376,
+    "lon": -0.098,
+    "altitude_m": 50
+  },
+  "property_type": "flat",
+  "built_form": "not_applicable",
+  "construction_age_band": "2003-2006",
+  "year_built": 2004,
+  "storeys": 1,
+  "floor_area_m2": 62,
+  "habitable_rooms": 3,
+  "bedrooms": 2,
+  "tenure": "owner_occupied",
+  "epc": {
+    "current_band": "C",
+    "sap_score": 70,
+    "lodgement_date": "2024-02-19",
+    "potential_band": null,
+    "potential_sap_score": null,
+    "estimated_annual_energy_cost_gbp": null
+  },
+  "walls": {
+    "type": "cavity",
+    "insulation": "as_built",
+    "u_value": null
+  },
+  "roof": {
+    "type": "another_dwelling_above",
+    "loft_insulation_mm": null,
+    "u_value": null
+  },
+  "floor": {
+    "type": "another_dwelling_below",
+    "insulated": false,
+    "u_value": null
+  },
+  "glazing": [
+    {
+      "type": "double_post_2002",
+      "share_pct": 100
+    }
+  ],
+  "draught_proofed_pct": 100,
+  "heating": {
+    "main_system": "electric_storage",
+    "main_fuel": "electricity",
+    "system_age_years": 21,
+    "seasonal_efficiency": null,
+    "hot_water": "electric_immersion",
+    "cylinder_insulated": true
+  },
+  "renewables": {
+    "pv_kwp": 0,
+    "pv_azimuth_deg": null,
+    "pv_tilt_deg": null,
+    "battery_kwh": 0,
+    "solar_thermal": false
+  },
+  "controls": [
+    "programmer"
+  ],
+  "constraints": {
+    "conservation_area": false,
+    "listed_building": false,
+    "leasehold": true,
+    "has_outdoor_space": null,
+    "roof_access": false,
+    "best_roof_azimuth_deg": null,
+    "off_gas_grid": true,
+    "floor_level": 3,
+    "free_text_notes": [
+      "3rd-floor flat, small balcony facing the street",
+      "Leaseholder: freeholder consent needed for external units"
+    ]
+  },
+  "current_value_estimate_gbp": 330000,
+  "value_estimate_date": "2026-09-30",
+  "data_quality": {
+    "missing_fields": [],
+    "imputed_fields": [],
+    "conflicts": [],
+    "months_of_metered_data": 12
+  }
+}

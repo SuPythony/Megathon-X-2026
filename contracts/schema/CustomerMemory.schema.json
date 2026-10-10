@@ -1,0 +1,90 @@
+{
+  "$defs": {
+    "RetrofitAction": {
+      "properties": {
+        "retrofit_id": {
+          "title": "Retrofit Id",
+          "type": "string"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. kWp, mm, kW",
+          "title": "Size"
+        },
+        "stage_year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Roadmap year (0 = now)",
+          "title": "Stage Year"
+        }
+      },
+      "required": [
+        "retrofit_id"
+      ],
+      "title": "RetrofitAction",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "customer_id": {
+      "title": "Customer Id",
+      "type": "string"
+    },
+    "facts": {
+      "description": "e.g. {'type':'constraint','value':'renting'}",
+      "items": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
+      },
+      "title": "Facts",
+      "type": "array"
+    },
+    "completed_retrofits": {
+      "items": {
+        "$ref": "#/$defs/RetrofitAction"
+      },
+      "title": "Completed Retrofits",
+      "type": "array"
+    },
+    "rejected": {
+      "description": "{'retrofit_id':..,'reason':..}",
+      "items": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
+      },
+      "title": "Rejected",
+      "type": "array"
+    },
+    "saved_scenarios": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Saved Scenarios",
+      "type": "array"
+    }
+  },
+  "required": [
+    "customer_id"
+  ],
+  "title": "CustomerMemory",
+  "type": "object"
+}

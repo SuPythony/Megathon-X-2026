@@ -1,0 +1,110 @@
+[
+  {
+    "property_id": "SH2",
+    "month": "2025-01",
+    "electricity_import_kwh": 321.6,
+    "gas_kwh": 1835.5,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-02",
+    "electricity_import_kwh": 311.5,
+    "gas_kwh": 1632.7,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-03",
+    "electricity_import_kwh": 301.4,
+    "gas_kwh": 1430.0,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-04",
+    "electricity_import_kwh": 286.3,
+    "gas_kwh": 1125.8,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-05",
+    "electricity_import_kwh": 271.1,
+    "gas_kwh": 821.7,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-06",
+    "electricity_import_kwh": 256.0,
+    "gas_kwh": 517.5,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-07",
+    "electricity_import_kwh": 250.9,
+    "gas_kwh": 416.1,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-08",
+    "electricity_import_kwh": 250.9,
+    "gas_kwh": 416.1,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-09",
+    "electricity_import_kwh": 261.0,
+    "gas_kwh": 618.9,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-10",
+    "electricity_import_kwh": 281.2,
+    "gas_kwh": 1024.4,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-11",
+    "electricity_import_kwh": 296.4,
+    "gas_kwh": 1328.6,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  },
+  {
+    "property_id": "SH2",
+    "month": "2025-12",
+    "electricity_import_kwh": 311.5,
+    "gas_kwh": 1632.7,
+    "pv_generation_kwh": null,
+    "electricity_export_kwh": null,
+    "estimated_read": false
+  }
+]

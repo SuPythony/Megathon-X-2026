@@ -1,0 +1,42 @@
+{
+  "description": "Validator output for one LLM answer.",
+  "properties": {
+    "numbers_found": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Numbers Found",
+      "type": "array"
+    },
+    "unsupported_numbers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unsupported Numbers",
+      "type": "array"
+    },
+    "jev_supported_probability": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Jev Supported Probability"
+    },
+    "passed": {
+      "title": "Passed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "numbers_found",
+    "unsupported_numbers",
+    "passed"
+  ],
+  "title": "ExplanationCheck",
+  "type": "object"
+}

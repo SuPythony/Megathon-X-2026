@@ -1,0 +1,74 @@
+{
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "month": {
+      "description": "YYYY-MM",
+      "title": "Month",
+      "type": "string"
+    },
+    "electricity_import_kwh": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Null = missing, never 0 by default",
+      "title": "Electricity Import Kwh"
+    },
+    "gas_kwh": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Gross CV kWh. Null = missing; 0 only if no gas supply",
+      "title": "Gas Kwh"
+    },
+    "pv_generation_kwh": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pv Generation Kwh"
+    },
+    "electricity_export_kwh": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Electricity Export Kwh"
+    },
+    "estimated_read": {
+      "default": false,
+      "title": "Estimated Read",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "property_id",
+    "month"
+  ],
+  "title": "EnergyUsageMonth",
+  "type": "object"
+}

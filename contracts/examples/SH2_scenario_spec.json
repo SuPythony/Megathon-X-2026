@@ -1,0 +1,34 @@
+{
+  "schema_version": "0.1.0",
+  "scenario_id": "SH2-pkg-1",
+  "property_id": "SH2",
+  "retrofits": [
+    {
+      "retrofit_id": "cavity_wall_insulation",
+      "size": null,
+      "stage_year": 0
+    },
+    {
+      "retrofit_id": "loft_insulation",
+      "size": null,
+      "stage_year": 0
+    },
+    {
+      "retrofit_id": "air_source_heat_pump",
+      "size": 7,
+      "stage_year": 1
+    },
+    {
+      "retrofit_id": "solar_pv",
+      "size": 3.5,
+      "stage_year": 2
+    }
+  ],
+  "weather": "typical",
+  "n_samples": 500,
+  "include_value": true,
+  "include_pareto": false,
+  "include_element_heat_loss": true,
+  "seed": 42,
+  "requested_by": "ui"
+}

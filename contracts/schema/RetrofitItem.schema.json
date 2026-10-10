@@ -1,0 +1,142 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "category": {
+      "enum": [
+        "fabric",
+        "glazing",
+        "heating",
+        "renewables",
+        "controls",
+        "airtightness"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "twin_edits": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "description": "Parameter changes applied to the physics twin",
+      "title": "Twin Edits",
+      "type": "object"
+    },
+    "blocked_by_rules": {
+      "description": "Rule ids that veto this retrofit",
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocked By Rules",
+      "type": "array"
+    },
+    "depends_on": {
+      "description": "Should come after these (ordering)",
+      "items": {
+        "type": "string"
+      },
+      "title": "Depends On",
+      "type": "array"
+    },
+    "excludes": {
+      "description": "Mutually exclusive retrofits",
+      "items": {
+        "type": "string"
+      },
+      "title": "Excludes",
+      "type": "array"
+    },
+    "cost_gbp_low": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cost Gbp Low"
+    },
+    "cost_gbp_high": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cost Gbp High"
+    },
+    "cost_basis": {
+      "default": "per_home",
+      "description": "per_home | per_m2 | per_kwp | per_window",
+      "title": "Cost Basis",
+      "type": "string"
+    },
+    "lifetime_years": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Lifetime Years"
+    },
+    "grants": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Grants",
+      "type": "array"
+    },
+    "sizing": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Continuous sizing bounds, e.g. {'kwp_min':1,'kwp_max':6}",
+      "title": "Sizing"
+    },
+    "source": {
+      "description": "Citation for cost/impact assumptions",
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "category",
+    "twin_edits",
+    "source"
+  ],
+  "title": "RetrofitItem",
+  "type": "object"
+}

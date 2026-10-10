@@ -1,0 +1,30 @@
+{
+  "_doc": "Layer-1 hard feasibility rules v0.1. A rule veto cannot be overridden by Jev or the LLM. Rules are evaluated on contracts.models.Property; 'when' is pseudo-code to implement in greentwin/retrofit/rules.py. Codes surface to users as reasons.",
+  "version": "0.1.0",
+  "rules": [
+    {"id": "R_NO_LOFT", "blocks": ["loft_insulation"], "when": "roof.type in [another_dwelling_above, flat]", "reason": "No accessible loft"},
+    {"id": "R_LOFT_ALREADY_DEEP", "blocks": ["loft_insulation"], "when": "roof.loft_insulation_mm >= 270", "reason": "Loft already at recommended depth"},
+    {"id": "R_NOT_CAVITY", "blocks": ["cavity_wall_insulation"], "when": "walls.type != cavity or walls.insulation != none", "reason": "Not an unfilled cavity wall"},
+    {"id": "R_SOLID_WALL_ONLY", "blocks": ["internal_wall_insulation", "external_wall_insulation"], "when": "walls.type == cavity or walls.insulation != none", "reason": "Solid-wall insulation only applies to uninsulated solid, timber or system-built walls"},
+    {"id": "R_CONSERVATION_EWI", "blocks": ["external_wall_insulation"], "when": "constraints.conservation_area or constraints.listed_building", "reason": "External cladding usually not permitted in a conservation area or on a listed building"},
+    {"id": "R_LISTED_GLAZING", "blocks": ["double_glazing", "triple_glazing"], "when": "constraints.listed_building", "reason": "Listed building: replacement windows restricted; consider secondary glazing"},
+    {"id": "R_GLAZING_DONE", "blocks": ["double_glazing", "secondary_glazing"], "when": "every glazing.type in [double_post_2002, triple]", "reason": "Already has modern double or triple glazing"},
+    {"id": "R_NO_ROOF_PV", "blocks": ["solar_pv", "battery"], "when": "constraints.roof_access == false", "reason": "No own roof available for panels"},
+    {"id": "R_NORTH_ROOF", "blocks": [], "downgrade": {"solar_pv": "needs_survey"}, "when": "best_roof_azimuth_deg known and abs(best_roof_azimuth_deg - 180) > 100", "reason": "Best roof faces north; low yield"},
+    {"id": "R_HP_NO_OUTDOOR", "blocks": [], "downgrade": {"air_source_heat_pump": "needs_survey"}, "when": "constraints.has_outdoor_space != true", "reason": "Outdoor unit location unconfirmed"},
+    {"id": "R_HP_ALREADY", "blocks": ["air_source_heat_pump"], "when": "heating.main_system in [air_source_heat_pump, ground_source_heat_pump]", "reason": "Already has a heat pump"},
+    {"id": "R_NO_FLOOR", "blocks": ["floor_insulation"], "when": "floor.type == another_dwelling_below or floor.insulated", "reason": "No ground floor to insulate, or already insulated"},
+    {"id": "R_HHR_ONLY_STORAGE", "blocks": ["hhr_storage_heaters"], "when": "heating.main_system not in [electric_storage, electric_direct]", "reason": "High-heat-retention storage heaters replace electric heating only"},
+    {"id": "R_SMART_DONE", "blocks": ["smart_thermostat"], "when": "smart_thermostat in controls", "reason": "Already has smart controls"},
+    {"id": "R_BATTERY_NEEDS_PV", "blocks": ["battery"], "when": "renewables.pv_kwp == 0 and solar_pv not in scenario", "reason": "Battery only recommended with PV"}
+  ],
+  "ordering": [
+    ["draught_proofing", "loft_insulation", "cavity_wall_insulation", "internal_wall_insulation", "external_wall_insulation", "floor_insulation"],
+    ["double_glazing", "triple_glazing", "secondary_glazing"],
+    ["smart_thermostat"],
+    ["air_source_heat_pump", "hhr_storage_heaters"],
+    ["solar_pv"],
+    ["battery"]
+  ],
+  "ordering_doc": "Fabric first, then glazing, controls, the heating system (sized on the reduced demand), then generation and storage. Within a group, order by expected net benefit."
+}

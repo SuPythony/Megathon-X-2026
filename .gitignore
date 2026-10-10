@@ -1,0 +1,47 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Data (download with scripts; never commit raw or large files)
+data/raw/
+data/interim/
+data/processed/*.parquet
+data/cache/
+*.duckdb
+*.duckdb.wal
+
+# Model artefacts (large); small JSON metadata/metrics may be committed
+artifacts/**/*.pt
+artifacts/**/*.pkl
+artifacts/**/*.joblib
+artifacts/**/*.nc
+artifacts/**/*.safetensors
+
+# LLM / Jev response caches (keep locally for replay; commit only eval snapshots)
+cache/llm/
+cache/jev/
+
+# Node / web
+node_modules/
+web/dist/
+web/.vite/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Organiser brief and early drafts (not shared in repo)
+LLOYDS-ps2.pdf
+Green_Home_Ideas.pdf

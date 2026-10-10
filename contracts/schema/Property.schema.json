@@ -1,0 +1,864 @@
+{
+  "$defs": {
+    "BuiltForm": {
+      "enum": [
+        "detached",
+        "semi_detached",
+        "mid_terrace",
+        "end_terrace",
+        "enclosed_mid_terrace",
+        "not_applicable"
+      ],
+      "title": "BuiltForm",
+      "type": "string"
+    },
+    "Constraints": {
+      "description": "Feasibility inputs. Rules read these; Jev reads them plus notes.",
+      "properties": {
+        "conservation_area": {
+          "default": false,
+          "title": "Conservation Area",
+          "type": "boolean"
+        },
+        "listed_building": {
+          "default": false,
+          "title": "Listed Building",
+          "type": "boolean"
+        },
+        "leasehold": {
+          "default": false,
+          "title": "Leasehold",
+          "type": "boolean"
+        },
+        "has_outdoor_space": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For heat-pump outdoor unit",
+          "title": "Has Outdoor Space"
+        },
+        "roof_access": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Own roof available for PV",
+          "title": "Roof Access"
+        },
+        "best_roof_azimuth_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Best Roof Azimuth Deg"
+        },
+        "off_gas_grid": {
+          "default": false,
+          "title": "Off Gas Grid",
+          "type": "boolean"
+        },
+        "floor_level": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "0 = ground; flats only",
+          "title": "Floor Level"
+        },
+        "free_text_notes": {
+          "description": "Agent/customer notes; read by Jev",
+          "items": {
+            "type": "string"
+          },
+          "title": "Free Text Notes",
+          "type": "array"
+        }
+      },
+      "title": "Constraints",
+      "type": "object"
+    },
+    "Control": {
+      "enum": [
+        "none",
+        "programmer",
+        "room_thermostat",
+        "trvs",
+        "smart_thermostat",
+        "zoned_control",
+        "smart_meter"
+      ],
+      "title": "Control",
+      "type": "string"
+    },
+    "DataQuality": {
+      "properties": {
+        "missing_fields": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Fields",
+          "type": "array"
+        },
+        "imputed_fields": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Imputed Fields",
+          "type": "array"
+        },
+        "conflicts": {
+          "description": "e.g. 'EPC A but 400 kWh/m2 metered'",
+          "items": {
+            "type": "string"
+          },
+          "title": "Conflicts",
+          "type": "array"
+        },
+        "months_of_metered_data": {
+          "default": 0,
+          "title": "Months Of Metered Data",
+          "type": "integer"
+        }
+      },
+      "title": "DataQuality",
+      "type": "object"
+    },
+    "EPCInfo": {
+      "properties": {
+        "current_band": {
+          "anyOf": [
+            {
+              "enum": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Band"
+        },
+        "sap_score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sap Score"
+        },
+        "lodgement_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO date",
+          "title": "Lodgement Date"
+        },
+        "potential_band": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "leakage: reference label only, never a model input",
+          "title": "Potential Band"
+        },
+        "potential_sap_score": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "leakage: reference label only",
+          "title": "Potential Sap Score"
+        },
+        "estimated_annual_energy_cost_gbp": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "EPC modelled current cost",
+          "title": "Estimated Annual Energy Cost Gbp"
+        }
+      },
+      "title": "EPCInfo",
+      "type": "object"
+    },
+    "Floor": {
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/FloorType"
+        },
+        "insulated": {
+          "default": false,
+          "title": "Insulated",
+          "type": "boolean"
+        },
+        "u_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "U Value"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Floor",
+      "type": "object"
+    },
+    "FloorType": {
+      "enum": [
+        "suspended_timber",
+        "solid",
+        "another_dwelling_below"
+      ],
+      "title": "FloorType",
+      "type": "string"
+    },
+    "Glazing": {
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/GlazingType"
+        },
+        "share_pct": {
+          "default": 100,
+          "description": "Share of windows with this glazing",
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Share Pct",
+          "type": "number"
+        },
+        "window_to_floor_ratio": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Window To Floor Ratio"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Glazing",
+      "type": "object"
+    },
+    "GlazingType": {
+      "enum": [
+        "single",
+        "secondary",
+        "double_pre_2002",
+        "double_post_2002",
+        "triple"
+      ],
+      "title": "GlazingType",
+      "type": "string"
+    },
+    "Heating": {
+      "properties": {
+        "main_system": {
+          "$ref": "#/$defs/HeatingSystem"
+        },
+        "main_fuel": {
+          "enum": [
+            "mains_gas",
+            "electricity",
+            "oil",
+            "lpg",
+            "solid",
+            "district"
+          ],
+          "title": "Main Fuel",
+          "type": "string"
+        },
+        "system_age_years": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "System Age Years"
+        },
+        "seasonal_efficiency": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Boiler efficiency or heat-pump SCOP",
+          "title": "Seasonal Efficiency"
+        },
+        "hot_water": {
+          "default": "from_main",
+          "enum": [
+            "from_main",
+            "electric_immersion",
+            "heat_pump_cylinder",
+            "instantaneous"
+          ],
+          "title": "Hot Water",
+          "type": "string"
+        },
+        "cylinder_insulated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cylinder Insulated"
+        }
+      },
+      "required": [
+        "main_system",
+        "main_fuel"
+      ],
+      "title": "Heating",
+      "type": "object"
+    },
+    "HeatingSystem": {
+      "enum": [
+        "gas_boiler_condensing",
+        "gas_boiler_non_condensing",
+        "oil_boiler",
+        "lpg_boiler",
+        "electric_storage",
+        "electric_storage_hhr",
+        "electric_direct",
+        "air_source_heat_pump",
+        "ground_source_heat_pump",
+        "district_heating",
+        "solid_fuel"
+      ],
+      "title": "HeatingSystem",
+      "type": "string"
+    },
+    "Location": {
+      "properties": {
+        "postcode_district": {
+          "description": "Outward code only, e.g. 'M14'. No full postcodes/addresses.",
+          "title": "Postcode District",
+          "type": "string"
+        },
+        "lsoa_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lsoa Code"
+        },
+        "local_authority": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Local Authority"
+        },
+        "region": {
+          "description": "ONS region, e.g. 'North West'",
+          "title": "Region",
+          "type": "string"
+        },
+        "lat": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Rounded to 3 dp (~100 m) for privacy",
+          "title": "Lat"
+        },
+        "lon": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lon"
+        },
+        "altitude_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Altitude M"
+        }
+      },
+      "required": [
+        "postcode_district",
+        "region"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "PropertyType": {
+      "enum": [
+        "house",
+        "bungalow",
+        "flat",
+        "maisonette"
+      ],
+      "title": "PropertyType",
+      "type": "string"
+    },
+    "Renewables": {
+      "properties": {
+        "pv_kwp": {
+          "default": 0.0,
+          "title": "Pv Kwp",
+          "type": "number"
+        },
+        "pv_azimuth_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "180 = south",
+          "title": "Pv Azimuth Deg"
+        },
+        "pv_tilt_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pv Tilt Deg"
+        },
+        "battery_kwh": {
+          "default": 0.0,
+          "title": "Battery Kwh",
+          "type": "number"
+        },
+        "solar_thermal": {
+          "default": false,
+          "title": "Solar Thermal",
+          "type": "boolean"
+        }
+      },
+      "title": "Renewables",
+      "type": "object"
+    },
+    "Roof": {
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/RoofType"
+        },
+        "loft_insulation_mm": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Null if no loft",
+          "title": "Loft Insulation Mm"
+        },
+        "u_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "U Value"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Roof",
+      "type": "object"
+    },
+    "RoofType": {
+      "enum": [
+        "pitched_loft",
+        "pitched_room_in_roof",
+        "flat",
+        "another_dwelling_above"
+      ],
+      "title": "RoofType",
+      "type": "string"
+    },
+    "Tenure": {
+      "enum": [
+        "owner_occupied",
+        "private_rented",
+        "social_rented",
+        "unknown"
+      ],
+      "title": "Tenure",
+      "type": "string"
+    },
+    "WallInsulation": {
+      "enum": [
+        "none",
+        "cavity_filled",
+        "internal",
+        "external",
+        "as_built"
+      ],
+      "title": "WallInsulation",
+      "type": "string"
+    },
+    "WallType": {
+      "enum": [
+        "solid_brick",
+        "solid_stone",
+        "cavity",
+        "timber_frame",
+        "system_built"
+      ],
+      "title": "WallType",
+      "type": "string"
+    },
+    "Walls": {
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/WallType"
+        },
+        "insulation": {
+          "$ref": "#/$defs/WallInsulation"
+        },
+        "u_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "W/m2K if measured; else from RdSAP defaults",
+          "title": "U Value"
+        }
+      },
+      "required": [
+        "type",
+        "insulation"
+      ],
+      "title": "Walls",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "customer_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Split key when present (customer-level splits)",
+      "title": "Customer Id"
+    },
+    "source": {
+      "enum": [
+        "epc_real",
+        "synthetic",
+        "showcase",
+        "agent_capture",
+        "self_serve"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "split": {
+      "anyOf": [
+        {
+          "enum": [
+            "train",
+            "val",
+            "test"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Assigned once, by property/customer",
+      "title": "Split"
+    },
+    "location": {
+      "$ref": "#/$defs/Location"
+    },
+    "property_type": {
+      "$ref": "#/$defs/PropertyType"
+    },
+    "built_form": {
+      "$ref": "#/$defs/BuiltForm"
+    },
+    "construction_age_band": {
+      "description": "RdSAP band, e.g. '1900-1929'",
+      "title": "Construction Age Band",
+      "type": "string"
+    },
+    "year_built": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Year Built"
+    },
+    "storeys": {
+      "default": 1,
+      "title": "Storeys",
+      "type": "integer"
+    },
+    "floor_area_m2": {
+      "title": "Floor Area M2",
+      "type": "number"
+    },
+    "habitable_rooms": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Habitable Rooms"
+    },
+    "bedrooms": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bedrooms"
+    },
+    "tenure": {
+      "$ref": "#/$defs/Tenure",
+      "default": "unknown"
+    },
+    "epc": {
+      "$ref": "#/$defs/EPCInfo"
+    },
+    "walls": {
+      "$ref": "#/$defs/Walls"
+    },
+    "roof": {
+      "$ref": "#/$defs/Roof"
+    },
+    "floor": {
+      "$ref": "#/$defs/Floor"
+    },
+    "glazing": {
+      "items": {
+        "$ref": "#/$defs/Glazing"
+      },
+      "title": "Glazing",
+      "type": "array"
+    },
+    "draught_proofed_pct": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Draught Proofed Pct"
+    },
+    "heating": {
+      "$ref": "#/$defs/Heating"
+    },
+    "renewables": {
+      "$ref": "#/$defs/Renewables"
+    },
+    "controls": {
+      "items": {
+        "$ref": "#/$defs/Control"
+      },
+      "title": "Controls",
+      "type": "array"
+    },
+    "constraints": {
+      "$ref": "#/$defs/Constraints"
+    },
+    "current_value_estimate_gbp": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Baseline valuation used for value impact. NOT a historical sale price.",
+      "title": "Current Value Estimate Gbp"
+    },
+    "value_estimate_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value Estimate Date"
+    },
+    "data_quality": {
+      "$ref": "#/$defs/DataQuality"
+    }
+  },
+  "required": [
+    "property_id",
+    "source",
+    "location",
+    "property_type",
+    "built_form",
+    "construction_age_band",
+    "floor_area_m2",
+    "walls",
+    "roof",
+    "floor",
+    "glazing",
+    "heating"
+  ],
+  "title": "Property",
+  "type": "object"
+}

@@ -1,0 +1,48 @@
+{
+  "description": "Historical transaction. Never used as the baseline value.",
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "date": {
+      "title": "Date",
+      "type": "string"
+    },
+    "price_gbp": {
+      "title": "Price Gbp",
+      "type": "number"
+    },
+    "energy_rating_at_sale": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Energy Rating At Sale"
+    },
+    "new_build": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "New Build"
+    }
+  },
+  "required": [
+    "property_id",
+    "date",
+    "price_gbp"
+  ],
+  "title": "SaleRecord",
+  "type": "object"
+}

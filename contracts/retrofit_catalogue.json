@@ -1,0 +1,26 @@
+{
+  "_doc": "Retrofit catalogue v0.1. twin_edits are physics parameters applied to the Level-1 twin. U-values are typical engineering assumptions to be checked against RdSAP 10 tables. Costs are TO_SOURCE from 'BEIS Domestic cost assumptions: what does it cost to retrofit homes' (2017) uplifted by CPI, then documented here. Never hard-code savings: savings come from rerunning the twin.",
+  "version": "0.1.0",
+  "items": [
+    {"id": "draught_proofing", "name": "Draught proofing", "category": "airtightness", "twin_edits": {"ach_reduction": 0.15}, "lifetime_years": 10, "source": "TO_SOURCE"},
+    {"id": "loft_insulation", "name": "Loft insulation to 270 mm", "category": "fabric", "twin_edits": {"roof_u_value": 0.16}, "lifetime_years": 40, "grants": ["ECO4", "GBIS"], "source": "TO_SOURCE"},
+    {"id": "cavity_wall_insulation", "name": "Cavity wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.55}, "lifetime_years": 40, "grants": ["ECO4", "GBIS"], "source": "TO_SOURCE"},
+    {"id": "internal_wall_insulation", "name": "Internal wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.30, "floor_area_factor": 0.97}, "excludes": ["external_wall_insulation"], "lifetime_years": 36, "source": "TO_SOURCE"},
+    {"id": "external_wall_insulation", "name": "External wall insulation", "category": "fabric", "twin_edits": {"wall_u_value": 0.30}, "excludes": ["internal_wall_insulation"], "lifetime_years": 36, "source": "TO_SOURCE"},
+    {"id": "floor_insulation", "name": "Suspended floor insulation", "category": "fabric", "twin_edits": {"floor_u_value": 0.25}, "lifetime_years": 40, "source": "TO_SOURCE"},
+    {"id": "double_glazing", "name": "Double glazing (A-rated)", "category": "glazing", "twin_edits": {"window_u_value": 1.4}, "excludes": ["triple_glazing", "secondary_glazing"], "lifetime_years": 30, "source": "TO_SOURCE"},
+    {"id": "triple_glazing", "name": "Triple glazing", "category": "glazing", "twin_edits": {"window_u_value": 0.8}, "excludes": ["double_glazing", "secondary_glazing"], "lifetime_years": 30, "source": "TO_SOURCE"},
+    {"id": "secondary_glazing", "name": "Secondary glazing", "category": "glazing", "twin_edits": {"window_u_value": 2.4}, "excludes": ["double_glazing", "triple_glazing"], "lifetime_years": 20, "source": "TO_SOURCE"},
+    {"id": "smart_thermostat", "name": "Smart thermostat + TRVs", "category": "controls", "twin_edits": {"setpoint_reduction_c": 0.5, "heating_hours_factor": 0.93}, "lifetime_years": 12, "source": "TO_SOURCE"},
+    {"id": "air_source_heat_pump", "name": "Air-source heat pump", "category": "heating", "twin_edits": {"main_system": "air_source_heat_pump", "scop": 2.9}, "depends_on": ["loft_insulation", "cavity_wall_insulation", "internal_wall_insulation", "external_wall_insulation"], "lifetime_years": 18, "grants": ["BUS_7500", "BUS_9000_off_gas"], "sizing": {"kw_min": 4, "kw_max": 12}, "source": "SCOP prior from the Electrification of Heat trial (verify); cost TO_SOURCE"},
+    {"id": "hhr_storage_heaters", "name": "High-heat-retention storage heaters", "category": "heating", "twin_edits": {"main_system": "electric_storage_hhr", "controllability_gain": 0.15}, "lifetime_years": 20, "source": "TO_SOURCE"},
+    {"id": "solar_pv", "name": "Rooftop solar PV", "category": "renewables", "twin_edits": {"pv_kwp": 3.5}, "lifetime_years": 25, "sizing": {"kwp_min": 1, "kwp_max": 6}, "source": "Yield from PVGIS; cost TO_SOURCE"},
+    {"id": "battery", "name": "Home battery", "category": "renewables", "twin_edits": {"battery_kwh": 5}, "depends_on": ["solar_pv"], "lifetime_years": 12, "source": "TO_SOURCE"}
+  ],
+  "grants": {
+    "BUS_7500": "Boiler Upgrade Scheme: GBP 7,500 for air/ground source heat pumps, England & Wales, MCS installer. Source: Energy Saving Trust.",
+    "BUS_9000_off_gas": "GBP 9,000 for eligible off-gas-grid homes, 21 Jul 2026 to 31 Mar 2027. Source: Energy Saving Trust (verify).",
+    "ECO4": "Energy Company Obligation 4 (eligibility-based). Verify current status.",
+    "GBIS": "Great British Insulation Scheme. Verify current status."
+  }
+}
