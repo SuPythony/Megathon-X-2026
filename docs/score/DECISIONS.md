@@ -21,7 +21,12 @@ Branch: `worktree-p3-green-score`. Research background: `docs/score/GREEN_SCORE_
 | D-11 | Flat / room-in-roof insulation inferred from roof U-value, else loft depth, else age band (≥ 1983) | Decided |
 | D-12 | Score uses posterior-mean inputs for the point score; samples give the distribution | Decided |
 | D-13 | Stub `EnergyBreakdown` from metered bills until Part 2's baseline lands | Decided (temporary) |
-| D-14 | EPC data: stream the 8.3 GB bulk zip over HTTP Range, keep a 10% property sample by UPRN hash | Decided |
+| D-14 | EPC data: bulk zip (8.3 GB) → deterministic property sample by UPRN hash (10% remote; 25% from the local copy) | Decided |
+| D-15 | U-value curves for walls, roof, floor (`score_mapping.json` v0.2.0); roof U goes through RdSAP Table 16 | Decided |
+| D-16 | EPC text → sub-score parsing rules (assumed depths, unknown condensing status, glazing date) | Decided |
+| D-17 | NEED assumptions: floor-area band midpoints (band 5 = 250 m²), PV flag = 3 kWp, "not gas" = electric | Decided |
+| D-18 | Cross-target weights via EPC↔NEED archetype cells, within-floor-area-band, Shapley (LMG) ratios | Decided |
+| D-19 | Learned score reported as `ScoreResult.alternatives` (contract addition) | Decided; needs consumer review |
 
 ---
 
@@ -68,6 +73,52 @@ The contract says `score` is the weighted sum at the posterior-mean inputs. For 
 
 ## D-14 EPC data acquisition
 The API's bulk file is an 8.3 GB zip (19 yearly certificate CSVs + 19 recommendation CSVs, updated 9 Oct 2026). Free disk: E: 2.6 GB, D: 14 GB, so the zip cannot be stored and unzipped (≈ 30 GB of certificate CSVs). `scripts/epc_bulk_extract.py` opens the zip remotely (HTTP Range on the pre-signed S3 URL), streams each yearly CSV, keeps 70 columns and a deterministic 10% sample of properties (`md5(UPRN) mod 100 < 10`, so all certificates of a sampled home stay together for history and splits). Test on 2008: 69,322 / 691,496 rows kept (10.02%).
+
+## D-15 U-value curves
+New-build EPCs (SAP, report type 3) describe elements only as "Average thermal transmittance X W/m²K", and some homeowners know U-values. When a U-value is known it is scored by a curve; lower U never lowers the sub-score (test `test_u_value_curves_monotonic_and_consistent_with_loft_table`).
+- Roof: U → equivalent loft depth through **RdSAP 10 Table 16** [verified in the BRE PDF: 0 mm 2.3, 50 mm 0.68, 100 mm 0.40, 150 mm 0.30, 200 mm 0.21, 270 mm 0.16, 400 mm 0.11 W/m²K] → loft curve. Proof of consistency: `roof_u_sub(0.16) == loft_sub(270)` and `roof_u_sub(0.40) == loft_sub(100)` exactly.
+- Walls: `[[0.18,100],[0.30,92],[0.45,82],[0.60,70],[1.0,40],[1.5,25],[1.7,0]]`, anchored on RdSAP 10 Table 6 (England): cavity as built pre-1976 1.5 ⇒ 25 (= `cavity_none`), solid brick as built 1.7 ⇒ 0 (= `solid_none`), modern as built 0.18–0.30 ⇒ 92–100.
+- Floor: `[[0.15,100],[0.25,90],[0.45,60],[0.70,30]]`; uninsulated floors (~0.7) ⇒ 30 (= `uninsulated`).
+
+## D-16 EPC text parsing (`greentwin/score/epc_features.py`)
+Parsed once per distinct string. Rules that need a judgement:
+- "Pitched, insulated (assumed)" with no depth ⇒ 100 mm (cautious); "limited insulation" ⇒ 25 mm.
+- Flat / room-in-roof "limited insulation" ⇒ midpoint of insulated and uninsulated.
+- Walls "partial insulation" ⇒ midpoint of none and as built; explicit "insulated" on the EPC is not age-gated (D-10 applies only to the ambiguous contract value).
+- **Condensing status is not in EPC text.** Main-heating stars: Very good ⇒ condensing, Average/Poor ⇒ non-condensing, Good ⇒ unknown, scored as the 50/50 mix (42.5). Evidence: in the 2019 sample 99.5% of gas boilers are "Good" (2008: Good 61.6%, Very good 22.2%, Average 16.2%), so stars cannot separate them in recent EPCs. Limitation: within-gas heating variation is lost on the EPC.
+- Glazing: double with unknown install date ⇒ half pre-2002, half post-2002; "High performance glazing" ⇒ post-2002 double; partial/mostly/some ⇒ `MULTI_GLAZE_PROPORTION`, else 50/80/20%, remainder single.
+- PV: `PHOTO_SUPPLY` (% of roof) × footprint (TFA ÷ storeys: 2 for houses, 1 otherwise) × 1.15 pitch × 0.18 kWp/m².
+- Controls: words → contract controls (e.g. "Time and temperature zone control" ⇒ programmer + room stat + TRVs + zoning; HHR storage controls ⇒ programmer + stat + TRVs).
+
+**Validation against EPC element stars** (Spearman, 159k 2019 certificates):
+
+| Our sub-score | EPC element rating | Spearman ρ | n |
+| --- | --- | --- | --- |
+| walls | WALLS_ENERGY_EFF | 0.892 | 158,630 |
+| roof | ROOF_ENERGY_EFF | 0.903 | 122,588 |
+| floor | FLOOR_ENERGY_EFF | 0.635 | 19,096 |
+| windows & glazing | WINDOWS_ENERGY_EFF | 0.903 | 159,074 |
+| heating system | MAINHEAT_ENERGY_EFF | 0.893 | 159,073 |
+| smart management | MAINHEATC_ENERGY_EFF | 0.770 | 158,590 |
+
+Our documented mappings rank homes almost exactly as the official SAP element ratings do, while staying transparent and monotonic.
+
+## D-17 NEED assumptions
+Floor-area band midpoints 40 / 75.5 / 125.5 / 175.5 / 250 m² (band 5 "over 200" is open-ended; 250 assumed). Only meter reads flagged V (valid) are used; gas = 0 only when the home has no gas meter and is not gas-heated. PV flag ⇒ 3 kWp. "Gas is not the main heating fuel" ⇒ scored as direct electric (most non-gas homes; oil/LPG cannot be told apart in NEED).
+
+## D-18 How the cross-target weights are actually identified
+First attempt (per-home NEED): metered kWh/m² is barely explained by NEED's coarse fields: **test R² 0.044** (EE + proxies → metered) and **0.055** (intensity + proxies → SAP) on 600k held-out homes. Behaviour dominates single-home meter readings, so per-home NEED cannot weigh EE against attributes (the fit gave EE 96% purely because the proxies are weak).
+
+Fix, the archetype join planned in GREEN_SCORE_STANDARDS.md §4.3:
+1. Cells = NEED property type × NEED age band × NEED floor-area band. EPC homes are mapped onto the same bands (`greentwin/score/archetypes.py`). Each cell gets mean EPC sub-scores and mean SAP from the EPC sample, and median **metered** kWh/m² from NEED (4M sample). Cells need ≥ 30 homes in both sources.
+2. Within each floor-area band (fixed effects): kWh/m² falls with size (median 164 → 80 kWh/m² from band 1 to band 5) and NEED's area is banded, which otherwise swamps everything (pooled R² ≈ 0). Within bands, cell SAP correlates −0.63 to −0.71 with metered kWh/m².
+3. SAP summarises the attributes, so plain NNLS gives it 100% of the weight (collinearity). The ratio therefore uses **Shapley/LMG R² shares**, which split credit fairly between correlated predictors: `r_EE = LMG(EE) / Σ LMG(attributes)` when predicting −metered kWh/m², and `r_INT = LMG(INT) / Σ LMG(attributes)` when predicting SAP.
+4. Final: `T = 1 / (1 + r_EE + r_INT)`, `w_EE = r_EE·T`, `w_INT = r_INT·T`; the five attributes share `T` in proportion to their per-home EPC weights (mean over the four modelled targets). Bootstrap over cells gives intervals.
+
+This is an ecological (cell-level) analysis: it shows how components relate on average across home types, not within a single home.
+
+## D-19 Where the learned score lives
+`ScoreResult.alternatives: list[AlternativeScore]` (name, weights, score, band, distribution, weights_version, method). The headline `score` and `band` always use the brief's weights. `GreenHomeScorer` loads the latest `artifacts/score_weights/v*/weights.json` automatically (`learned_weights_dir=None` turns it off). Contract addition: needs review by the UI and LLM owners.
 
 ---
 

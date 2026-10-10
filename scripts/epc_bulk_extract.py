@@ -140,14 +140,18 @@ def main() -> None:
     ap.add_argument("--pct", type=int, default=10)
     ap.add_argument("--out", default="data/interim/epc")
     ap.add_argument("--only", nargs="*", help="member names to process (default: all certificate CSVs)")
+    ap.add_argument("--zip", help="local copy of domestic-csv.zip (skips the remote Range reads)")
     a = ap.parse_args()
-    load_dotenv(a.env_file) if a.env_file else load_dotenv()
-    tok = os.environ.get("EPC_API_TOKEN", "")
-    if not tok or tok.startswith("__ASK_USER__"):
-        sys.exit("EPC_API_TOKEN not set")
-
-    rf = RemoteFile(signed_url_factory(tok))
-    z = zipfile.ZipFile(io.BufferedReader(rf, buffer_size=1 << 20))
+    if a.zip:
+        rf = None
+        z = zipfile.ZipFile(a.zip)
+    else:
+        load_dotenv(a.env_file) if a.env_file else load_dotenv()
+        tok = os.environ.get("EPC_API_TOKEN", "")
+        if not tok or tok.startswith("__ASK_USER__"):
+            sys.exit("EPC_API_TOKEN not set")
+        rf = RemoteFile(signed_url_factory(tok))
+        z = zipfile.ZipFile(io.BufferedReader(rf, buffer_size=1 << 20))
     members = [i for i in z.infolist() if not i.is_dir()]
     if a.list:
         for i in members:
@@ -179,8 +183,8 @@ def main() -> None:
                 kept += int(m.sum())
         df = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=KEEP)
         df.to_parquet(dest, index=False)
-        print(f"{info.filename}: kept {kept:,}/{seen:,} rows in {time.time() - t0:.0f}s; "
-              f"fetched {rf.bytes_fetched / 1e9:.2f} GB so far -> {dest}", flush=True)
+        fetched = f"; fetched {rf.bytes_fetched / 1e9:.2f} GB so far" if rf else ""
+        print(f"{info.filename}: kept {kept:,}/{seen:,} rows in {time.time() - t0:.0f}s{fetched} -> {dest}", flush=True)
 
 
 if __name__ == "__main__":

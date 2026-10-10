@@ -675,6 +675,20 @@ export interface KeyIssue {
   probability?: number | null;
 }
 
+/** The same seven sub-scores combined with different weights (e.g. weights learned from data). Reported beside the headline score, which always uses the brief's fixed weights. */
+export interface AlternativeScore {
+  name?: "learned_weights";
+  /** Component -> weight; sums to 1 */
+  weights: Record<string, number>;
+  score: number;
+  band: "Highly efficient" | "Good" | "Moderate" | "Poor" | "Very poor";
+  score_distribution?: Distribution | null;
+  /** e.g. 'artifacts/score_weights/v1' */
+  weights_version: string;
+  /** How the weights were learned (documented in docs/score) */
+  method: string;
+}
+
 export interface ScoreResult {
   /** Rounded weighted sum (of the posterior mean inputs) */
   score: number;
@@ -694,6 +708,8 @@ export interface ScoreResult {
   peer_context?: Record<string, number | string>;
   /** Version of contracts/score_mapping.json used */
   mapping_version?: string;
+  /** Companion scores with other weights (never replaces the headline score) */
+  alternatives?: AlternativeScore[];
 }
 
 export interface ValueImpact {

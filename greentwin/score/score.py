@@ -28,13 +28,32 @@ class GreenHomeScorer:
     """Implements ``greentwin.interfaces.GreenHomeScorer``."""
 
     def __init__(self, n_samples: int = 2000, seed: int = 42, weights: Optional[Mapping[str, float]] = None,
-                 intensity_peers: Optional[Mapping[str, float]] = None):
+                 intensity_peers: Optional[Mapping[str, float]] = None, learned_weights_dir: Optional[str] = "auto"):
         self.n = n_samples
         self.seed = seed
         self.w = dict(weights or m.weights())
         if abs(sum(self.w.values()) - 1) > 1e-9:
             raise ValueError("weights must sum to 1")
         self.intensity_peers = intensity_peers  # peer median kWh/m2 keyed by property type (fitted on NEED)
+        self.learned = self._load_learned(learned_weights_dir)
+
+    @staticmethod
+    def _load_learned(d: Optional[str]) -> Optional[dict]:
+        """Learned-weights companion (D-05). 'auto' = latest artifacts/score_weights/v*; None = off."""
+        import json
+        from pathlib import Path
+        if d is None:
+            return None
+        root = Path(__file__).resolve().parents[2] / "artifacts" / "score_weights"
+        path = Path(d) if d != "auto" else max(root.glob("v*/weights.json"), default=None, key=lambda p: p.parent.name)
+        if path is None or not Path(path).exists():
+            return None
+        path = Path(path)
+        if path.is_dir():
+            path = path / "weights.json"
+        j = json.loads(path.read_text(encoding="utf-8"))
+        return {"weights": j["weights"], "version": str(path.parent.relative_to(root.parents[1])).replace("\\", "/"),
+                "method": j.get("method", "")}
 
     # ------------------------------------------------------------------ public
     def score(self, prop: Property, energy: EnergyBreakdown, rating: Optional[RatingEstimate] = None,
@@ -105,7 +124,18 @@ class GreenHomeScorer:
                 contribution_distribution=summarise(self.w[k] * s, "points") if uncertain else None,
                 inputs_used=inputs[k]))
 
-        peer_p50 = self.intensity_peers.get(prop.property_type.value) if self.intensity_peers else None
+        alternatives = []
+        if self.learned:
+            from contracts.models import AlternativeScore
+            lw = self.learned["weights"]
+            l_total = sum(lw[k] * samples[k] for k in m.COMPONENTS)
+            l_score = m.round_half_up(sum(lw[k] * point[k] for k in m.COMPONENTS))
+            alternatives.append(AlternativeScore(
+                weights=lw, score=l_score, band=m.classify(l_score),
+                score_distribution=summarise(l_total, "points"),
+                weights_version=self.learned["version"], method=self.learned["method"]))
+
+        peer_p50 = self._peer_p50(prop)
         issues = key_issues(prop, point, intensity, peer_p50, missing + list(prop.data_quality.missing_fields))
 
         return ScoreResult(
@@ -120,9 +150,22 @@ class GreenHomeScorer:
             rating_source=rating_source,
             peer_context=self._peer_context(peer, peer_p50),
             mapping_version=f"score_mapping.json v{m.mapping()['version']}",
+            alternatives=alternatives,
         )
 
     # ------------------------------------------------------------------ helpers
+    def _peer_p50(self, prop: Property) -> Optional[float]:
+        """Median metered kWh/m2 of NEED homes of the same type and floor-area band (per m2, so size-fair)."""
+        if self.intensity_peers is not None:
+            return self.intensity_peers.get(prop.property_type.value)
+        from .archetypes import epc_need_type
+        from .sampling import priors
+        cells = priors().get("intensity_peer_p50", {}).get("cells", {})
+        t = epc_need_type(prop.property_type.value, prop.built_form.value)
+        band = 1 + sum(prop.floor_area_m2 > x for x in (50, 100, 150, 200))
+        hit = cells.get(f"{t}|{band}")
+        return hit["p50"] if hit else None
+
     def _inputs(self, prop, sap, intensity, loft, energy, rating_source) -> dict[str, dict]:
         pv_note = self._pv_overlap(prop, energy)
         return {

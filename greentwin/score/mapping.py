@@ -76,6 +76,20 @@ def loft_sub(mm):
     return _interp(mm, mapping()["components"]["insulation"]["roof_loft_mm_points"])
 
 
+def roof_u_sub(u):
+    """Roof U-value -> equivalent loft depth (RdSAP 10 Table 16) -> loft curve. Lower U never scores lower."""
+    pts = mapping()["components"]["insulation"]["roof_u_to_loft_mm"]["points"]
+    return loft_sub(_interp(u, pts))
+
+
+def wall_u_sub(u):
+    return _interp(u, mapping()["components"]["insulation"]["wall_u_points"])
+
+
+def floor_u_sub(u):
+    return _interp(u, mapping()["components"]["insulation"]["floor_u_points"])
+
+
 ROOF_INSULATED_U = 0.35  # W/m2K; RdSAP improvement threshold for roof rooms (RdSAP10 note 13)
 ROOF_AS_BUILT_INSULATED_FROM = 1983  # age bands from 1983 assumed insulated as built (decision D-11)
 WALL_AS_BUILT_INSULATED_FROM = 1976  # first wall U-value requirement in Building Regulations (decision D-10)
@@ -97,6 +111,8 @@ def roof_sub(prop: Property, loft_mm=None):
     rt = prop.roof.type
     if rt == RoofType.another_dwelling_above:
         return None
+    if prop.roof.u_value is not None and loft_mm is None:
+        return float(roof_u_sub(prop.roof.u_value))
     if rt == RoofType.pitched_loft:
         mm = prop.roof.loft_insulation_mm if loft_mm is None else loft_mm
         if mm is None:
@@ -127,6 +143,8 @@ def floor_sub(prop: Property):
     from contracts.models import FloorType
     if prop.floor.type == FloorType.another_dwelling_below:
         return None
+    if prop.floor.u_value is not None:
+        return float(floor_u_sub(prop.floor.u_value))
     f = mapping()["components"]["insulation"]["floor"]
     return float(f["insulated" if prop.floor.insulated else "uninsulated"])
 
@@ -136,7 +154,8 @@ def insulation_sub(prop: Property, loft_mm=None):
     ew = mapping()["components"]["insulation"]["element_weights"]
     parts = {
         "roof": roof_sub(prop, loft_mm),
-        "walls": wall_sub(prop.walls.type, prop.walls.insulation, prop.construction_age_band),
+        "walls": (float(wall_u_sub(prop.walls.u_value)) if prop.walls.u_value is not None
+                  else wall_sub(prop.walls.type, prop.walls.insulation, prop.construction_age_band)),
         "floor": floor_sub(prop),
     }
     present = {k: v for k, v in parts.items() if v is not None}

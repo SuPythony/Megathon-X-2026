@@ -49,6 +49,15 @@ def test_loft_and_pv_monotonic():
         assert m.renewables_sub(kwp, solar_thermal=True) >= base
 
 
+def test_u_value_curves_monotonic_and_consistent_with_loft_table():
+    u = np.linspace(0.05, 3.0, 600)
+    for f in (m.wall_u_sub, m.roof_u_sub, m.floor_u_sub):
+        assert nonincreasing(f(u)), f.__name__
+    # RdSAP Table 16: 270 mm <-> U 0.16, 100 mm <-> U 0.40; both paths give the same sub-score
+    assert abs(float(m.roof_u_sub(0.16)) - float(m.loft_sub(270))) < 1e-9
+    assert abs(float(m.roof_u_sub(0.40)) - float(m.loft_sub(100))) < 1e-9
+
+
 def test_wall_insulation_never_lowers_score():
     better = [WallInsulation.none, WallInsulation.cavity_filled, WallInsulation.internal, WallInsulation.external]
     for wt in WallType:
