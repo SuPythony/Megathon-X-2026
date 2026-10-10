@@ -32,7 +32,7 @@ Branch: `worktree-p3-green-score`. Research background: `docs/score/GREEN_SCORE_
 | D-22 | Missing `PHOTO_SUPPLY` = unknown PV, not "no PV" (bug found in v1 results) | Fixed |
 | D-23 | EBM curve check: loft curve too linear (data + physics: diminishing returns); heating map between cost and carbon orderings | Findings |
 | D-24 | Loft curve = share of max heat-loss cut (RdSAP Table 16), `score_mapping.json` v0.3.0; insulation key issue judged per element | Decided (user, 11 Oct 2026) |
-| D-25 | Heating map: physics (SAP 10.2 carbon + primary energy per kWh heat) tried and **rejected**: fits the data worse than the current map | Experiment; map unchanged, **open** |
+| D-25 | Heating map: physics (SAP 10.2 carbon + primary energy per kWh heat) tried and rejected; **keep the current map** (best fit to cost and carbon orderings) | Decided (user chose option A, 11 Oct 2026) |
 | D-26 | Lighting scored inside smart management: 0.53 × controls + 0.47 × low-energy lighting % (share learned), mapping v0.4.0 | Decided (user asked to score lighting) |
 
 ---
@@ -192,7 +192,7 @@ Result, Spearman across 11 heating categories against the EBM points learned fro
 | Physics, carbon only | 0.593 | 0.506 |
 | Physics, carbon + primary energy | 0.556 | 0.533 |
 
-Why physics loses: (1) SAP models storage heaters with poor responsiveness and off-peak tariffs, so per-kWh carbon ties them with direct electric while the data separates them; (2) the EPC "solid fuel" class mixes coal with wood (low carbon), so a coal-only assumption is wrong for the class; (3) the cost and carbon data disagree with each other (storage beats direct on cost and loses on carbon; LPG is worst on cost but mid-table on carbon), so no single physics quantity matches both. Decision: keep the current map (`score_mapping.json` unchanged for heating). The open question is which target defines "green" for heating (see the question to the user).
+Why physics loses: (1) SAP models storage heaters with poor responsiveness and off-peak tariffs, so per-kWh carbon ties them with direct electric while the data separates them; (2) the EPC "solid fuel" class mixes coal with wood (low carbon), so a coal-only assumption is wrong for the class; (3) the cost and carbon data disagree with each other (storage beats direct on cost and loses on carbon; LPG is worst on cost but mid-table on carbon), so no single physics quantity matches both. Options put to the user: (A) keep the current map, (B) carbon-only map learned from EIR, (C) cost + carbon blend learned from SAP and EIR. **User chose A** (11 Oct 2026): it is the best compromise across both orderings (0.879 / 0.697), it is documented, and B would rank storage heaters below direct electric, against the reformed-EPC heating principles, while C would put condensing gas within about 10 points of heat pumps. Revisit when the reformed EPC heating-system metric (HEM, from October 2026) publishes its banding.
 
 ## D-26 Lighting scored (inside smart energy management)
 The brief fixes seven components, so lighting cannot be an eighth: it joins `smart_energy_management`, documented as "controls and efficient electricity use". `sub = (1 − a) × controls_level + a × low_energy_lighting_pct`, with `a` learned by `scripts/fit_lighting_split.py` (RdSAP 10 era, simplex NNLS with lighting as its own attribute, 100 bootstraps):
