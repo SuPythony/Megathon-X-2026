@@ -1,0 +1,19 @@
+  [electricity] trial 0 tune MAE 5.865 rounds 3347 {'num_leaves': 31, 'min_sum_hessian_in_leaf': 200, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [electricity] trial 1 tune MAE 5.872 rounds 2145 {'num_leaves': 63, 'min_sum_hessian_in_leaf': 50, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [electricity] trial 2 tune MAE 5.870 rounds 1709 {'num_leaves': 63, 'min_sum_hessian_in_leaf': 10, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [electricity] trial 3 tune MAE 5.868 rounds 544 {'num_leaves': 127, 'min_sum_hessian_in_leaf': 200, 'learning_rate': 0.05, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [electricity] trial 4 tune MAE 5.861 rounds 2127 {'num_leaves': 63, 'min_sum_hessian_in_leaf': 200, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.7}
+  [electricity] trial 5 tune MAE 5.866 rounds 606 {'num_leaves': 255, 'min_sum_hessian_in_leaf': 50, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [electricity] trial 6 tune MAE 5.869 rounds 1090 {'num_leaves': 63, 'min_sum_hessian_in_leaf': 200, 'learning_rate': 0.05, 'lambda_l2': 10, 'feature_fraction': 0.9}
+  [electricity] trial 7 tune MAE 5.861 rounds 866 {'num_leaves': 127, 'min_sum_hessian_in_leaf': 50, 'learning_rate': 0.05, 'lambda_l2': 100, 'feature_fraction': 0.7}
+[electricity] R2 EBM 0.2848  hybrid 0.3015  LightGBM 0.3017 | MAE 19.004 / 18.672 / 18.667 | cover 0.898 | PIT KS 0.0021 | mono [0] | |corr| 2.87 | add err 0.090 | single/batch 0.00e+00
+  [gas] trial 0 tune MAE 12.459 rounds 2068 {'num_leaves': 31, 'min_sum_hessian_in_leaf': 200, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [gas] trial 1 tune MAE 12.461 rounds 1370 {'num_leaves': 63, 'min_sum_hessian_in_leaf': 50, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [gas] trial 2 tune MAE 12.446 rounds 1270 {'num_leaves': 63, 'min_sum_hessian_in_leaf': 10, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [gas] trial 3 tune MAE 12.456 rounds 387 {'num_leaves': 127, 'min_sum_hessian_in_leaf': 200, 'learning_rate': 0.05, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [gas] trial 4 tune MAE 12.456 rounds 1640 {'num_leaves': 63, 'min_sum_hessian_in_leaf': 200, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.7}
+  [gas] trial 5 tune MAE 12.465 rounds 358 {'num_leaves': 255, 'min_sum_hessian_in_leaf': 50, 'learning_rate': 0.03, 'lambda_l2': 100, 'feature_fraction': 0.9}
+  [gas] trial 6 tune MAE 12.461 rounds 680 {'num_leaves': 63, 'min_sum_hessian_in_leaf': 200, 'learning_rate': 0.05, 'lambda_l2': 10, 'feature_fraction': 0.9}
+  [gas] trial 7 tune MAE 12.457 rounds 663 {'num_leaves': 127, 'min_sum_hessian_in_leaf': 50, 'learning_rate': 0.05, 'lambda_l2': 100, 'feature_fraction': 0.7}
+[gas] R2 EBM 0.1825  hybrid 0.1895  LightGBM 0.1909 | MAE 44.982 / 44.809 / 44.755 | cover 0.899 | PIT KS 0.0017 | mono [19, 0, 0] | |corr| 3.68 | add err 0.058 | single/batch 0.00e+00
+gates: {"electricity": {"beats_ebm_mae_ci": true, "zero_monotone_violations": true, "coverage_88_92": true, "pit_ks_below_0.01": true, "additive_waterfall": true, "single_equals_batch": true}, "gas": {"beats_ebm_mae_ci": true, "zero_monotone_violations": false, "coverage_88_92": true, "pit_ks_below_0.01": true, "additive_waterfall": true, "single_equals_batch": true}} -> NOT PASSED

@@ -79,6 +79,15 @@ def prepare_frame(df: pd.DataFrame, fuel: str) -> pd.DataFrame:
     return X
 
 
+def tree_frame(df: pd.DataFrame, fuel: str) -> pd.DataFrame:
+    """Frame for the LightGBM correction: nominals as pandas categories (LightGBM remaps them to training codes)."""
+    X = prepare_frame(df, fuel)
+    for c in NOMINAL:
+        if c in X:
+            X[c] = X[c].astype("category")
+    return X
+
+
 def _age_band(prop: Property) -> float:
     year = prop.year_built
     if year is None:
@@ -172,22 +181,32 @@ class EnergyPriorModel:
     models: dict  # fuel -> fitted ExplainableBoostingRegressor
     residual_quantiles: dict  # fuel -> {stratum: quantiles}
     metadata: dict = field(default_factory=dict)
+    # Optional hybrid: fuel -> monotone LightGBM fitted on the EBM's residuals (scripts/hybrid_energy_prior.py).
+    # Prediction = EBM terms + this one correction term; monotone + monotone stays monotone.
+    corrections: dict = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str | Path = DEFAULT_ARTIFACT) -> "EnergyPriorModel":
         # joblib unpickles: only load artefacts we trained ourselves (scripts/train_energy_prior.py), never downloads.
         blob = joblib.load(path)
         return cls(models=blob["models"], residual_quantiles=blob["residual_quantiles"],
-                   metadata=blob.get("metadata", {}))
+                   metadata=blob.get("metadata", {}), corrections=blob.get("corrections", {}))
 
     def save(self, path: str | Path = DEFAULT_ARTIFACT) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         joblib.dump({"models": self.models, "residual_quantiles": self.residual_quantiles,
-                     "metadata": self.metadata}, path, compress=3)
+                     "metadata": self.metadata, "corrections": self.corrections}, path, compress=3)
+
+    def correction(self, df: pd.DataFrame, fuel: str) -> np.ndarray:
+        """Higher-order interaction correction (kWh/m2/yr) from the residual booster; 0 if not hybrid."""
+        booster = self.corrections.get(fuel)
+        if booster is None:
+            return np.zeros(len(df))
+        return booster.predict(tree_frame(df, fuel), num_iteration=booster.best_iteration or None)
 
     def predict_point(self, df: pd.DataFrame, fuel: str) -> np.ndarray:
         """Point prediction (kWh/m2/yr) for a NEED-feature frame; floored at 1 so relative residuals apply."""
-        return np.maximum(self.models[fuel].predict(prepare_frame(df, fuel)), 1.0)
+        return np.maximum(self.models[fuel].predict(prepare_frame(df, fuel)) + self.correction(df, fuel), 1.0)
 
     def samples(self, features: pd.DataFrame, fuel: str) -> np.ndarray:
         """Predictive samples for ONE home: yhat * (1 + conformal relative residual quantiles)."""
@@ -209,6 +228,9 @@ class EnergyPriorModel:
             label = " x ".join(FEATURE_LABELS.get(p, p) for p in parts)
             value = ", ".join(_display_value(p, row[p]) for p in parts)
             out.append(FeatureContribution(feature=label, value=value, contribution=round(float(s), 2), unit=UNIT))
+        if fuel in self.corrections:  # hybrid: one extra term so the waterfall still sums to the prediction
+            out.append(FeatureContribution(feature="higher-order interactions (tree correction)", value=None,
+                                           contribution=round(float(self.correction(features, fuel)[0]), 2), unit=UNIT))
         return out[:1] + sorted(out[1:], key=lambda c: -abs(c.contribution))  # intercept first, then by size
 
     def area_factor(self, prop: Property, fuel: str) -> float:
