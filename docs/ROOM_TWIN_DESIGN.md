@@ -1,7 +1,7 @@
 # Room-level Digital Twin: Design
 
 Owner: Satyarth (Part 1, digital twin). Status: **draft, proposed**. Nothing in `contracts/` has been changed yet. The contract additions in §6 need team sign-off first.
-Based on commit `38942ee` and contracts `0.4.0`. Companion spec for the physics teammate: `docs/digitaltwinvariables.md`.
+Based on commit `7220322` and contracts `0.4.0`. Companion spec for the physics teammate: `docs/digitaltwinvariables.md`.
 
 ---
 
@@ -21,26 +21,29 @@ What does **not** change: whole-house physics and Bayesian calibration stay the 
 
 ## 2. Pipeline
 
+**Prefit archetypes.** We don't reconstruct arbitrary geometry from the photo. We keep a library of prefit twins of standard UK house types (`greentwin/twin/archetypes.py`). The vision model picks the closest one and reads room labels and printed dimensions. Deterministic code then fits the archetype to the home: floor area, ceiling height, built form (which walls are party walls), orientation and room labels. Homes of the same type look alike in 3D, but their parameters (areas, U-values, appliances, behaviour, calibration) are their own.
+
 ```
- floor plan photo ──► [A] Vision LLM ──► FloorPlanDraft (pixels, labels, confidence)
+ floor plan photo ──► [A] Vision LLM ──► FloorPlanExtraction
+                                          (archetype_id, rooms, printed dims, confidence)
                                             │
                                             ▼
-                                [B] Normaliser (deterministic)  ◄── one known dimension from user
-                                            │                        (wall length or total area)
-                                            ▼
-                                FloorPlan (metres, rooms, walls, openings)
+                     [B] fit_layout (deterministic) ◄── Property (EPC floor area, built form)
                                             │
- fuse box photo ──► [A] Vision LLM ──► FuseBoardDraft (circuits, ratings, raw labels)
+                                            ▼
+                     TwinLayout: rooms, walls (exterior / party / internal), openings, envelope areas
+                                            │
+ fuse box photo ──► [A] Vision LLM ──► FuseBoardExtraction (circuits, ratings, raw labels)
                                             │
  per-room appliance form ──► ApplianceEntry[] ──► [C] Appliance catalogue (watts, typical use)
                                             │
                                             ▼
-                     [D] User confirms everything (2D editor + review screen)
+                     [D] User confirms everything (archetype + labels, circuits, appliances)
                                             │
                                             ▼
                      [E] Twin builder
-                         ├─ params_from_property: areas from plan, baseload prior from appliances,
-                         │                         hot-water fuel from shower/immersion
+                         ├─ params_from_property: areas from TwinLayout.envelope(), baseload prior
+                         │                         from appliances, hot-water fuel from shower/immersion
                          ├─ calibrate / simulate (whole house, unchanged)
                          ├─ room allocation (§5)
                          └─ scene(): TwinScene with rooms, walls, openings, appliances
@@ -51,9 +54,9 @@ What does **not** change: whole-house physics and Bayesian calibration stay the 
 
 ### Rules
 1. **Vision produces drafts only.** Nothing reaches the twin until the user confirms it (same rule as the existing `CaptureResult`).
-2. **Vision never produces energy numbers.** It reads geometry, labels and ratings. Watts and usage come from the sourced appliance catalogue (§4).
-3. **The LLM doesn't do geometry maths.** It returns approximate pixel coordinates and labels. Scaling to metres, closing polygons, snapping walls and classifying external walls is deterministic code in the normaliser [B], which is testable and repeatable.
-4. **Every field carries a confidence.** Low-confidence fields go to `needs_confirmation` and are highlighted in the editor.
+2. **Vision never produces energy numbers.** It reads type, labels, dimensions and ratings. Watts and usage come from the sourced appliance catalogue (§4).
+3. **The LLM doesn't do geometry.** It chooses an archetype and reads printed text. Scaling, wall classification, openings and envelope areas are deterministic code (`build_layout`, `fit_layout`), which is tested.
+4. **Every field carries a confidence.** Low-confidence fields (including the archetype choice) go to `needs_confirmation`. Rooms with no slot in the archetype (e.g. a conservatory) go to `unmatched_rooms` for the user to review.
 
 ---
 
@@ -63,77 +66,80 @@ What does **not** change: whole-house physics and Bayesian calibration stay the 
 
 | Item | Choice | Why |
 |---|---|---|
-| Model | `claude-opus-5-5` | Best vision accuracy for dense plans and small handwritten fuse labels. |
-| Output | Structured outputs: `client.messages.parse(..., output_format=<PydanticModel>)` | Returns a validated Pydantic object; no hand JSON parsing. |
-| Thinking | Adaptive (default on Opus 5.5). Effort `high` for floor plans, `medium` for fuse boxes. | Opus 5.5's default effort is `medium`, so set it explicitly. |
-| Refusal handling | Check `stop_reason` before reading the output; enable server-side fallbacks (`fallbacks: "default"`) | `refusal` / `max_tokens` responses may not match the schema. |
-| Caching | Store each response in `cache/llm/` keyed by image hash + prompt version | Same image → same draft; demo runs offline from cache. |
+| Model | `claude-sonnet-5-5` | Team decision. Good vision quality at Sonnet price ($2 / $10 per MTok). |
+| Output | Structured outputs: `client.messages.parse(..., output_format=<PydanticModel>)` | Schema-validated Pydantic object; no hand JSON parsing. Verified against `anthropic` 1.13. |
+| Thinking | Adaptive (default on). Effort `high` for floor plans, `medium` for fuse boxes. | Set explicitly per task. |
+| Refusal handling | Check `stop_reason` before reading `parsed_output`; `refusal` / `max_tokens` raise `VisionError` and are never cached. | Server-side fallback on Sonnet 5.5 only retries `cyber`/`frontier_llm` declines, which don't apply to floor plans, so it's not enabled. |
+| Caching | `cache/llm/vision/<Schema>_<hash>.json`, keyed by model + prompt version + image bytes | Same photo → same draft; demo replays offline; no key needed. |
 
-**Correction for `AGENTS.md`:** it names `claude-haiku-5-5`, which isn't a real model ID. The current Haiku is `claude-haiku-4-5`. If cost matters later, measure Haiku 4.5 against Opus 5.5 on our labelled set (§8) before switching.
+**Correction for `AGENTS.md`:** it names `claude-haiku-5-5`, which isn't a real model ID. The photo-to-twin row should name `claude-sonnet-5-5`.
 
-Schema notes for structured outputs: no recursive schemas, and no `minimum`/`maximum`/`minLength`. The Python SDK strips those and validates them client-side. Every object needs `additionalProperties: false`, which Pydantic models get automatically through `.parse()`.
+Schema notes for structured outputs: no recursive schemas, and no `minimum`/`maximum`/`minLength`. The Python SDK strips those and validates them client-side.
 
-### 3.2 `FloorPlanDraft` (vision output; internal to Part 1, not a shared contract)
+### 3.2 Archetype library (v1)
+
+| `archetype_id` | Type | Storeys | Beds | Reference area | Showcase home |
+|---|---|---|---|---|---|
+| `victorian_terrace_2bed` | Pre-1919 solid-brick terrace | 2 | 2 | 77 m² | SH1 |
+| `interwar_semi_3bed` | 1930s semi, bay window, side hall | 2 | 3 | 91 m² | SH2 (layout match) |
+| `postwar_detached_4bed` | 1960s-80s detached | 2 | 4 | 135 m² | |
+| `modern_terrace_3bed` | Post-2000 terrace | 2 | 3 | 85 m² | |
+| `bungalow_2bed` | Detached bungalow | 1 | 2 | 70 m² | |
+| `flat_2bed` | Mid-floor purpose-built flat | 1 | 2 | 60 m² | SH3 |
+
+Each archetype is a rectangular footprint per storey, tiled by rectangular rooms with doors and windows on room walls. Fitting:
+- **Area:** printed total > printed room dimensions > EPC floor area > archetype default. Both axes scale equally.
+- **Built form → party walls:** detached none; semi and end-terrace one side; mid-terrace both sides; enclosed mid-terrace adds the back. Flats keep their own default. Openings on party walls are dropped.
+- **Orientation:** from the plan's north arrow if shown, else south-facing front (180°). Each exterior wall gets an outward azimuth.
+- **Room labels:** extracted rooms are matched by storey and type, by closest area when dimensions are printed, otherwise largest first.
+- **Output:** `TwinLayout` with rooms (`contracts.Room`), walls, openings and `envelope()`, whose areas use `TwinParams` field names (`wall_area_m2`, `window_area_m2`, `party_wall_area_m2`, `volume_m3`, ...). Also `to_floor_plan()` gives a `contracts.FloorPlan` with `source="parametric"`.
+
+More archetypes are cheap to add: one entry in `ARCHETYPES` plus the tiling test.
+
+### 3.3 `FloorPlanExtraction` (vision output; internal to Part 1)
 
 ```python
-class PixelPoint(BaseModel):
-    x: float; y: float                      # image pixels, origin top-left
-
-class DraftOpening(BaseModel):
-    kind: Literal["door", "window", "patio_door"]
-    wall_ref: str                           # id of the DraftWall it sits on
-    position_px: PixelPoint                 # centre
-    width_px: float
-    confidence: float
-
-class DraftWall(BaseModel):
-    wall_id: str
-    start: PixelPoint; end: PixelPoint
-    exterior_guess: bool                    # vision's guess; normaliser recomputes
-    confidence: float
-
-class DraftRoom(BaseModel):
-    room_id: str
+class ExtractedRoom(BaseModel):
     label: str                              # as printed, e.g. "Kitchen/Diner"
-    room_type: Literal["living", "kitchen", "bedroom", "bathroom", "wc", "hall",
-                       "landing", "utility", "dining", "study", "garage", "conservatory", "other"]
-    storey: int
-    polygon_px: list[PixelPoint]
-    printed_dimensions: Optional[str]       # e.g. "4.20m x 3.10m" if written on the plan
+    room_type: RoomType                     # living | kitchen | dining | bedroom | bathroom | wc | hall | ...
+    storey: int                             # 0 = ground
+    width_m: Optional[float]                # only if printed
+    depth_m: Optional[float]                # only if printed
+    window_count: Optional[int]
     confidence: float
 
-class FloorPlanDraft(BaseModel):
-    storeys_detected: int
-    rooms: list[DraftRoom]
-    walls: list[DraftWall]
-    openings: list[DraftOpening]
-    scale_hint: Optional[str]               # scale bar text or printed dimension it found
-    compass_north_deg: Optional[float]      # if a north arrow exists
-    notes: list[str]                        # what it was unsure about
+class FloorPlanExtraction(BaseModel):
+    archetype_id: ArchetypeId               # closest prefit archetype
+    archetype_confidence: float
+    archetype_reason: str
+    built_form_guess: Optional[BuiltForm]
+    storeys: int
+    bedrooms: int
+    rooms: list[ExtractedRoom]
+    total_floor_area_m2: Optional[float]    # only if printed
+    front_azimuth_deg: Optional[float]      # only if a north arrow is shown
+    notes: list[str]
 ```
 
-`printed_dimensions` and `scale_hint` matter: estate-agent plans usually print room sizes, which gives the normaliser a scale for free.
-
-### 3.3 `FuseBoardDraft` (vision output)
+### 3.4 `FuseBoardExtraction` (vision output)
 
 ```python
-class DraftCircuit(BaseModel):
-    position: int                           # left-to-right slot number
+class ExtractedCircuit(BaseModel):
+    position: int                           # left-to-right slot number, from 1
     device: Literal["mcb", "rcbo", "rcd", "main_switch", "fuse", "spd", "unknown"]
     rating_a: Optional[int]                 # e.g. 6, 16, 32, 40, 45
     curve: Optional[Literal["B", "C", "D"]]
-    label_raw: Optional[str]                # exactly as written, e.g. "Upstairs skts"
-    label_guess: Optional[str]              # normalised, e.g. "upstairs sockets"
-    circuit_kind_guess: Literal["lighting", "sockets", "ring", "cooker", "shower", "immersion",
-                                "heating", "ev_charger", "heat_pump", "storage_heaters",
-                                "smoke_alarm", "spare", "other", "unknown"]
-    rooms_guess: list[str]                  # room labels it may serve
+    label_raw: Optional[str]                # exactly as written; null if none, never invented
+    circuit_kind: Literal["lighting", "sockets", "cooker", "shower", "immersion", "heating",
+                          "ev_charger", "heat_pump", "storage_heaters", "smoke_alarm",
+                          "spare", "other", "unknown"]
+    rooms_guess: list[str]
     confidence: float
 
-class FuseBoardDraft(BaseModel):
+class FuseBoardExtraction(BaseModel):
     board_type: Literal["split_load_rcd", "all_rcbo", "single_rcd", "rewireable_fuses", "unknown"]
-    circuits: list[DraftCircuit]
     main_switch_rating_a: Optional[int]
+    circuits: list[ExtractedCircuit]
     notes: list[str]
 ```
 
@@ -249,7 +255,7 @@ Stack (from the plan): React + Vite + TypeScript, react-three-fiber + drei, Zust
 
 ## 8. Evaluation and demo safety
 
-- **Floor plan:** room-count accuracy, room-area error (%) after scaling, exterior-wall classification accuracy. Test set: CubiCasa5k samples + our own plans.
+- **Floor plan:** archetype-choice accuracy, room-count accuracy, area error (%) after fitting. Test set: estate-agent style plans + CubiCasa5k samples.
 - **Fuse box:** rating read accuracy, circuit-kind accuracy, on 10–20 labelled photos.
 - **Share of fields the user corrected**: tracks how much the review step is doing.
 - **Demo:** one prepared floor plan + fuse box photo with **cached, hand-checked** drafts in `cache/llm/`. Live vision runs, but the demo never depends on it.
@@ -258,21 +264,20 @@ Stack (from the plan): React + Vite + TypeScript, react-three-fiber + drei, Zust
 
 ## 9. Build order (thinnest path first)
 
-1. **Contracts:** add §6 models (after sign-off) + regenerate `types.ts` / JSON schema.
-2. **Hand-written `FloorPlan` JSON** for the demo house → `scene()` → 3D viewer with room isolation. **No vision yet.**
+1. ✅ **Archetype library + fitting** (`greentwin/twin/archetypes.py`) and **vision extraction** on `claude-sonnet-5-5` with structured outputs + cache (`greentwin/twin/vision.py`). Tests: `tests/test_archetypes.py`.
+2. **`scene()`**: `TwinLayout` → `TwinScene` → 3D viewer with room isolation, starting with the showcase homes. Needs the §6 contract fields, or an internal scene JSON until sign-off.
 3. **Appliance catalogue** + per-room form → baseload prior.
 4. **Room allocation** on the stub `run_physics` → `RoomEnergy` → room panel.
-5. **Normaliser [B]:** pixels → metres, wall snapping, exterior classification. Unit tests on synthetic drafts.
-6. **Vision [A]** for floor plan, then fuse box. Structured outputs + cache.
-7. **2D confirm editor** (react-konva) + fuse-box review screen.
-8. Swap the stub physics for the teammate's `run_physics`.
+5. **Confirm screen:** pick or override the archetype, fix labels, map circuits to rooms.
+6. Prepare demo photos; hand-check and commit their cached drafts as an eval snapshot.
+7. Swap the stub physics for the teammate's `run_physics`.
 
 ---
 
 ## 10. Open questions
 
-1. Is a plan without printed dimensions acceptable? Then the user must type one wall length.
+1. Homes that match no archetype well (extensions, conversions): add archetypes, or let the user pick the closest and accept the visual mismatch?
 2. Multi-storey plans on one photo vs one photo per storey?
 3. Does the EV charger go through physics (new output) or a separate electricity term?
-4. Who owns the 2D confirm editor? It's in the UI block (B7) in the current plan.
+4. Who owns the confirm screen? It's in the UI block (B7) in the current plan.
 5. Privacy: floor plans and fuse box photos are interior data, so the consent + retention note goes in `docs/RESPONSIBLE_AI.md`.
