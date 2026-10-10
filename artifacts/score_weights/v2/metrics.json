@@ -1,0 +1,512 @@
+{
+  "seed": 42,
+  "era_stability": {
+    "boundaries": {
+      "sap2009": [
+        "2008-01-01",
+        "2012-03-31"
+      ],
+      "sap2012": [
+        "2012-04-01",
+        "2025-06-14"
+      ],
+      "rdsap10": [
+        "2025-06-15",
+        "2100-01-01"
+      ]
+    },
+    "note": "SAP/EIR/CO2 use each era's own fixed fuel prices and carbon factors; weights are fitted within one era only",
+    "sap2009": {
+      "n": 1342875,
+      "sap": {
+        "s_insulation": 0.211725,
+        "s_heating_system": 0.571864,
+        "s_windows_glazing": 0.067045,
+        "s_renewable_energy": 0.059733,
+        "s_smart_energy_management": 0.089634
+      },
+      "eir": {
+        "s_insulation": 0.224421,
+        "s_heating_system": 0.549713,
+        "s_windows_glazing": 0.069521,
+        "s_renewable_energy": 0.062776,
+        "s_smart_energy_management": 0.093569
+      },
+      "co2_m2": {
+        "s_insulation": 0.200092,
+        "s_heating_system": 0.468142,
+        "s_windows_glazing": 0.073966,
+        "s_renewable_energy": 0.0848,
+        "s_smart_energy_management": 0.172999
+      },
+      "pe_m2": {
+        "s_insulation": 0.192789,
+        "s_heating_system": 0.421404,
+        "s_windows_glazing": 0.076417,
+        "s_renewable_energy": 0.095846,
+        "s_smart_energy_management": 0.213544
+      }
+    },
+    "sap2012": {
+      "n": 3623688,
+      "sap": {
+        "s_insulation": 0.207677,
+        "s_heating_system": 0.465553,
+        "s_windows_glazing": 0.088701,
+        "s_renewable_energy": 0.100499,
+        "s_smart_energy_management": 0.13757
+      },
+      "eir": {
+        "s_insulation": 0.20553,
+        "s_heating_system": 0.47624,
+        "s_windows_glazing": 0.078447,
+        "s_renewable_energy": 0.08497,
+        "s_smart_energy_management": 0.154812
+      },
+      "co2_m2": {
+        "s_insulation": 0.173886,
+        "s_heating_system": 0.431215,
+        "s_windows_glazing": 0.068268,
+        "s_renewable_energy": 0.094979,
+        "s_smart_energy_management": 0.231651
+      },
+      "pe_m2": {
+        "s_insulation": 0.191718,
+        "s_heating_system": 0.347892,
+        "s_windows_glazing": 0.06492,
+        "s_renewable_energy": 0.120016,
+        "s_smart_energy_management": 0.275454
+      }
+    }
+  },
+  "era": "rdsap10",
+  "epc": {
+    "n": 447139,
+    "n_train": 313265,
+    "n_val": 66971,
+    "n_test": 66903,
+    "targets": {
+      "sap": {
+        "nnls_weights": {
+          "s_insulation": 0.207781,
+          "s_heating_system": 0.439578,
+          "s_windows_glazing": 0.099441,
+          "s_renewable_energy": 0.107297,
+          "s_smart_energy_management": 0.145903
+        },
+        "nnls_weights_boot_p5": {
+          "s_insulation": 0.2038,
+          "s_heating_system": 0.4334,
+          "s_windows_glazing": 0.0953,
+          "s_renewable_energy": 0.1061,
+          "s_smart_energy_management": 0.1428
+        },
+        "nnls_weights_boot_p95": {
+          "s_insulation": 0.21,
+          "s_heating_system": 0.4426,
+          "s_windows_glazing": 0.1058,
+          "s_renewable_energy": 0.1125,
+          "s_smart_energy_management": 0.1482
+        },
+        "scale_target_units_per_point": 0.5735,
+        "r2_test_learned": 0.3029,
+        "r2_test_brief_weights": 0.2749,
+        "r2_test_equal_weights": 0.2621,
+        "r2_test_lgbm_with_extras": 0.5889,
+        "standardised_ols": {
+          "s_insulation": 3.0105,
+          "s_heating_system": 2.441,
+          "s_windows_glazing": 0.7451,
+          "s_renewable_energy": 0.8969,
+          "s_smart_energy_management": 1.6705
+        },
+        "shapley_r2": {
+          "s_insulation": 0.1386,
+          "s_heating_system": 0.0853,
+          "s_windows_glazing": 0.0258,
+          "s_renewable_energy": 0.0166,
+          "s_smart_energy_management": 0.0394
+        },
+        "shapley_r2_total": 0.3058,
+        "lgbm_shap_share": {
+          "s_insulation": 0.3612,
+          "s_heating_system": 0.2821,
+          "s_windows_glazing": 0.0363,
+          "s_renewable_energy": 0.0441,
+          "s_smart_energy_management": 0.0812,
+          "low_energy_lighting_pct": 0.1001,
+          "open_fireplaces": 0.0724,
+          "mech_vent": 0.0145,
+          "dual_tariff": 0.008
+        }
+      },
+      "eir": {
+        "nnls_weights": {
+          "s_insulation": 0.457971,
+          "s_heating_system": 0.408724,
+          "s_windows_glazing": 0.10831,
+          "s_renewable_energy": 0.024996,
+          "s_smart_energy_management": 0.0
+        },
+        "nnls_weights_boot_p5": {
+          "s_insulation": 0.4488,
+          "s_heating_system": 0.3981,
+          "s_windows_glazing": 0.1005,
+          "s_renewable_energy": 0.0186,
+          "s_smart_energy_management": 0.0
+        },
+        "nnls_weights_boot_p95": {
+          "s_insulation": 0.4677,
+          "s_heating_system": 0.4167,
+          "s_windows_glazing": 0.1212,
+          "s_renewable_energy": 0.0291,
+          "s_smart_energy_management": 0.0
+        },
+        "scale_target_units_per_point": 0.3797,
+        "r2_test_learned": 0.2243,
+        "r2_test_brief_weights": 0.1782,
+        "r2_test_equal_weights": 0.1094,
+        "r2_test_lgbm_with_extras": 0.5418,
+        "standardised_ols": {
+          "s_insulation": 4.4243,
+          "s_heating_system": 1.4261,
+          "s_windows_glazing": 0.6035,
+          "s_renewable_energy": 0.1789,
+          "s_smart_energy_management": -0.9876
+        },
+        "shapley_r2": {
+          "s_insulation": 0.1814,
+          "s_heating_system": 0.0236,
+          "s_windows_glazing": 0.0172,
+          "s_renewable_energy": 0.0012,
+          "s_smart_energy_management": 0.0078
+        },
+        "shapley_r2_total": 0.2312,
+        "lgbm_shap_share": {
+          "s_insulation": 0.5005,
+          "s_heating_system": 0.121,
+          "s_windows_glazing": 0.0411,
+          "s_renewable_energy": 0.0084,
+          "s_smart_energy_management": 0.0,
+          "low_energy_lighting_pct": 0.1036,
+          "open_fireplaces": 0.1012,
+          "mech_vent": 0.0016,
+          "dual_tariff": 0.1226
+        }
+      },
+      "co2_m2": {
+        "nnls_weights": {
+          "s_insulation": 0.554933,
+          "s_heating_system": 0.274338,
+          "s_windows_glazing": 0.071754,
+          "s_renewable_energy": 0.098975,
+          "s_smart_energy_management": 0.0
+        },
+        "nnls_weights_boot_p5": {
+          "s_insulation": 0.5416,
+          "s_heating_system": 0.2566,
+          "s_windows_glazing": 0.0649,
+          "s_renewable_energy": 0.0912,
+          "s_smart_energy_management": 0.0
+        },
+        "nnls_weights_boot_p95": {
+          "s_insulation": 0.5691,
+          "s_heating_system": 0.285,
+          "s_windows_glazing": 0.0869,
+          "s_renewable_energy": 0.104,
+          "s_smart_energy_management": 0.0
+        },
+        "scale_target_units_per_point": 0.3404,
+        "r2_test_learned": 0.2091,
+        "r2_test_brief_weights": 0.1771,
+        "r2_test_equal_weights": 0.1257,
+        "r2_test_lgbm_with_extras": 0.4669,
+        "standardised_ols": {
+          "s_insulation": 4.7673,
+          "s_heating_system": 0.8756,
+          "s_windows_glazing": 0.3426,
+          "s_renewable_energy": 0.4825,
+          "s_smart_energy_management": -0.187
+        },
+        "shapley_r2": {
+          "s_insulation": 0.1819,
+          "s_heating_system": 0.0087,
+          "s_windows_glazing": 0.0123,
+          "s_renewable_energy": 0.0035,
+          "s_smart_energy_management": 0.0002
+        },
+        "shapley_r2_total": 0.2066,
+        "lgbm_shap_share": {
+          "s_insulation": 0.5001,
+          "s_heating_system": 0.1046,
+          "s_windows_glazing": 0.0336,
+          "s_renewable_energy": 0.0184,
+          "s_smart_energy_management": 0.0702,
+          "low_energy_lighting_pct": 0.0795,
+          "open_fireplaces": 0.0612,
+          "mech_vent": 0.0057,
+          "dual_tariff": 0.1266
+        }
+      },
+      "pe_m2": {
+        "nnls_weights": {
+          "s_insulation": 0.393021,
+          "s_heating_system": 0.25503,
+          "s_windows_glazing": 0.082439,
+          "s_renewable_energy": 0.088811,
+          "s_smart_energy_management": 0.180699
+        },
+        "nnls_weights_boot_p5": {
+          "s_insulation": 0.384,
+          "s_heating_system": 0.2449,
+          "s_windows_glazing": 0.0788,
+          "s_renewable_energy": 0.0871,
+          "s_smart_energy_management": 0.178
+        },
+        "nnls_weights_boot_p95": {
+          "s_insulation": 0.396,
+          "s_heating_system": 0.2576,
+          "s_windows_glazing": 0.0931,
+          "s_renewable_energy": 0.0943,
+          "s_smart_energy_management": 0.1861
+        },
+        "scale_target_units_per_point": 2.464,
+        "r2_test_learned": 0.2744,
+        "r2_test_brief_weights": 0.2535,
+        "r2_test_equal_weights": 0.2313,
+        "r2_test_lgbm_with_extras": 0.448,
+        "standardised_ols": {
+          "s_insulation": 24.4524,
+          "s_heating_system": 6.0441,
+          "s_windows_glazing": 2.7286,
+          "s_renewable_energy": 3.2059,
+          "s_smart_energy_management": 9.0027
+        },
+        "shapley_r2": {
+          "s_insulation": 0.2043,
+          "s_heating_system": 0.0144,
+          "s_windows_glazing": 0.0193,
+          "s_renewable_energy": 0.0065,
+          "s_smart_energy_management": 0.0299
+        },
+        "shapley_r2_total": 0.2744,
+        "lgbm_shap_share": {
+          "s_insulation": 0.5118,
+          "s_heating_system": 0.0586,
+          "s_windows_glazing": 0.0358,
+          "s_renewable_energy": 0.0261,
+          "s_smart_energy_management": 0.1951,
+          "low_energy_lighting_pct": 0.0866,
+          "open_fireplaces": 0.0709,
+          "mech_vent": 0.0111,
+          "dual_tariff": 0.004
+        }
+      }
+    },
+    "bayes_sap": {
+      "prior": "Dirichlet(10 x brief weights renormalised over the 5 attributes)",
+      "mean": {
+        "s_insulation": 0.2084999978542328,
+        "s_heating_system": 0.4357999861240387,
+        "s_windows_glazing": 0.09589999914169312,
+        "s_renewable_energy": 0.11500000208616257,
+        "s_smart_energy_management": 0.14480000734329224
+      },
+      "p5": {
+        "s_insulation": 0.19539999961853027,
+        "s_heating_system": 0.41499999165534973,
+        "s_windows_glazing": 0.07559999823570251,
+        "s_renewable_energy": 0.0957999974489212,
+        "s_smart_energy_management": 0.13120000064373016
+      },
+      "p95": {
+        "s_insulation": 0.22259999811649323,
+        "s_heating_system": 0.45649999380111694,
+        "s_windows_glazing": 0.11599999666213989,
+        "s_renewable_energy": 0.133200004696846,
+        "s_smart_energy_management": 0.15850000083446503
+      }
+    }
+  },
+  "need_per_home_diagnostic": {
+    "note": "Per-home NEED fits: attributes are coarse flags and behaviour dominates, so these are NOT used for the weights (D-18); kept to show how little single-home meter data is explained.",
+    "n": 2282489,
+    "n_train": 1597967,
+    "n_test": 342063,
+    "ee_on_metered": {
+      "weights": {
+        "s_energy_efficiency": 0.966739,
+        "s_heating_proxy": 0.0,
+        "s_renewables_proxy": 0.033261,
+        "loft_installed": 0.0,
+        "cavity_installed": 0.0
+      },
+      "r2_test": 0.0443
+    },
+    "int_on_sap": {
+      "weights": {
+        "s_energy_intensity": 0.440719,
+        "s_heating_proxy": 0.0,
+        "s_renewables_proxy": 0.559281,
+        "loft_installed": 0.0,
+        "cavity_installed": 0.0
+      },
+      "r2_test": 0.0552
+    }
+  },
+  "cells": {
+    "n_cells": 106,
+    "homes_epc": 446228,
+    "homes_need": 3404745,
+    "fit_ee_on_metered": {
+      "nnls_weights": {
+        "s_energy_efficiency": 1.0,
+        "s_insulation": 0.0,
+        "s_heating_system": 0.0,
+        "s_windows_glazing": 0.0,
+        "s_renewable_energy": 0.0,
+        "s_smart_energy_management": 0.0
+      },
+      "lmg_r2": {
+        "s_energy_efficiency": 0.2468,
+        "s_insulation": 0.0818,
+        "s_heating_system": 0.0648,
+        "s_windows_glazing": 0.0928,
+        "s_renewable_energy": 0.0794,
+        "s_smart_energy_management": 0.3124
+      },
+      "r2_within_area_band": 0.3916
+    },
+    "fit_int_on_sap": {
+      "nnls_weights": {
+        "s_energy_intensity": 0.14005,
+        "s_insulation": 0.017691,
+        "s_heating_system": 0.608758,
+        "s_windows_glazing": 0.081367,
+        "s_renewable_energy": 0.0,
+        "s_smart_energy_management": 0.152133
+      },
+      "lmg_r2": {
+        "s_energy_intensity": 0.238,
+        "s_insulation": 0.1916,
+        "s_heating_system": 0.3034,
+        "s_windows_glazing": 0.0831,
+        "s_renewable_energy": 0.0227,
+        "s_smart_energy_management": 0.0515
+      },
+      "r2_within_area_band": 0.8693
+    },
+    "ratio_rule": "LMG R^2 of the outcome component / summed LMG R^2 of the five attributes (D-18)",
+    "ratio_ee_to_attributes": 0.391,
+    "ratio_int_to_attributes": 0.3648,
+    "ratio_ee_boot_p5_p95": [
+      0.2545,
+      0.6787
+    ],
+    "ratio_int_boot_p5_p95": [
+      0.2304,
+      0.5113
+    ],
+    "corr_metered_vs_epc_sap": -0.4811
+  },
+  "final_weights_boot_p5_p95": {
+    "energy_efficiency": [
+      0.1703,
+      0.3236
+    ],
+    "energy_intensity": [
+      0.1491,
+      0.2527
+    ],
+    "attribute_block": [
+      0.4629,
+      0.6639
+    ],
+    "insulation": [
+      0.1867,
+      0.2678
+    ],
+    "heating_system": [
+      0.1594,
+      0.2286
+    ],
+    "windows_glazing": [
+      0.0419,
+      0.0601
+    ],
+    "renewable_energy": [
+      0.037,
+      0.0531
+    ],
+    "smart_energy_management": [
+      0.0378,
+      0.0542
+    ]
+  },
+  "final_weights": {
+    "energy_efficiency": 0.2226,
+    "energy_intensity": 0.2078,
+    "insulation": 0.2298,
+    "heating_system": 0.1962,
+    "windows_glazing": 0.0515,
+    "renewable_energy": 0.0456,
+    "smart_energy_management": 0.0465
+  },
+  "brief_weights": {
+    "energy_efficiency": 0.25,
+    "energy_intensity": 0.2,
+    "insulation": 0.15,
+    "heating_system": 0.15,
+    "windows_glazing": 0.1,
+    "renewable_energy": 0.1,
+    "smart_energy_management": 0.05
+  },
+  "brief_vs_learned_on_epc_test": {
+    "n": 66761,
+    "intensity": "archetype-cell median metered (imputed)",
+    "spearman": 0.9833,
+    "band_agreement": 0.8322,
+    "mean_abs_diff_points": 2.68,
+    "mean_brief": 57.67,
+    "mean_learned": 59.98,
+    "share_poor_or_very_poor_brief": 0.1096,
+    "share_poor_or_very_poor_learned": 0.1066,
+    "band_crosstab": {
+      "Good": {
+        "Good": 10391,
+        "Highly efficient": 32,
+        "Moderate": 7872,
+        "Poor": 0,
+        "Very poor": 0
+      },
+      "Highly efficient": {
+        "Good": 477,
+        "Highly efficient": 131,
+        "Moderate": 0,
+        "Poor": 0,
+        "Very poor": 0
+      },
+      "Moderate": {
+        "Good": 223,
+        "Highly efficient": 0,
+        "Moderate": 39133,
+        "Poor": 1385,
+        "Very poor": 0
+      },
+      "Poor": {
+        "Good": 0,
+        "Highly efficient": 0,
+        "Moderate": 1186,
+        "Poor": 5870,
+        "Very poor": 25
+      },
+      "Very poor": {
+        "Good": 0,
+        "Highly efficient": 0,
+        "Moderate": 0,
+        "Poor": 4,
+        "Very poor": 32
+      }
+    }
+  }
+}
