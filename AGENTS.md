@@ -69,7 +69,10 @@ This is a hackathon. **Speed is the goal, not bug-free code.** A working, good-l
 | Jev | TypeSafe "System 1" model (not JEPA). Used **only** for what-if routing, feasibility layer 2 and the explanation check. **Never** for kWh/£/CO2/score. Rule vetoes always win. Falls back to Claude structured output or rules. |
 | Value | Always a **range**, labelled **indicative** (association, not proven causation). Primary: **Bayesian hierarchical hedonic** model on real UK sales; baseline OLS without the rating; repeat-sales and matching only as stretch checks. |
 | Plan | Phases and checkpoints, not clock time. Build order is Tier A → B → C → D. |
-| Hardware | GPU available, used for Tier-D models (twin v2, DeepONet, GraphSAGE, PINO, vision). |
+| Physics library | **JAX** (`jax.numpy`). The twin runs inside the NumPyro model (NUTS/SVI need its gradients) and is `vmap`ped over posterior samples. Option B's ODE twin uses `diffrax`. Not numpy, not PyTorch. |
+| Electricity depth | Half-hourly electricity layer from London smart-meter load shapes; battery, LED and time-of-use retrofits; GraphSAGE GNN on DESNZ LSOA consumption for area priors and the dashboard. |
+| Photo-to-twin | Claude Haiku 5.5 (`claude-haiku-5-5`) vision with structured outputs drafts rooms + element tags with confidence; the agent confirms in a react-konva editor; v1 fallback is manual tags. Vision never produces energy numbers. |
+| Hardware | GPU available, used for Tier-D models (twin v2, DeepONet, home-level GraphSAGE, PINO). |
 | Showcase homes | SH1 (Victorian terrace, conservation area), SH2 (1970s cavity semi), SH3 (all-electric 3rd-floor flat). See `contracts/examples/`. |
 
 ## Core rules (from the problem statement; judges test these)

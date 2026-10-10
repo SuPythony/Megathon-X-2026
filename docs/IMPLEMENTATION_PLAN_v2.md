@@ -16,18 +16,25 @@ v1 (`IMPLEMENTATION_PLAN.md`) listed every idea by tier. This version groups the
 
 ---
 
-## Open decision: how ambitious is the physics twin?
+## Physics library: JAX (decided) and the open twin-ambition decision
 
-The documents disagree, and the answer decides what Block 2 builds first:
+**Library: JAX (`jax.numpy`), not numpy or PyTorch.** The Bayesian calibration (B3) puts the twin *inside* the NumPyro model, and NUTS/SVI need gradients of the likelihood through it. A numpy twin can't be sampled by NUTS. Written in `jax.numpy`, the same twin code:
+- gives exact gradients for calibration,
+- runs over all posterior samples at once with `jax.vmap` (fast ladder, Pareto and what-ifs),
+- is `jax.jit`-compiled, and runs on CPU (JAX GPU is Linux-only, which is fine).
 
-| | Option A — numpy twin first (`IMPLEMENTATION_PLAN.md`, this plan's default) | Option B — differentiable twin first (`STRATEGY_REPORT.md`, "Must" tier) |
+The steady-state twin is simple algebra, so writing it in `jax.numpy` costs almost nothing extra.
+
+**Still open: how ambitious is the twin?**
+
+| | Option A — monthly steady-state twin first (default) | Option B — differentiable RC graph first (`STRATEGY_REPORT.md`, "Must" tier) |
 | --- | --- | --- |
-| Level-1 twin | Monthly steady-state RC element model in numpy | 4–6 node RC graph in PyTorch; an MLP maps EPC features → conductances; ODE solve (`torchdiffeq`) |
+| Level-1 twin | Monthly steady-state RC element model in JAX | 4–6 node RC graph in JAX; an MLP maps EPC features → conductances; ODE solve with `diffrax` |
 | GP discrepancy (metered = twin + GP + noise) | Stretch | Core, inside the calibration |
 | Risk | Low; fast to an end-to-end skeleton | Higher; checkpoint 1 slips if the ODE or training stalls |
 | Gain | — | Learned conductances, hourly runs, end-to-end training on meter data |
 
-**Recommendation:** Option A for checkpoint 1, then upgrade to the differentiable graph behind the same `simulate()` interface if checkpoint 2 is on time. Both options keep the same contracts, so nothing downstream changes.
+**Recommendation:** Option A for checkpoint 1, then upgrade to the differentiable graph behind the same `simulate()` interface if checkpoint 2 is on time. Both options use JAX and keep the same contracts, so nothing downstream changes.
 
 ---
 
@@ -80,6 +87,8 @@ Problem-statement coverage:
    - **Weather**: monthly HDD (base 15.5 °C), mean temperature and irradiance by area from HadUK-Grid (primary) or Open-Meteo. Also 30–50-year history for trend layers. Cache every response.
    - **ONS postcode → LSOA / local authority**, IMD deprivation, off-gas-grid postcodes, conservation areas / listed buildings (planning.data.gov.uk, Historic England), and OSM footprints (roof azimuth, party walls).
    - **Priors:** Electrification of Heat trial (heat-pump SCOP by house type) and English Housing Survey stock distributions.
+   - **London smart meters** (London Datastore, half-hourly, 5,567 homes, 2011–14, electricity only): cluster daily profiles by season and day type into **load-shape archetypes** for the electricity layer (B2).
+   - **DESNZ sub-national LSOA consumption** (OGL): real annual domestic electricity and gas per meter by LSOA, the labels for the GNN area model (B8) and a check on synthetic area totals.
 3. **Sourced factors.** These already exist in `contracts/` and are verified. This block keeps them correct and closes the gaps:
    - `emission_factors.json`: DESNZ 2025. Electricity 0.19553 kgCO2e/kWh (generation 0.177 + T&D 0.01853); gas 0.18296 (gross CV). **Gap:** oil, LPG, solid fuel and district heating return `carbon = null` until their factors are added from the same file.
    - `tariffs.json`: Ofgem Q4 2026.
@@ -107,7 +116,7 @@ Problem-statement coverage:
 
 **Goal:** a documented physics model that turns any home and any retrofit package into per-fuel energy and an estimated rating. A generator then uses that model to create realistic homes, meter readings and reference labels.
 
-**2a. Level-1 twin** (`greentwin/twin`; numpy per Option A, see the open decision):
+**2a. Level-1 twin** (`greentwin/twin`, written in **JAX** so B3 can sample it with NUTS/SVI and `vmap` it over posterior samples; Option A, see the decision above):
 - `params_from_property(Property) -> TwinParams`:
   - Element U·A from RdSAP default U-values by age band, wall type and insulation.
   - Areas estimated from floor area, built form, storeys and party walls (OSM).
@@ -158,7 +167,9 @@ Problem-statement coverage:
 - `eval/reports/synthetic_validation.md` is written.
 - `docs/SYNTHETIC_DATA.md` lists every generation and label rule and states that agreement with synthetic labels is not real-world accuracy.
 
-**Upgrade (Option B, if chosen or after checkpoint 2):** a differentiable 4–6 node RC graph in PyTorch behind the same `simulate()` interface. An MLP maps EPC features → conductances (softplus > 0) and the model is trained end to end on metered kWh.
+**2d. Electricity layer** (`greentwin/twin/electricity.py`): a half-hourly electricity profile per home. It's the smart-meter load-shape archetype scaled to the calibrated baseload, plus heat-pump demand from degree-hours, plus PVGIS hourly PV, minus battery dispatch. Gives PV self-consumption, export and time-of-use bills, with monthly totals kept consistent with 2a. Also provides the lighting share used by LED retrofits.
+
+**Upgrade (Option B, if chosen or after checkpoint 2):** a differentiable 4–6 node RC graph in JAX (`diffrax` ODE solver) behind the same `simulate()` interface. An MLP maps EPC features → conductances (softplus > 0) and the model is trained end to end on metered kWh.
 
 ---
 
@@ -230,7 +241,12 @@ Problem-statement coverage:
    - **Baseline:** rules only. **Metrics:** AUC and precision@k on held-out properties; zero infeasible items recommended.
 4. **Ordering + staging:** fabric → glazing → controls → heating system (sized on reduced demand) → generation/storage. Marginal savings come from B3 in that sequence. A small dynamic programme stages the package by dependencies and cash flow.
 5. **Suitability:** P(suitable) = P(feasible) × P(net benefit) → High (≥ 0.8) / Medium (0.5–0.8) / Low, with a reason. P(net benefit) comes from the posterior; independence is assumed and stated.
-6. **Pareto optimiser:**
+6. **Electricity retrofits** (via the 2d layer):
+   - **Battery:** stores PV and cheap-rate electricity.
+   - **LED lighting:** cuts the lighting share of baseload.
+   - **Time-of-use tariff:** changes bills, not kWh, and is reported that way. Needs a cited supplier tariff before any bill figure is shown.
+   - The catalogue already has `battery`; add `led_lighting` and `time_of_use_tariff`.
+7. **Pareto optimiser:**
    - Enumerate feasible packages (≤ 256) on net cost after grants (sourced costs only), CO2e cut, bill saving and score gain.
    - Compute the front per posterior sample → **P(on front)**; the knee is the default; add a budget slider and a reference-point mode ("≥ 2 t CO2, ≤ £10k").
    - Memory-learned preference weights re-rank points without relaxing hard constraints.
@@ -399,7 +415,15 @@ GraphRAG pattern: retrieve the home's subgraph (constraints, eligible grants, bl
    - Loan = package − grants; repayment vs monthly bill saving ("cash-flow positive?").
    - Marked "illustrative, not an offer"; a "book an adviser" button.
    - Value shown as separate information, never as part of the borrowing case.
-6. **Green twins of your home** (from B5), **memory/history**, and **agent capture v1** (floor-plan + room photos, manual element tags confirmed by the agent, consent and blur notice).
+6. **Green twins of your home** (from B5) and **memory/history**.
+7. **Photo-to-twin (agent capture)**, with B6 providing the vision endpoint:
+   - Upload a floor-plan photo + room photos.
+   - **Claude Haiku 5.5** (`claude-haiku-5-5`) vision with structured outputs returns rooms (label, polygon, estimated dimensions) and element tags (glazing, boiler/heat pump, radiators, visible loft depth, …), each with a confidence.
+   - The agent corrects polygons and tags in a **react-konva** floor-plan editor; every field needs agent confirmation.
+   - Confirmed fields fill `Property`. **Room-level geometry** gives floor area (cross-checked with the EPC), wall lengths and window areas for the twin's U·A areas, and real rooms in the 3D house.
+   - The physics stays home-level (monthly bills can't identify per-room parameters). Vision outputs are tags, never energy numbers.
+   - Consent and blur notice. **v1 fallback:** photos + manual tags.
+   - **Evaluation:** room-area error and tag accuracy on a labelled set (CubiCasa5k + our photos), confidence calibration, share of fields the agent corrected.
 
 **UX rules:**
 - Every number shows its unit and interval; every colour is paired with a number.
@@ -446,7 +470,12 @@ GraphRAG pattern: retrieve the home's subgraph (constraints, eligible grants, bl
    - Lending (balance × margin + fees) + retention (churn reduction × CLV) + acquisition (new customers × CLV − acquisition and visit costs), with financed emissions alongside.
    - All parameters are sliders with stated ranges; Monte Carlo output is labelled "Illustrative scenario on a synthetic customer base. Not a forecast."
 7. **Funnel:** users → profiles → plans → visits → applications → loans; cost per acquired customer and £ lent per area.
-8. **Optional:** a portfolio Pareto front for allocating a green-finance budget across homes (multi-objective knapsack: ε-constraint or NSGA-II).
+8. **GNN area model:**
+   - GraphSAGE (PyTorch Geometric) on the LSOA adjacency graph.
+   - **Features:** EPC stock mix, IMD, weather, off-gas share. **Target:** DESNZ mean domestic electricity and gas per meter.
+   - **Uses:** area-level priors for the Bayesian hierarchy (B3); a "uses more than expected" map layer; filling suppressed LSOAs.
+   - **Baseline:** EBM/LightGBM without the graph. **Validation:** spatial-block CV.
+9. **Optional:** a portfolio Pareto front for allocating a green-finance budget across homes (multi-objective knapsack: ε-constraint or NSGA-II).
 
 The idea that green homes carry lower credit risk is presented as a hypothesis, not a finding.
 
@@ -511,13 +540,13 @@ B8 after B1, fed by B3/B4 batch outputs
 - If checkpoint 2 slips, drop Jev (keep the Claude fallback), the graph store, 3D v2/v3 and the portfolio front.
 
 **Stretch only, after checkpoint 3:**
-- Differentiable RC graph (if Option A was chosen).
+- Differentiable RC graph in JAX/diffrax (if Option A was chosen).
 - GP emulator / BoTorch continuous sizing.
 - UKCP18 lifetime savings.
 - Physics-informed DeepONet surrogate.
-- Neighbourhood GraphSAGE.
+- Home-level neighbourhood GraphSAGE (the LSOA-level GNN is in B8).
 - Spatial PINO visual (gated ±5% vs Level 1).
-- Photo-to-twin vision (agent capture v2).
+- Automatic floor-plan segmentation without agent correction (photo-to-twin with agent review is in B7).
 - NEED savings CATE vs physics.
 - JEPA-Anything factorised load model (merged only if an ablation shows a gain).
 

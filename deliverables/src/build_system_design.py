@@ -172,11 +172,11 @@ def architecture():
     n, g = 5, 6
     w = (full - (n - 1) * g) / n
     inputs = [
-        ("Property & energy", ["EPC + recommendations", "NEED metered energy"]),
+        ("Property & energy", ["EPC, NEED, DESNZ LSOA", "London smart meters"]),
         ("Sales & market", ["UCL Price Paid–EPC", "UK House Price Index"]),
         ("Weather & solar", ["HadUK-Grid, Open-Meteo", "PVGIS"]),
         ("Geo + factors", ["ONS LSOA, IMD, planning", "DESNZ, Ofgem, BEIS"]),
-        ("Customer input", ["EPC lookup, form, agent", "photos + memory"]),
+        ("Customer input", ["EPC lookup, form, memory", "photos → Haiku vision"]),
     ]
     for i, (t, ls) in enumerate(inputs):
         box(d, xl + i * (w + g), ys[0], w, rh, t, ls, tsize=7.6, lsize=6.3)
@@ -231,7 +231,7 @@ def architecture():
     box(d, xl + w3 + 8, ys[7], w3, rh, "B7  Customer app + chat",
         ["score · ladder · Pareto · loan", "memory · DistributionCard"], kind="amber")
     box(d, xl + 2 * (w3 + 8), ys[7], w3, rh, "B8  Lloyds dashboard",
-        ["LSOA heat map · segments", "Green Profits (scenario)"], kind="amber")
+        ["LSOA heat map · GNN areas", "segments · Green Profits"], kind="amber")
 
     # vertical connectors between rows (centre spine + side spines)
     cxs = [xl + w3 / 2, xl + w3 + 8 + w3 / 2, xl + 2 * (w3 + 8) + w3 / 2]
@@ -281,7 +281,7 @@ def block_graph():
     }
     meta = {
         "B1": ("B1  Data foundation", ["data, splits, factors"], "green"),
-        "B2": ("B2  Twin + rating + synth", ["physics, labels"], "core"),
+        "B2": ("B2  Twin (JAX) + rating + synth", ["physics, labels"], "core"),
         "B3": ("B3  Bayesian + energy", ["posterior samples"], "core"),
         "B4": ("B4  Score + retrofits", ["ladder, Pareto"], "plain"),
         "B5": ("B5  Property value", ["Bayesian hedonic"], "plain"),
@@ -479,10 +479,17 @@ def build():
     table([
         ["Concern", "Choice"],
         ["Data + storage", "Python 3.12, pandas/Polars, DuckDB + Parquet (with meta.json per file)"],
-        ["Physics twin", "numpy steady-state monthly RC model (Option A); differentiable PyTorch RC graph later "
-         "behind the same simulate() (Option B)"],
+        ["Physics twin", "<b>JAX</b> (jax.numpy): the twin runs inside the NumPyro model, so NUTS/SVI get exact "
+         "gradients, and jax.vmap runs it over all posterior samples at once. Monthly steady-state RC model "
+         "first; differentiable RC graph (diffrax ODE) later behind the same simulate()"],
+        ["Electricity layer", "Half-hourly profile per home: London smart-meter load-shape archetypes scaled to "
+         "annual kWh + heat pump (degree-hours) + PVGIS hourly PV − battery dispatch → self-consumption, "
+         "time-of-use bills"],
         ["Bayesian", "NumPyro: NUTS offline for hierarchy, SVI per home (&lt; 1 s); ArviZ diagnostics"],
-        ["Learned models", "EBM (InterpretML) primary; XGBoost baseline"],
+        ["Learned models", "EBM (InterpretML) primary; XGBoost baseline; GraphSAGE GNN (PyTorch Geometric) on "
+         "the LSOA graph"],
+        ["Photo-to-twin", "Claude Haiku 5.5 (claude-haiku-5-5) vision with structured outputs: floor plan → rooms, "
+         "room photos → element tags with confidence; react-konva floor-plan editor for agent correction"],
         ["Value", "NumPyro hierarchical hedonic regression; OLS baseline"],
         ["API", "FastAPI; run_scenario cached by hash(spec + model versions)"],
         ["LLM", "Claude tool use + numeric validator + template fallback; Jev (System 1) if a key exists, "
@@ -551,7 +558,8 @@ def build():
         ["B1 Data", "greentwin/data, geo", "load_property(id), load_usage(id), load_weather(area), load_sales(), "
          "emission_factors(), tariffs(), catalogue()", "examples + small CSV samples"],
         ["B2 Twin", "greentwin/twin", "params_from_property(p), simulate(params, weather, mode), "
-         "apply_retrofits(params, actions), estimate_rating(...), generate_synthetic(n, seed)", "RdSAP defaults"],
+         "apply_retrofits(params, actions), estimate_rating(...), electricity_profile(p, params) (half-hourly), "
+         "generate_synthetic(n, seed)", "RdSAP defaults"],
         ["B3 Bayesian", "greentwin/bayes, models", "intensity_prior(p) → Distribution, calibrate(p, usage, weather) → "
          "Posterior, predict(posterior, spec) → samples", "synthetic data from B2"],
         ["B4 Score + retrofits", "greentwin/score, retrofit, optimise", "score(p, energy) → ScoreResult, "
@@ -560,10 +568,12 @@ def build():
         ["B5 Value", "greentwin/value", "value_impact(p, rating_after) → ValueImpact, green_twins(p)",
          "UCL sales sample"],
         ["B6 Orchestration", "greentwin/api, llm, jev, kb", "run_scenario(spec) → ScenarioResult; REST API; "
-         "chat(...), route(...) → WhatIfRoute", "MOCK ScenarioResult"],
-        ["B7 Customer app", "web/", "screens over the API using contracts/types.ts", "mock server"],
+         "chat(...), route(...) → WhatIfRoute; extract_floorplan(image), tag_photo(image) → draft Property "
+         "fields + confidence", "MOCK ScenarioResult"],
+        ["B7 Customer app", "web/", "screens over the API using contracts/types.ts; react-konva floor-plan "
+         "editor", "mock server"],
         ["B8 Dashboard", "greentwin/geo + web/", "area_layers(layer, region), segments(), "
-         "green_profits(assumptions)", "B1 data + batch outputs"],
+         "green_profits(assumptions), lsoa_gnn() → expected kWh per LSOA (Distribution)", "B1 data + batch outputs"],
     ], [24 * mm, 30 * mm, 86 * mm, 30 * mm])
     story.append(PageBreak())
 
@@ -575,7 +585,9 @@ def build():
          ["uv + Python 3.12 environment; CI runs pytest.",
           "Download scripts → Parquet + meta.json: EPC certificates + recommendations + certificate history "
           "(North West, South West, London), NEED 50k, UCL Price Paid–EPC linked sales + UK HPI, weather degree "
-          "days (HadUK-Grid / Open-Meteo), ONS postcode → LSOA, IMD, off-gas, planning constraints, OSM roofs.",
+          "days (HadUK-Grid / Open-Meteo), ONS postcode → LSOA, IMD, off-gas, planning constraints, OSM roofs, "
+          "<b>London smart meters</b> (half-hourly, 5,567 homes; load shapes) and <b>DESNZ sub-national LSOA "
+          "electricity + gas consumption</b> (real area-level labels).",
           "Sourced factors in contracts/: DESNZ 2025 emissions, Ofgem tariffs, BEIS 2017 × CPI costs; unsourced "
           "items return null + reason.",
           "Mappers to Property / SaleRecord; splits.py (70/15/15 by customer, else property, seed 42, assigned "
@@ -585,9 +597,11 @@ def build():
         ("B2 · Physics twin + rating estimator + synthetic data", "PS §5, §7, §9 · feeds B3, B4, B5, B7",
          "A documented physics model that turns any home and retrofit package into per-fuel energy and an "
          "estimated rating, and a generator that uses it to create realistic training data and labels.",
-         ["Level-1 twin: element U·A from RdSAP defaults, ventilation, degree days, hot water, appliances; "
-          "boiler efficiency / heat-pump COP → electricity + gas; PV cuts imports. Modes: calibrated and "
-          "standard (SAP occupancy).",
+         ["Level-1 twin <b>in JAX</b>: element U·A from RdSAP defaults (room geometry when photo-to-twin "
+          "provides it), ventilation, degree days, hot water, appliances; boiler efficiency / heat-pump COP → "
+          "electricity + gas; PV cuts imports. Modes: calibrated and standard (SAP occupancy).",
+          "Electricity layer: half-hourly profile from smart-meter load-shape archetypes + heat pump + PVGIS PV "
+          "− battery dispatch, giving self-consumption and time-of-use bills; lighting share for LED retrofits.",
           "apply_retrofits: each catalogue item is a parameter edit; packages are always re-simulated.",
           "Rating estimator (contracts/sap_estimator.json): SAP 2012 formula on the twin in standard mode, "
           "anchored to the recorded SAP; labelled \"estimated rating, not an EPC\".",
@@ -619,6 +633,8 @@ def build():
           "Feasibility: rule vetoes → Jev (or Claude fallback) on survivors → calibrated P(feasible).",
           "Improvement ladder: twin reruns in fabric-first order; per-step distributions; P(suitable) = "
           "P(feasible) × P(net benefit) → High/Medium/Low; probabilistic verdicts.",
+          "Electricity retrofits: battery (self-consumption, time-of-use shifting), LED lighting, time-of-use "
+          "tariff (changes bills, not kWh; reported as such).",
           "Pareto front over feasible packages with P(on front), knee and budget filter."],
          "ScoreResult, Feasibility, RetrofitEffect, ParetoPoint, docs/SCORE.md",
          "SH1 blocks EWI; SH2 shows electricity rising; SH3 blocks loft/PV and marks the heat pump "
@@ -649,7 +665,10 @@ def build():
          "The customer journey from \"how green is my home\" to a green-loan conversation.",
          ["Shared theme + components (NumberWithRange, DistributionCard, ScoreWaterfall, ProvenanceTag).",
           "Screens: score + waterfall, improvement ladder, what-if chat, 3D twin, Pareto + green loan, memory, "
-          "agent capture v1.",
+          "agent capture.",
+          "Photo-to-twin: upload floor plan + room photos → Haiku vision drafts rooms and element tags with "
+          "confidence → agent corrects in a react-konva editor → confirmed fields fill Property and room-level "
+          "geometry drives the 3D house. v1 fallback: photos + manual tags.",
           "3D: parametric house from EPC fields; outside, cutaway and thermal views; retrofits appear; numbers "
           "update via run_scenario; precomputed packages for showcase homes."],
          "web/ app",
@@ -660,7 +679,10 @@ def build():
           "Heat map layers: green share, Poor share, finance demand, carbon potential, grant eligibility, "
           "hotspots, degree-day trends.",
           "Segments; Green Profits scenario from contracts/green_profits_assumptions.json (assumption sliders, "
-          "Monte Carlo); funnel. Synthetic customer base labelled as such."],
+          "Monte Carlo); funnel. Synthetic customer base labelled as such.",
+          "GNN area model: GraphSAGE on the LSOA adjacency graph (features: EPC stock mix, IMD, weather, off-gas "
+          "share) predicting DESNZ mean domestic electricity and gas per meter; uses: area priors for the "
+          "Bayesian hierarchy, an \"uses more than expected\" map layer, filling suppressed LSOAs."],
          "/dashboard/* API + dashboard screens",
          "Runs on three regions; every assumption visibly labelled."),
     ]
@@ -736,6 +758,40 @@ def build():
         "Always \"Indicative range based on historical associations in sales data; not a promised or proven "
         "increase.\" Never a reason to borrow.",
     ])
+    story.append(CondPageBreak(60 * mm))
+    H2("6.5 Photo-to-twin (agent capture, B6 + B7)")
+    bullets([
+        "<b>Flow:</b> agent or customer uploads a floor-plan photo and room photos → <b>Claude Haiku 5.5</b> "
+        "(claude-haiku-5-5) vision with structured outputs returns rooms (label, polygon, estimated dimensions) "
+        "and element tags (glazing type, boiler/heat pump, radiators, visible loft depth, ...) each with a "
+        "confidence → the agent corrects polygons and tags in a <b>react-konva</b> editor → confirmed fields "
+        "fill <font face='%s'>Property</font>." % F,
+        "<b>What room geometry is for:</b> floor area cross-checked against the EPC, wall lengths and window "
+        "areas for the twin's U·A areas, and real rooms in the 3D house. The physics stays home-level: monthly "
+        "bills cannot identify per-room parameters.",
+        "<b>Guardrails:</b> vision outputs are tags with confidence, never energy numbers; low confidence goes back "
+        "to the agent; every field needs agent confirmation. Consent, faces and personal items blurred, stated "
+        "retention. v1 fallback: photos + manual tags.",
+        "<b>Evaluation:</b> room-area error and tag accuracy on a labelled set (CubiCasa5k floor plans + our "
+        "photos), confidence calibration, share of fields the agent had to correct.",
+    ])
+    story.append(CondPageBreak(60 * mm))
+    H2("6.6 Electricity depth (B1 + B2 + B4 + B8)")
+    bullets([
+        "<b>Data:</b> London smart meters (half-hourly, 5,567 homes, 2011–14) → load-shape archetypes "
+        "(clustered daily profiles by season and day type); DESNZ sub-national LSOA consumption → real "
+        "area-level electricity and gas per meter.",
+        "<b>Twin electricity layer:</b> each home's electricity = archetype profile scaled to its calibrated "
+        "baseload + heat-pump demand from degree-hours + PVGIS hourly PV − battery dispatch. Gives PV "
+        "self-consumption, export, and time-of-use bills; monthly totals stay consistent with the monthly twin.",
+        "<b>Electricity retrofits:</b> battery (shifts PV and cheap-rate electricity), LED lighting (cuts the "
+        "lighting share of baseload), time-of-use tariff (changes bills, not kWh, and is labelled that way). "
+        "Time-of-use rates need a cited supplier source before any bill figure is shown.",
+        "<b>GNN on LSOAs:</b> GraphSAGE over the LSOA adjacency graph predicts DESNZ mean consumption from stock "
+        "mix, IMD, weather and off-gas share. Baselines: EBM/LightGBM without the graph; spatial-block CV to "
+        "avoid leakage. Uses: priors for the Bayesian hierarchy, an \"uses more than expected\" dashboard "
+        "layer, filling suppressed areas.",
+    ])
     story.append(PageBreak())
 
     # ---------------------------------------------------------------- 7 evaluation + PS mapping
@@ -758,6 +814,12 @@ def build():
         ["Probabilities", "calibration (a \"0.8\" happens ~80% of the time)", "—", "B3, B4, B6"],
         ["LLM", "groundedness ≥ 90%, accuracy ≥ 90%, unsupported &lt; 5%", "no validator", "B6"],
         ["Synthetic data", "KS / quantiles vs NEED", "—", "B2"],
+        ["GNN area model", "MAE per fuel on held-out LSOAs (spatial-block CV)", "EBM / LightGBM without graph",
+         "B8"],
+        ["Photo-to-twin", "room-area error, tag accuracy, confidence calibration, % fields corrected",
+         "manual tagging", "B6 + B7"],
+        ["Electricity layer", "half-hourly profile error vs held-out smart-meter homes; PV self-consumption",
+         "flat profile", "B2"],
     ], [38 * mm, 62 * mm, 48 * mm, 22 * mm])
     H2("Problem statement coverage")
     table([
@@ -827,8 +889,8 @@ def build():
     H2("Open decisions")
     table([
         ["Decision", "Options", "Recommendation"],
-        ["Twin ambition", "A: numpy steady-state twin first · B: differentiable PyTorch RC graph first",
-         "A for checkpoint 1; upgrade behind simulate() if on time"],
+        ["Twin ambition (library decided: JAX)", "A: monthly steady-state twin in JAX first · B: differentiable "
+         "RC graph in JAX (diffrax) first", "A for checkpoint 1; upgrade behind simulate() if on time"],
         ["Verdict thresholds", "gain threshold (3% / 2 points), probability cut-offs, cost per kWh cut-off",
          "Agree once; record in docs/SCORE.md"],
         ["Default goal", "bills or carbon for \"net benefit\"", "Bills by default; carbon toggle"],
