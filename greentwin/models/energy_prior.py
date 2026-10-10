@@ -281,3 +281,41 @@ def _display_value(feature: str, v) -> str:
     if feature in ("li_flag", "cwi_flag", "pv_flag", "conservatory"):
         return "yes" if v else "no"
     return str(v)
+
+
+_DEFAULT_MODEL: Optional[EnergyPriorModel] = None
+
+
+def load_default(path: str | Path | None = None) -> EnergyPriorModel:
+    """Process-wide cached model (artifacts/m04_energy_prior/v2/model.pkl, relative to the repo root)."""
+    global _DEFAULT_MODEL
+    if _DEFAULT_MODEL is None or path is not None:
+        root = Path(__file__).resolve().parents[2]
+        _DEFAULT_MODEL = EnergyPriorModel.load(Path(path) if path else root / DEFAULT_ARTIFACT)
+    return _DEFAULT_MODEL
+
+
+def energy_prior(prop: Property, imd_quintile: Optional[int] = None) -> EnergyPrior:
+    """What EnergyRetrofitEngine.energy_prior delegates to."""
+    return load_default().energy_prior(prop, imd_quintile)
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+
+    ap = argparse.ArgumentParser(description="M04 energy prior for one home (optionally updated with meters)")
+    ap.add_argument("property_json")
+    ap.add_argument("--usage", help="monthly EnergyUsageMonth list (JSON) -> Bayesian posterior")
+    ap.add_argument("--imd", type=int, default=None, help="IMD quintile 1-5 if known")
+    a = ap.parse_args()
+    prop = Property.model_validate_json(Path(a.property_json).read_text())
+    prior = energy_prior(prop, a.imd)
+    if not a.usage:
+        print(prior.model_dump_json(indent=2))
+    else:
+        from contracts.models import EnergyUsageMonth
+        from greentwin.models.prior_update import update_with_meters
+        usage = [EnergyUsageMonth.model_validate(u) for u in json.loads(Path(a.usage).read_text())]
+        print(json.dumps({"prior": json.loads(prior.model_dump_json()),
+                          "update": update_with_meters(load_default(), prop, usage)}, indent=2))

@@ -29,15 +29,12 @@ from greentwin.models.energy_prior import (  # noqa: E402
     MODEL_ID, SEED, STRATA, UNIT, EnergyPriorModel, _stratum_key, property_to_features,
 )
 from greentwin.models.prior_update import (  # noqa: E402
-    NoiseModel, annual_from_months, crps_samples, posterior_weights, prior_samples, resample,
+    GAS_WEATHER_CV, NoiseModel, crps_samples, posterior_weights, prior_samples, resample, update_with_meters,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN = ROOT / "artifacts" / MODEL_ID / "v2"
 COL = {"electricity": "elec", "gas": "gas"}
-# ASSUMPTION (labelled): raw metered gas includes weather variation that NEED's weather-corrected gas removed.
-# Year-on-year UK heating degree days vary by roughly this relative amount; added to gas observation variance.
-GAS_WEATHER_CV = 0.07
 N_PRIOR = 4000
 
 
@@ -136,45 +133,14 @@ def dist_json(samples: np.ndarray, unit: str, tails=()):
     return json.loads(summarise(samples, unit, tails=list(tails), worst_tail="high").model_dump_json())
 
 
-def showcase(model: EnergyPriorModel, noise: dict) -> dict:
+def showcase(model: EnergyPriorModel) -> dict:
+    """SH1-SH3 through the same entry point the system uses (prior_update.update_with_meters)."""
     out = {}
-    rng = np.random.default_rng(SEED)
     for sh in ("SH1", "SH2", "SH3"):
         prop = Property.model_validate_json((ROOT / f"contracts/examples/{sh}_property.json").read_text())
         usage = [EnergyUsageMonth.model_validate(u) for u in
                  json.loads((ROOT / f"contracts/examples/{sh}_usage_2025.json").read_text())]
-        usage = sorted(usage, key=lambda u: u.month)
-        feats = property_to_features(prop)
-        res = {"floor_area_m2": prop.floor_area_m2, "fuels": {}}
-        for fuel, field in (("electricity", "electricity_import_kwh"), ("gas", "gas_kwh")):
-            if fuel == "gas" and feats.iloc[0].main_heat_fuel != "gas":
-                res["fuels"][fuel] = {"note": "No mains gas supply: gas is structurally 0 (not missing data)."}
-                continue
-            annual, extra, missing = annual_from_months([getattr(u, field) for u in usage])
-            if fuel == "gas":
-                extra += GAS_WEATHER_CV ** 2
-            obs = annual / prop.floor_area_m2
-            yhat = float(model.predict_point(feats, fuel)[0])
-            q = model.residual_quantiles[fuel].get(_stratum_key(feats.iloc[0], fuel),
-                                                   model.residual_quantiles[fuel]["__all__"])
-            th = prior_samples(yhat, q, 20000, rng, factor=model.area_factor(prop, fuel))
-            w, ess = posterior_weights(th, [obs], noise[fuel], [extra])
-            post = resample(th, w, 20000, rng)
-            pred = predictive(post, noise[fuel], rng)
-            peer = model.metadata.get("peer_median_kwh_m2", {}).get(fuel, {})
-            key = f"{feats.iloc[0].prop_type}|{int(feats.iloc[0].age_band)}"
-            tails = [("above the NEED median for this type and age", float(peer[key]), "above")] if key in peer else []
-            res["fuels"][fuel] = {
-                "observed": {"annual_kwh": round(annual, 1), "intensity_kwh_m2": round(obs, 2),
-                             "imputed_months": [usage[i].month for i in missing],
-                             "extra_log_variance": round(extra, 5)},
-                "prior": dist_json(th, UNIT, tails), "posterior": dist_json(post, UNIT, tails),
-                "posterior_predictive_next_year": dist_json(pred, UNIT, tails),
-                "posterior_annual_kwh": dist_json(post * prop.floor_area_m2, "kWh/yr"),
-                "ess": round(ess, 1), "prior_samples": int(len(th)),
-                "sd_reduction_pct": round(100 * (1 - np.std(post) / np.std(th)), 1),
-            }
-        out[sh] = res
+        out[sh] = update_with_meters(model, prop, usage)
     return out
 
 
@@ -211,7 +177,7 @@ def main():
         print(json.dumps(out[fuel]["update_test"], indent=1), flush=True)
     model.metadata["noise"] = {f: {"nu": n.nu, "scale": n.scale} for f, n in noise.items()}
     model.save(run / "model.pkl")
-    out["showcase"] = showcase(model, noise)
+    out["showcase"] = showcase(model)
     (run / "bayes.json").write_text(json.dumps({k: v for k, v in out.items() if k != "showcase"}, indent=2))
     (run / "showcase_bayes.json").write_text(json.dumps(out["showcase"], indent=2))
     # Refresh the contract examples with the area-adjusted, tail-annotated priors.

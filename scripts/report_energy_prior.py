@@ -124,7 +124,8 @@ def main():
     data = {
         "model_names": res["model_names"],
         "fuels": {f: fuel_payload(f, res[f]) for f in ("electricity", "gas") if f in res},
-        "trials": trials[["fuel", "model", "trial", "tune_mae", "seconds"]].round(3).to_dict("records"),
+        "trials": trials.assign(space=trials.get("space", pd.Series(index=trials.index, dtype=object)).fillna(trials.model))
+                  [["fuel", "model", "space", "trial", "tune_mae", "seconds"]].round(3).to_dict("records"),
         "showcase": {sh: {"elec": p["electricity_kwh_m2"], "gas": p["gas_kwh_m2"],
                           "contrib_e": p["contributions_electricity"], "contrib_g": p["contributions_gas"]}
                      for sh, p in showcase.items()},

@@ -50,3 +50,30 @@ def test_predictive_draws_are_bounded():
 
 def test_crps_of_point_mass_is_abs_error():
     assert crps_samples(np.full(100, 5.0), 7.0) == pytest.approx(2.0)
+
+
+# ----------------------------------------------------------------- system entry point (needs the trained model)
+import json  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[1]
+MODEL = ROOT / "artifacts/m04_energy_prior/v2/model.pkl"
+
+
+@pytest.mark.skipif(not MODEL.exists(), reason="train first")
+def test_update_with_meters_end_to_end():
+    from contracts.models import EnergyUsageMonth, Property
+    from greentwin.models.energy_prior import energy_prior, load_default
+    from greentwin.models.prior_update import update_with_meters
+
+    prop = Property.model_validate_json((ROOT / "contracts/examples/SH1_property.json").read_text())
+    usage = [EnergyUsageMonth.model_validate(u) for u in
+             json.loads((ROOT / "contracts/examples/SH1_usage_2025.json").read_text())]
+    assert energy_prior(prop).provenance.engine == "ebm"
+    r = update_with_meters(load_default(), prop, usage, n=5000)
+    gas = r["fuels"]["gas"]
+    assert gas["observed"]["imputed_months"] == ["2025-08"]  # missing August imputed, not zero
+    assert gas["posterior"]["std"] < gas["prior"]["std"]
+    # Too little data -> prior only, with a reason; no readings -> prior only.
+    assert update_with_meters(load_default(), prop, usage[:4], n=2000)["fuels"]["gas"]["posterior"] is None
+    assert "no meter readings" in update_with_meters(load_default(), prop, [], n=2000)["fuels"]["electricity"]["note"]

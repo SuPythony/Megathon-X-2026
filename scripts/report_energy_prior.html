@@ -317,13 +317,14 @@ function ladder(F) {
 
 function ceiling(F) {
   const c = F.ceiling.all_features;
-  const bars = [["Explainable ceiling (ω²)", c.omega2_unbiased, css("--fg-2")], ["EBM", F.test.ebm.r2, css("--ebm")],
+  const bars = [["Ceiling (ω²)", c.omega2_unbiased, css("--fg-2")], ["EBM", F.test.ebm.r2, css("--ebm")],
                 ["EBM, deprivation unknown", F.ebm_imd_unknown.r2, css("--ebm")], ["OLS one-hot", F.test.ols_onehot.r2, css("--cmp")],
                 ["NEED median", F.test.need_median.r2, css("--ctx")]];
   plot("c-ceiling", [{ type: "bar", x: bars.map(b => b[0]), y: bars.map(b => b[1]), marker: { color: bars.map(b => b[2]) },
     hovertemplate: "%{x}<br>%{y:.3f}<extra></extra>", text: bars.map(b => b[1].toFixed(3)), textposition: "outside",
     textfont: { color: css("--fg-2") }, cliponaxis: false }],
-    { yaxis: { title: "Share of variance explained", gridcolor: css("--grid"), rangemode: "tozero" } });
+    { yaxis: { title: "Share of variance explained", gridcolor: css("--grid"), range: [0, Math.max(...bars.map(b => b[1])) * 1.18] },
+      margin: { l: 56, r: 16, t: 24, b: 90 }, xaxis: { tickangle: -20 } });
   document.getElementById("ceiling-text").innerHTML =
     `If we grouped homes into every combination of the model's inputs (${c.cells.toLocaleString()} groups) and predicted each home by its group's true average, we would explain <strong>${f3(c.omega2_unbiased)}</strong> of the variance (bias-corrected ω²; the raw in-sample value is ${f3(c.eta2_in_sample)}). ` +
     `No model of these inputs can do better on average. EBM reaches <strong>${pct(F.test.ebm.r2 / c.omega2_unbiased)}</strong> of that ceiling with one smooth additive model. ` +
@@ -355,7 +356,7 @@ function fit(F) {
   }
   const c = F.calibration, mx = Math.max(...c.ebm.actual_mean, ...c.ebm.pred_mean, ...c.ols_onehot.actual_mean) * 1.05;
   plot("c-cal", [
-    { type: "scatter", mode: "lines", x: [0, mx], y: [0, mx], line: { color: css("--ctx"), width: 1, dash: "dot" }, hoverinfo: "skip" },
+    { type: "scatter", mode: "lines", x: [0, mx], y: [0, mx], line: { color: css("--ctx"), width: 1, dash: "dot" }, hoverinfo: "skip", showlegend: false },
     { type: "scatter", mode: "lines+markers", name: "EBM", x: c.ebm.pred_mean, y: c.ebm.actual_mean, line: { color: css("--ebm"), width: 2 },
       marker: { size: 8, color: css("--ebm"), line: { color: css("--surface"), width: 2 } }, hovertemplate: "EBM<br>predicted %{x:.1f}<br>metered %{y:.1f}<extra></extra>" },
     { type: "scatter", mode: "lines+markers", name: "OLS one-hot", x: c.ols_onehot.pred_mean, y: c.ols_onehot.actual_mean, line: { color: css("--cmp"), width: 2 },
@@ -486,7 +487,9 @@ function diag(F) {
     line: { color: css("--ebm"), width: 2 }, marker: { size: 9, color: css("--ebm"), line: { color: css("--surface"), width: 2 } },
     customdata: lc.map(r => [r.cells, r.test_mae, r.fit_seconds]),
     hovertemplate: "%{x:,} homes (%{customdata[0]:,} cells)<br>test R² %{y:.4f}<br>MAE %{customdata[1]:.2f}<br>fit %{customdata[2]} s<extra></extra>" }],
-    { xaxis: { type: "log", title: "Training homes (log scale)", gridcolor: css("--grid") }, yaxis: { title: "Test R²", gridcolor: css("--grid") },
+    { xaxis: { type: "log", title: "Training homes (log scale)", gridcolor: css("--grid"), tickvals: lc.map(r => r.homes),
+        ticktext: lc.map(r => r.homes >= 1e6 ? (r.homes / 1e6).toFixed(1) + "M" : Math.round(r.homes / 1e3) + "k") },
+      yaxis: { title: "Test R²", gridcolor: css("--grid") },
       shapes: F.ceiling ? [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: F.ceiling.all_features.omega2_unbiased, y1: F.ceiling.all_features.omega2_unbiased,
         line: { color: css("--fg-2"), dash: "dot", width: 1 } }] : [],
       annotations: F.ceiling ? [{ xref: "paper", x: 0, y: F.ceiling.all_features.omega2_unbiased, text: "ceiling", showarrow: false, xanchor: "left", yanchor: "bottom", font: { size: 11, color: css("--fg-2") } }] : [] });
@@ -547,10 +550,12 @@ function bayes(F) {
     const o = v.observed.intensity_kwh_m2;
     plot(`bsh-${sh}`, [hist(v.prior, "Prior (EBM)", css("--ctx")), hist(v.posterior, "Posterior", css("--ebm")),
       hist(v.posterior_predictive_next_year, "Next-year predictive", css("--cmp"), "dot")],
-      { showlegend: true, legend: { orientation: "h", y: 1.12, x: 0 },
-        xaxis: { title: unit, gridcolor: css("--grid") }, yaxis: { title: "Density", gridcolor: css("--grid"), showticklabels: false },
+      { showlegend: true, legend: { orientation: "h", y: -0.28, x: 0 }, margin: { l: 40, r: 16, t: 24, b: 80 },
+        xaxis: { title: unit, gridcolor: css("--grid"), range: [0, Math.max(v.prior.percentiles.p99, o) * 1.05] },
+        yaxis: { title: "Density", gridcolor: css("--grid"), showticklabels: false },
         shapes: [{ type: "line", x0: o, x1: o, yref: "paper", y0: 0, y1: 1, line: { color: css("--fg"), width: 1.5 } }],
-        annotations: [{ x: o, yref: "paper", y: 1, text: "metered", showarrow: false, yanchor: "bottom", font: { size: 11, color: css("--fg-2") } }] });
+        annotations: [{ x: o, yref: "paper", y: 1, text: `metered ${f1(o)}`, showarrow: false, xanchor: "left", yanchor: "bottom", xshift: 4,
+                        font: { size: 11, color: css("--fg-2") } }] });
   }
   const ci = (d, l) => d.credible_intervals.find(x => x.level === l);
   document.getElementById("t-dist").innerHTML = `<thead><tr><th>Home</th><th>Distribution</th><th>Mean</th><th>Median</th><th>Mode</th><th>SD</th><th>Skew</th><th>P5</th><th>P25</th><th>P75</th><th>P95</th><th>50% CI</th><th>90% CI</th><th>Worst 5% mean</th><th>P(above peers)</th></tr></thead><tbody>` +
@@ -574,12 +579,14 @@ function segments(F) {
 function tuning(F) {
   const tr = D.trials.filter(t => t.fuel === F.fuel);
   const models = ["lightgbm", "xgboost", "ebm"];
-  plot("c-trials", models.map(m => {
-    const r = tr.filter(t => t.model === m);
-    return { type: "scatter", mode: "markers", name: NAMES[m], x: r.map(t => t.trial), y: r.map(t => t.tune_mae),
-      marker: { size: 9, color: m === "ebm" ? css("--ebm") : (m === "lightgbm" ? css("--cmp") : css("--ctx")), line: { color: css("--surface"), width: 2 } },
-      customdata: r.map(t => t.seconds), hovertemplate: NAMES[m] + "<br>trial %{x}<br>tune MAE %{y:.3f}<br>%{customdata:.0f} s<extra></extra>" };
-  }), { showlegend: true, legend: { orientation: "h", y: 1.08, x: 0 },
+  const series = [["lightgbm", "lightgbm", NAMES.lightgbm, css("--cmp"), "circle"], ["xgboost", "xgboost", NAMES.xgboost, css("--ctx"), "circle"],
+                  ["ebm", "ebm", "EBM, first grid", css("--ebm"), "circle-open"], ["ebm", "ebm_wide", "EBM, wide grid", css("--ebm"), "circle"]];
+  plot("c-trials", series.map(([m, sp, name, color, symbol]) => {
+    const r = tr.filter(t => t.model === m && t.space === sp);
+    return { type: "scatter", mode: "markers", name, x: r.map(t => t.trial), y: r.map(t => t.tune_mae),
+      marker: { size: 9, color, symbol, line: { color: symbol === "circle-open" ? color : css("--surface"), width: 2 } },
+      customdata: r.map(t => t.seconds), hovertemplate: name + "<br>trial %{x}<br>tune MAE %{y:.3f}<br>%{customdata:.0f} s<extra></extra>" };
+  }).filter(t => t.x.length), { showlegend: true, legend: { orientation: "h", y: 1.08, x: 0 },
         xaxis: { title: "Trial", gridcolor: css("--grid") }, yaxis: { title: "Tune MAE (cell means)", gridcolor: css("--grid") } });
   const bp = F.best_params;
   document.getElementById("t-params").innerHTML = `<thead><tr><th>Model</th><th>Chosen hyperparameters</th></tr></thead><tbody>` +

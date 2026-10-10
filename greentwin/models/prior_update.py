@@ -14,6 +14,7 @@ its centre; it does not replace it.
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
 import numpy as np
@@ -121,3 +122,81 @@ def annual_from_months(values: list[float | None], seasonal_cv_missing: float = 
     # var(log annual) ~= sum (c * m_i)^2 / annual^2 (delta method).
     extra = float(sum((seasonal_cv_missing * filled[i]) ** 2 for i in missing) / annual ** 2) if annual > 0 else 0.0
     return annual, extra, missing
+
+
+# --------------------------------------------------------------------------- system entry point
+# ASSUMPTION (labelled): raw metered gas includes weather variation that NEED's weather-corrected gas removed.
+GAS_WEATHER_CV = 0.07
+FIELDS = {"electricity": "electricity_import_kwh", "gas": "gas_kwh"}
+
+
+def last_12_months(usage, field: str) -> tuple[list[str], list[float | None]]:
+    """The latest 12 calendar months ending at the newest reading; absent or null months stay None (never 0)."""
+    by_month = {u.month: getattr(u, field) for u in usage}
+    if not by_month:
+        return [], []
+    y, m = map(int, max(by_month).split("-"))
+    months = []
+    for _ in range(12):
+        months.append(f"{y:04d}-{m:02d}")
+        y, m = (y, m - 1) if m > 1 else (y - 1, 12)
+    months.reverse()
+    return months, [by_month.get(k) for k in months]
+
+
+def update_with_meters(model, prop, usage, n: int = 20000, seed: int = 42) -> dict:
+    """Prior (M04) -> posterior for one home from its monthly meter readings (``EnergyUsageMonth`` list).
+
+    Returns per fuel: observed annual figure, prior / posterior / next-year predictive Distributions (kWh/m2/yr),
+    posterior annual kWh, ESS and SD reduction. A fuel without enough readings returns the prior with a reason.
+    """
+    from contracts.summarise import summarise
+    from greentwin.models.energy_prior import UNIT, _stratum_key, property_to_features
+
+    noise_meta = model.metadata.get("noise")
+    if not noise_meta:
+        raise ValueError("model has no fitted noise: run scripts/bayes_energy_prior.py first")
+    rng = np.random.default_rng(seed)
+    feats = property_to_features(prop)
+    row = feats.iloc[0]
+    peer = model.metadata.get("peer_median_kwh_m2", {})
+    out = {"property_id": prop.property_id, "floor_area_m2": prop.floor_area_m2, "fuels": {}}
+    for fuel, field in FIELDS.items():
+        if fuel == "gas" and row.main_heat_fuel != "gas":
+            out["fuels"][fuel] = {"note": "No mains gas supply: gas is structurally 0 (not missing data)."}
+            continue
+        nm = NoiseModel(scale=noise_meta[fuel]["scale"], nu=noise_meta[fuel]["nu"])
+        yhat = float(model.predict_point(feats, fuel)[0])
+        rq = model.residual_quantiles[fuel]
+        theta = prior_samples(yhat, rq.get(_stratum_key(row, fuel), rq["__all__"]), n, rng,
+                              factor=model.area_factor(prop, fuel))
+        key = f"{row.prop_type}|{int(row.age_band)}" if row.age_band == row.age_band else None
+        tails = ([("above the NEED median for this type and age", float(peer[fuel][key]), "above")]
+                 if key and key in peer.get(fuel, {}) else [])
+
+        def dist(x, unit=UNIT, t=tails):
+            return json.loads(summarise(x, unit, tails=t, worst_tail="high").model_dump_json())
+
+        months, values = last_12_months(usage, field)
+        try:
+            annual, extra, missing = annual_from_months(values)
+        except ValueError as e:
+            out["fuels"][fuel] = {"prior": dist(theta), "posterior": None,
+                                  "note": f"prior only: {e}" if months else "prior only: no meter readings"}
+            continue
+        if fuel == "gas":
+            extra += GAS_WEATHER_CV ** 2
+        obs = annual / prop.floor_area_m2
+        w, ess = posterior_weights(theta, [obs], nm, [extra])
+        post = resample(theta, w, n, rng)
+        pred = post * np.exp(nm.sample(post.shape, rng))
+        out["fuels"][fuel] = {
+            "observed": {"window": [months[0], months[-1]], "annual_kwh": round(annual, 1),
+                         "intensity_kwh_m2": round(obs, 2), "imputed_months": [months[i] for i in missing],
+                         "extra_log_variance": round(extra, 5)},
+            "prior": dist(theta), "posterior": dist(post), "posterior_predictive_next_year": dist(pred),
+            "posterior_annual_kwh": dist(post * prop.floor_area_m2, "kWh/yr", ()),
+            "ess": round(ess, 1), "prior_samples": int(n),
+            "sd_reduction_pct": round(100 * (1 - np.std(post) / np.std(theta)), 1),
+        }
+    return out
