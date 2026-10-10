@@ -12,7 +12,7 @@ Every uncertain number carries a Bayesian credible interval. A tool-only LLM exp
 
 - **Approach (submission):** `deliverables/M1.pdf`
 - **Implementation plan:** `docs/IMPLEMENTATION_PLAN.md`
-- **Strategy report (design rationale):** `docs/STRATEGY_REPORT.md`
+- **Strategy report:** `docs/STRATEGY_REPORT_OVERVIEW.md` (ideas, data, ML approach, evaluation) and `docs/STRATEGY_REPORT.md` (system design and build plan)
 - **Team knowledge / rules:** `AGENTS.md`
 - **Shared data formats:** `contracts/`
 
