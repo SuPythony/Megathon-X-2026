@@ -2,9 +2,21 @@
 // Keep in sync with models.py in the SAME commit. Units: kWh/yr, GBP, kgCO2e, m2, W/m2K, W/K.
 // Savings = baseline - after (positive = saving, negative = increase).
 
-export const SCHEMA_VERSION = "0.2.0";
+export const SCHEMA_VERSION = "0.3.0";
 
-export interface Interval { mean: number; lo: number; hi: number; level: number; unit: string; }
+// Full posterior summary of every uncertain output (built by contracts/summarise.py).
+export interface Percentiles { p1: number; p5: number; p10: number; p25: number; p50: number; p75: number; p90: number; p95: number; p99: number; }
+export interface CredibleInterval { level: number; lo: number; hi: number; } // 0.5 and 0.9 always present
+export interface TailProbability { label: string; threshold: number; direction: "below" | "above"; probability: number; }
+export interface Histogram { bin_edges: number[]; counts: number[]; }
+export interface Distribution {
+  unit: string; n_samples: number;
+  mean: number; median: number; mode: number; std: number; skewness: number;
+  percentiles: Percentiles; credible_intervals: CredibleInterval[];
+  tail_probabilities: TailProbability[]; worst_tail: "low" | "high"; worst_5pct_mean: number;
+  histogram?: Histogram | null;
+  headline: "mean" | "median"; // which centre to show first
+}
 
 export interface Provenance {
   engine: "physics_l1" | "surrogate_deeponet" | "sap_estimator" | "ebm" | "xgboost" | "hedonic" | "dr_learner" | "rules" | "mock";
@@ -71,40 +83,43 @@ export interface RetrofitAction { retrofit_id: string; size?: number | null; sta
 export interface ScenarioSpec {
   schema_version: string; scenario_id: string; property_id: string; retrofits: RetrofitAction[];
   weather: "typical" | "cold_year" | "warm_year" | "forecast_week" | "ukcp18_2050";
-  n_samples: number; include_value: boolean; include_pareto: boolean; include_element_heat_loss: boolean; seed: number;
+  n_samples: number; include_value: boolean; include_pareto: boolean; include_element_heat_loss: boolean; seed: number; goal: "bills" | "carbon"; // defines net benefit; never changes computed numbers
   requested_by: "ui" | "llm" | "batch" | "jev_router" | "eval";
 }
 
 export interface EnergyBreakdown {
-  electricity_import_kwh: Interval; gas_kwh: Interval; purchased_total_kwh: Interval;
-  space_heating_kwh?: Interval | null; hot_water_kwh?: Interval | null; pv_generation_kwh?: Interval | null;
-  intensity_kwh_m2: Interval; // annualised METERED (import + gas) / m2 — used by the score
-  intensity_weather_normalised_kwh_m2?: Interval | null; // sensitivity only
+  electricity_import_kwh: Distribution; gas_kwh: Distribution; purchased_total_kwh: Distribution;
+  space_heating_kwh?: Distribution | null; hot_water_kwh?: Distribution | null; pv_generation_kwh?: Distribution | null;
+  intensity_kwh_m2: Distribution; // annualised METERED (import + gas) / m2 — used by the score
+  intensity_weather_normalised_kwh_m2?: Distribution | null; // sensitivity only
 }
 export type ScoreComponentName =
   | "energy_efficiency" | "energy_intensity" | "insulation" | "heating_system"
   | "windows_glazing" | "renewable_energy" | "smart_energy_management";
-export interface ScoreComponent { name: ScoreComponentName; weight: number; sub_score: number; contribution: number; inputs_used: Record<string, number | string | null>; }
+export interface ScoreComponent { name: ScoreComponentName; weight: number; sub_score: number; contribution: number; contribution_distribution?: Distribution | null; inputs_used: Record<string, number | string | null>; }
 export interface ScoreResult {
-  score: number; score_interval?: Interval | null; band: "Highly efficient" | "Good" | "Moderate" | "Poor" | "Very poor";
-  band_probabilities: Record<string, number>; components: ScoreComponent[]; key_issues: string[];
+  score: number; score_distribution?: Distribution | null; band: "Highly efficient" | "Good" | "Moderate" | "Poor" | "Very poor";
+  band_probabilities: Record<string, number>; p_poor_or_very_poor?: number | null; components: ScoreComponent[]; key_issues: string[];
 }
 export interface Feasibility {
   retrofit_id: string; status: "feasible" | "feasible_with_conditions" | "needs_survey" | "infeasible";
   decided_by: "rules" | "jev" | "claude_fallback" | "agent"; reason_codes: string[]; p_feasible: number;
 }
 export interface RetrofitEffect {
-  retrofit_id: string; order: number; feasibility: Feasibility; electricity_saving_kwh: Interval; gas_saving_kwh: Interval;
-  carbon_saving_kgco2e: Interval; bill_saving_gbp: Interval; cost_gbp?: Interval | null; cost_unavailable_reason?: string | null; p_net_benefit: number; p_suitable: number;
-  suitability: "High" | "Medium" | "Low"; reason: string;
+  retrofit_id: string; order: number; feasibility: Feasibility; electricity_saving_kwh: Distribution; gas_saving_kwh: Distribution;
+  carbon_saving_kgco2e: Distribution; bill_saving_gbp: Distribution; cost_gbp?: Distribution | null; cost_unavailable_reason?: string | null; purchased_energy_saving_kwh?: Distribution | null; score_after?: Distribution | null;
+  improvement_potential_cumulative_pct?: Distribution | null; payback_years?: Distribution | null;
+  p_net_benefit: number; p_suitable: number; suitability: "High" | "Medium" | "Low";
+  p_gain_above_threshold?: number | null;
+  verdict?: "recommended" | "optional" | "not_worth_adding" | "needs_survey" | "not_feasible" | null; reason: string;
 }
 export interface RatingEstimate {
-  sap: Interval; band: "A" | "B" | "C" | "D" | "E" | "F" | "G"; band_probabilities: Record<string, number>;
+  sap: Distribution; band: "A" | "B" | "C" | "D" | "E" | "F" | "G"; band_probabilities: Record<string, number>;
   anchored_to_recorded_sap: boolean; method: "sap2012_ecf_delta"; label: "estimated rating, not an EPC";
 }
 export interface ValueImpact {
-  current_value_gbp: number | null; band_before?: string | null; band_after?: string | null; uplift_pct?: Interval | null; value_after_gbp?: Interval | null;
-  method: "hedonic_quantile" | "dr_learner" | "green_twin_matching" | "unavailable"; label: "indicative";
+  current_value_gbp: number | null; current_value_distribution?: Distribution | null; band_before?: string | null; band_after?: string | null; uplift_pct?: Distribution | null; value_after_gbp?: Distribution | null;
+  method: "bayesian_hedonic" | "hedonic_quantile" | "dr_learner" | "green_twin_matching" | "unavailable"; label: "indicative";
   wording: string; // always displayed with the range
   unavailable_reason?: string | null;
 }
@@ -114,17 +129,17 @@ export interface ElementHeatLoss {
   estimated: boolean; basis: string; // show basis label wherever element colours are displayed
 }
 export interface ParetoPoint {
-  package: string[]; net_cost_gbp: Interval; carbon_saving_kgco2e: Interval; bill_saving_gbp: Interval; score_gain: Interval;
+  package: string[]; net_cost_gbp: Distribution; carbon_saving_kgco2e: Distribution; bill_saving_gbp: Distribution; score_gain: Distribution;
   p_on_front: number; is_knee: boolean;
 }
 export interface ScenarioResult {
   schema_version: string; scenario_id: string; property_id: string; provenance: Provenance;
   baseline: EnergyBreakdown; after: EnergyBreakdown;
-  electricity_saving_kwh: Interval; gas_saving_kwh: Interval; purchased_energy_saving_kwh: Interval;
-  improvement_potential_pct?: Interval | null; improvement_potential_unavailable_reason?: string | null;
-  carbon_saving_kgco2e?: Interval | null; carbon_unavailable_reason?: string | null;
+  electricity_saving_kwh: Distribution; gas_saving_kwh: Distribution; purchased_energy_saving_kwh: Distribution;
+  improvement_potential_pct?: Distribution | null; improvement_potential_unavailable_reason?: string | null; improvement_potential_p_top_decile?: number | null;
+  carbon_saving_kgco2e?: Distribution | null; carbon_unavailable_reason?: string | null;
   emission_factors: Record<string, number>; emission_factor_source: string;
-  bill_saving_gbp: Interval; score_before: ScoreResult; score_after: ScoreResult; rating_after?: RatingEstimate | null;
+  bill_saving_gbp: Distribution; score_before: ScoreResult; score_after: ScoreResult; rating_after?: RatingEstimate | null;
   retrofits: RetrofitEffect[];
   value: ValueImpact; element_heat_loss_before: ElementHeatLoss[]; element_heat_loss_after: ElementHeatLoss[];
   pareto: ParetoPoint[]; data_confidence: "high" | "medium" | "low"; warnings: string[];

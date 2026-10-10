@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "0.3.0",
   "scenario_id": "SH2-pkg-1",
   "property_id": "SH2",
   "retrofits": [
@@ -30,5 +30,6 @@
   "include_pareto": false,
   "include_element_heat_loss": true,
   "seed": 42,
+  "goal": "bills",
   "requested_by": "ui"
 }

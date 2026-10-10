@@ -8,9 +8,16 @@ Run:  python scripts/make_showcase_examples.py
 """
 
 import json
+import sys
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parents[1] / "contracts" / "examples"
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from contracts.summarise import exact, summarise  # noqa: E402
+
+OUT = ROOT / "contracts" / "examples"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Typical UK monthly heating-degree-day shares (Jan..Dec), normalised below.
@@ -20,7 +27,7 @@ MONTHS = [f"2025-{m:02d}" for m in range(1, 13)]
 
 HOMES = [
     {
-        "schema_version": "0.2.0",
+        "schema_version": "0.3.0",
         "property_id": "SH1",
         "customer_id": "C-SH1",
         "source": "showcase",
@@ -51,7 +58,7 @@ HOMES = [
         "_story": "Victorian solid-wall mid-terrace in a conservation area: EWI blocked -> internal wall insulation; classic 'fabric first, then heat pump' path; one missing month.",
     },
     {
-        "schema_version": "0.2.0",
+        "schema_version": "0.3.0",
         "property_id": "SH2",
         "customer_id": "C-SH2",
         "source": "showcase",
@@ -81,7 +88,7 @@ HOMES = [
         "_story": "1970s cavity semi: every common retrofit feasible; the best Pareto and green-loan demo; shows electricity rising after a heat pump.",
     },
     {
-        "schema_version": "0.2.0",
+        "schema_version": "0.3.0",
         "property_id": "SH3",
         "customer_id": "C-SH3",
         "source": "showcase",
@@ -132,8 +139,17 @@ def usage(home: dict) -> list[dict]:
     return rows
 
 
-def iv(mean, lo, hi, unit):
-    return {"mean": mean, "lo": lo, "hi": hi, "level": 0.9, "unit": unit}
+_RNG = np.random.default_rng(42)
+N_MOCK = 500
+
+
+def dist(mean, lo, hi, unit, tails=(), worst_tail="low"):
+    """Placeholder Distribution: normal samples with the given mean and ~90% range, summarised
+    exactly as real model outputs are (contracts.summarise). lo == hi -> exact value."""
+    if lo == hi:
+        return exact(mean, unit, N_MOCK).model_dump()
+    samples = _RNG.normal(mean, (hi - lo) / 3.29, N_MOCK)
+    return summarise(samples, unit, tails=tails, worst_tail=worst_tail).model_dump()
 
 
 BASIS = "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills"
@@ -149,29 +165,51 @@ def mock_result() -> dict:
 
 def _mock_result() -> dict:
     return {
-        "schema_version": "0.2.0", "scenario_id": "SH2-pkg-mock", "property_id": "SH2",
+        "schema_version": "0.3.0", "scenario_id": "SH2-pkg-mock", "property_id": "SH2",
         "provenance": {"engine": "mock", "model_version": "mock-0", "data_version": "mock-0", "seed": 42, "n_samples": 0},
-        "baseline": {"electricity_import_kwh": iv(3400, 3250, 3550, "kWh/yr"), "gas_kwh": iv(12800, 12300, 13300, "kWh/yr"),
-                     "purchased_total_kwh": iv(16200, 15600, 16800, "kWh/yr"), "intensity_kwh_m2": iv(171, 164, 177, "kWh/m2/yr")},
-        "after": {"electricity_import_kwh": iv(5100, 4600, 5700, "kWh/yr"), "gas_kwh": iv(0, 0, 0, "kWh/yr"),
-                  "purchased_total_kwh": iv(5100, 4600, 5700, "kWh/yr"), "intensity_kwh_m2": iv(54, 48, 60, "kWh/m2/yr")},
-        "electricity_saving_kwh": iv(-1700, -2300, -1200, "kWh/yr"),
-        "gas_saving_kwh": iv(12800, 12300, 13300, "kWh/yr"),
-        "purchased_energy_saving_kwh": iv(11100, 10400, 11800, "kWh/yr"),
-        "improvement_potential_pct": iv(68.5, 64.0, 72.0, "%"),
-        "carbon_saving_kgco2e": iv(2010, 1880, 2140, "kgCO2e/yr"),
+        "baseline": {"electricity_import_kwh": dist(3400, 3250, 3550, "kWh/yr"), "gas_kwh": dist(12800, 12300, 13300, "kWh/yr"),
+                     "purchased_total_kwh": dist(16200, 15600, 16800, "kWh/yr"), "intensity_kwh_m2": dist(171, 164, 177, "kWh/m2/yr")},
+        "after": {"electricity_import_kwh": dist(5100, 4600, 5700, "kWh/yr"), "gas_kwh": dist(0, 0, 0, "kWh/yr"),
+                  "purchased_total_kwh": dist(5100, 4600, 5700, "kWh/yr"), "intensity_kwh_m2": dist(54, 48, 60, "kWh/m2/yr")},
+        "electricity_saving_kwh": dist(-1700, -2300, -1200, "kWh/yr",
+                                       tails=[("electricity use rises", 0.0, "below")]),
+        "gas_saving_kwh": dist(12800, 12300, 13300, "kWh/yr"),
+        "purchased_energy_saving_kwh": dist(11100, 10400, 11800, "kWh/yr"),
+        "improvement_potential_pct": dist(68.5, 64.0, 72.0, "%"),
+        "improvement_potential_p_top_decile": 0.62,
+        "carbon_saving_kgco2e": dist(2010, 1880, 2140, "kgCO2e/yr"),
         "emission_factors": {"electricity": 0.19553, "gas": 0.18296},
         "emission_factor_source": "contracts/emission_factors.json (DESNZ 2025: elec generation + T&D; gas gross CV)",
-        "bill_saving_gbp": iv(560, 420, 690, "GBP/yr"),
-        "score_before": {"score": 46, "band": "Poor", "band_probabilities": {"Poor": 0.8, "Moderate": 0.2},
+        "bill_saving_gbp": dist(560, 420, 690, "GBP/yr",
+                                tails=[("bill rises", 0.0, "below"), ("bill falls by more than £500/yr", 500.0, "above")]),
+        "score_before": {"score": 46, "score_distribution": dist(46.2, 41, 51, "points"), "band": "Poor",
+                         "band_probabilities": {"Very poor": 0.0, "Poor": 0.8, "Moderate": 0.2, "Good": 0.0,
+                                                "Highly efficient": 0.0}, "p_poor_or_very_poor": 0.8,
                          "components": [], "key_issues": ["Unfilled cavity walls", "Gas boiler", "No renewables"]},
-        "score_after": {"score": 78, "band": "Good", "band_probabilities": {"Good": 0.7, "Highly efficient": 0.3},
+        "score_after": {"score": 78, "score_distribution": dist(77.8, 74, 82, "points"), "band": "Good",
+                        "band_probabilities": {"Very poor": 0.0, "Poor": 0.0, "Moderate": 0.0, "Good": 0.7,
+                                               "Highly efficient": 0.3}, "p_poor_or_very_poor": 0.0,
                         "components": [], "key_issues": []},
-        "retrofits": [],
-        "rating_after": {"sap": iv(77, 73, 81, "SAP points"), "band": "C", "band_probabilities": {"C": 0.8, "B": 0.15, "D": 0.05},
+        "retrofits": [{
+            "retrofit_id": "air_source_heat_pump", "order": 3,
+            "feasibility": {"retrofit_id": "air_source_heat_pump", "status": "feasible", "decided_by": "rules",
+                            "reason_codes": [], "p_feasible": 1.0},
+            "electricity_saving_kwh": dist(-2300, -2900, -1800, "kWh/yr", tails=[("electricity use rises", 0.0, "below")]),
+            "gas_saving_kwh": dist(7150, 6500, 7800, "kWh/yr"),
+            "purchased_energy_saving_kwh": dist(4850, 4100, 5600, "kWh/yr"),
+            "carbon_saving_kgco2e": dist(860, 700, 1010, "kgCO2e/yr"),
+            "bill_saving_gbp": dist(-35, -180, 110, "GBP/yr",
+                                    tails=[("bill saving is positive", 0.0, "above"),
+                                           ("bill rises by more than £100/yr", -100.0, "below")]),
+            "score_after": dist(80, 77, 83, "points"),
+            "improvement_potential_cumulative_pct": dist(64, 58, 69, "%"),
+            "p_net_benefit": 0.38, "p_suitable": 0.38, "suitability": "Low", "p_gain_above_threshold": 0.99,
+            "verdict": "optional",
+            "reason": "Large carbon cut; bill change centred near zero at current tariffs (goal = bills)"}],
+        "rating_after": {"sap": dist(77, 73, 81, "SAP points"), "band": "C", "band_probabilities": {"C": 0.8, "B": 0.15, "D": 0.05},
                          "anchored_to_recorded_sap": True, "method": "sap2012_ecf_delta", "label": "estimated rating, not an EPC"},
-        "value": {"current_value_gbp": 325000, "band_before": "D", "band_after": "C", "uplift_pct": iv(3.0, 1.5, 4.5, "%"),
-                  "value_after_gbp": iv(334750, 329875, 339625, "GBP"), "method": "hedonic_quantile", "label": "indicative",
+        "value": {"current_value_gbp": 325000, "band_before": "D", "band_after": "C", "uplift_pct": dist(3.0, 1.5, 4.5, "%", tails=[("no value increase", 0.0, "below")]),
+                  "value_after_gbp": dist(334750, 329875, 339625, "GBP"), "method": "bayesian_hedonic", "label": "indicative",
                   "wording": "Indicative range based on historical associations in sales data; not a promised or proven increase."},
         "element_heat_loss_before": [
             {"element": "walls", "heat_loss_w_per_k": 110, "share_pct": 37},
@@ -194,13 +232,13 @@ def main() -> None:
         (OUT / f"{h['property_id']}_usage_2025.json").write_text(json.dumps(usage_rows, indent=2), encoding="utf-8")
         print(h["property_id"], "-", story)
     (OUT / "SH2_scenario_spec.json").write_text(json.dumps({
-        "schema_version": "0.2.0", "scenario_id": "SH2-pkg-1", "property_id": "SH2",
+        "schema_version": "0.3.0", "scenario_id": "SH2-pkg-1", "property_id": "SH2",
         "retrofits": [{"retrofit_id": "cavity_wall_insulation", "size": None, "stage_year": 0},
                       {"retrofit_id": "loft_insulation", "size": None, "stage_year": 0},
                       {"retrofit_id": "air_source_heat_pump", "size": 7, "stage_year": 1},
                       {"retrofit_id": "solar_pv", "size": 3.5, "stage_year": 2}],
         "weather": "typical", "n_samples": 500, "include_value": True, "include_pareto": False,
-        "include_element_heat_loss": True, "seed": 42, "requested_by": "ui"}, indent=2), encoding="utf-8")
+        "include_element_heat_loss": True, "seed": 42, "goal": "bills", "requested_by": "ui"}, indent=2), encoding="utf-8")
     (OUT / "SH2_scenario_result_MOCK.json").write_text(json.dumps(mock_result(), indent=2), encoding="utf-8")
 
 

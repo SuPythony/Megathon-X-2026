@@ -42,7 +42,7 @@
   },
   "properties": {
     "schema_version": {
-      "default": "0.2.0",
+      "default": "0.3.0",
       "title": "Schema Version",
       "type": "string"
     },
@@ -99,6 +99,16 @@
       "default": 42,
       "title": "Seed",
       "type": "integer"
+    },
+    "goal": {
+      "default": "bills",
+      "description": "Defines 'net benefit' for suitability/verdicts; never changes computed numbers",
+      "enum": [
+        "bills",
+        "carbon"
+      ],
+      "title": "Goal",
+      "type": "string"
     },
     "requested_by": {
       "default": "ui",

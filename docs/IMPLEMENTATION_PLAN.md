@@ -64,7 +64,7 @@ All modules exchange the Pydantic models in `contracts/models.py`. JSON on the w
   - Area in **m2**; U-values in **W/m2K**; heat loss in **W/K**.
 - **Savings = baseline − after.** Positive means a saving. Negative means an increase, for example electricity after a heat pump. Report electricity and gas separately, always.
 - **Purchased energy** = grid electricity import + gas, in kWh/yr. Solar reduces imports, not demand.
-- **Uncertain numbers are `Interval`:** `{mean, lo, hi, level=0.9, unit}`. A bare float is only allowed for deterministic quantities, such as the score formula on fixed inputs.
+- **Uncertain numbers are `Distribution`:** the full posterior summary (mean, median, mode, std, P1–P99, 50%/90% credible intervals, tail probabilities, worst-5% mean, skewness, histogram), built with `contracts.summarise.summarise`. A bare float is only allowed for documented constants (weights, emission factors, tariffs, grants, rule vetoes).
 - **Missing values are `null`, never 0.** The exception is a true zero, such as a home with no gas supply.
 - **`provenance.engine`** on every result says which model produced it. `mock` results must never reach the demo.
 - **Leakage fields** (`epc.potential_*`) are reference labels only and are never model inputs. The schema descriptions mark them.

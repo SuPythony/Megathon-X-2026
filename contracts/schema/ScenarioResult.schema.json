@@ -1,5 +1,139 @@
 {
   "$defs": {
+    "CredibleInterval": {
+      "description": "Central (equal-tailed) credible interval, e.g. level 0.9 = P5..P95.",
+      "properties": {
+        "level": {
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Level",
+          "type": "number"
+        },
+        "lo": {
+          "title": "Lo",
+          "type": "number"
+        },
+        "hi": {
+          "title": "Hi",
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
+        "lo",
+        "hi"
+      ],
+      "title": "CredibleInterval",
+      "type": "object"
+    },
+    "Distribution": {
+      "description": "Full posterior summary of an uncertain quantity (replaces the old mean/lo/hi Interval).\n\nBuilt from posterior samples by ``contracts.summarise.summarise``. A known-exact value\n(e.g. gas after a heat pump removes the boiler) is a degenerate distribution: std = 0.",
+      "properties": {
+        "unit": {
+          "description": "e.g. 'kWh/yr', 'GBP/yr', 'kgCO2e/yr', 'points', '%'",
+          "title": "Unit",
+          "type": "string"
+        },
+        "n_samples": {
+          "description": "Posterior samples the summary was computed from",
+          "minimum": 1,
+          "title": "N Samples",
+          "type": "integer"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "median": {
+          "description": "Equals percentiles.p50",
+          "title": "Median",
+          "type": "number"
+        },
+        "mode": {
+          "description": "Most likely value: peak of the sample density (KDE)",
+          "title": "Mode",
+          "type": "number"
+        },
+        "std": {
+          "minimum": 0,
+          "title": "Std",
+          "type": "number"
+        },
+        "skewness": {
+          "default": 0.0,
+          "description": "Sample skewness; |skew| > 0.5 -> headline uses the median",
+          "title": "Skewness",
+          "type": "number"
+        },
+        "percentiles": {
+          "$ref": "#/$defs/Percentiles"
+        },
+        "credible_intervals": {
+          "description": "At least the 50% and 90% intervals",
+          "items": {
+            "$ref": "#/$defs/CredibleInterval"
+          },
+          "title": "Credible Intervals",
+          "type": "array"
+        },
+        "tail_probabilities": {
+          "items": {
+            "$ref": "#/$defs/TailProbability"
+          },
+          "title": "Tail Probabilities",
+          "type": "array"
+        },
+        "worst_tail": {
+          "default": "low",
+          "description": "Which side is the bad outcome (low for savings, high for costs)",
+          "enum": [
+            "low",
+            "high"
+          ],
+          "title": "Worst Tail",
+          "type": "string"
+        },
+        "worst_5pct_mean": {
+          "description": "Mean of the worst 5% of samples (expected shortfall)",
+          "title": "Worst 5Pct Mean",
+          "type": "number"
+        },
+        "histogram": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Histogram"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "headline": {
+          "default": "mean",
+          "description": "Which centre the UI/LLM shows first",
+          "enum": [
+            "mean",
+            "median"
+          ],
+          "title": "Headline",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unit",
+        "n_samples",
+        "mean",
+        "median",
+        "mode",
+        "std",
+        "percentiles",
+        "credible_intervals",
+        "worst_5pct_mean"
+      ],
+      "title": "Distribution",
+      "type": "object"
+    },
     "ElementHeatLoss": {
       "description": "Level 1 heat loss per envelope element; drives 3D colouring.",
       "properties": {
@@ -72,18 +206,18 @@
     "EnergyBreakdown": {
       "properties": {
         "electricity_import_kwh": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "gas_kwh": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "purchased_total_kwh": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "space_heating_kwh": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Interval"
+              "$ref": "#/$defs/Distribution"
             },
             {
               "type": "null"
@@ -94,7 +228,7 @@
         "hot_water_kwh": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Interval"
+              "$ref": "#/$defs/Distribution"
             },
             {
               "type": "null"
@@ -105,7 +239,7 @@
         "pv_generation_kwh": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Interval"
+              "$ref": "#/$defs/Distribution"
             },
             {
               "type": "null"
@@ -114,13 +248,13 @@
           "default": null
         },
         "intensity_kwh_m2": {
-          "$ref": "#/$defs/Interval",
+          "$ref": "#/$defs/Distribution",
           "description": "Annualised METERED energy (grid import + gas) / floor area, as defined in the brief; used by the score"
         },
         "intensity_weather_normalised_kwh_m2": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Interval"
+              "$ref": "#/$defs/Distribution"
             },
             {
               "type": "null"
@@ -189,42 +323,29 @@
       "title": "Feasibility",
       "type": "object"
     },
-    "Interval": {
-      "description": "Posterior summary of an uncertain quantity.",
+    "Histogram": {
+      "description": "Sample histogram for the UI density plot; len(bin_edges) == len(counts) + 1.",
       "properties": {
-        "mean": {
-          "title": "Mean",
-          "type": "number"
+        "bin_edges": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Bin Edges",
+          "type": "array"
         },
-        "lo": {
-          "description": "Lower bound of the credible interval",
-          "title": "Lo",
-          "type": "number"
-        },
-        "hi": {
-          "description": "Upper bound of the credible interval",
-          "title": "Hi",
-          "type": "number"
-        },
-        "level": {
-          "default": 0.9,
-          "description": "Credible level, e.g. 0.9 for 90%",
-          "title": "Level",
-          "type": "number"
-        },
-        "unit": {
-          "description": "e.g. 'kWh/yr', 'GBP', 'kgCO2e/yr', 'points'",
-          "title": "Unit",
-          "type": "string"
+        "counts": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Counts",
+          "type": "array"
         }
       },
       "required": [
-        "mean",
-        "lo",
-        "hi",
-        "unit"
+        "bin_edges",
+        "counts"
       ],
-      "title": "Interval",
+      "title": "Histogram",
       "type": "object"
     },
     "ParetoPoint": {
@@ -237,16 +358,16 @@
           "type": "array"
         },
         "net_cost_gbp": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "carbon_saving_kgco2e": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "bill_saving_gbp": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "score_gain": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "p_on_front": {
           "title": "P On Front",
@@ -267,6 +388,60 @@
         "p_on_front"
       ],
       "title": "ParetoPoint",
+      "type": "object"
+    },
+    "Percentiles": {
+      "description": "Posterior percentiles; must be non-decreasing from p1 to p99.",
+      "properties": {
+        "p1": {
+          "title": "P1",
+          "type": "number"
+        },
+        "p5": {
+          "title": "P5",
+          "type": "number"
+        },
+        "p10": {
+          "title": "P10",
+          "type": "number"
+        },
+        "p25": {
+          "title": "P25",
+          "type": "number"
+        },
+        "p50": {
+          "title": "P50",
+          "type": "number"
+        },
+        "p75": {
+          "title": "P75",
+          "type": "number"
+        },
+        "p90": {
+          "title": "P90",
+          "type": "number"
+        },
+        "p95": {
+          "title": "P95",
+          "type": "number"
+        },
+        "p99": {
+          "title": "P99",
+          "type": "number"
+        }
+      },
+      "required": [
+        "p1",
+        "p5",
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90",
+        "p95",
+        "p99"
+      ],
+      "title": "Percentiles",
       "type": "object"
     },
     "Provenance": {
@@ -333,7 +508,7 @@
       "description": "Post-retrofit EPC-style rating from contracts/sap_estimator.json. Never presented as an EPC.",
       "properties": {
         "sap": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "band": {
           "enum": [
@@ -396,22 +571,22 @@
           "$ref": "#/$defs/Feasibility"
         },
         "electricity_saving_kwh": {
-          "$ref": "#/$defs/Interval",
+          "$ref": "#/$defs/Distribution",
           "description": "Marginal, in sequence; negative = increase"
         },
         "gas_saving_kwh": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "carbon_saving_kgco2e": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "bill_saving_gbp": {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         "cost_gbp": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Interval"
+              "$ref": "#/$defs/Distribution"
             },
             {
               "type": "null"
@@ -432,7 +607,55 @@
           "description": "Set when the catalogue cost is unsourced",
           "title": "Cost Unavailable Reason"
         },
+        "purchased_energy_saving_kwh": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Marginal grid import + gas saving"
+        },
+        "score_after": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Projected score after this step (cumulative)"
+        },
+        "improvement_potential_cumulative_pct": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Improvement potential reached after steps 1..order"
+        },
+        "payback_years": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "p_net_benefit": {
+          "description": "Under ScenarioSpec.goal, cost uncertainty included",
           "maximum": 1,
           "minimum": 0,
           "title": "P Net Benefit",
@@ -453,6 +676,40 @@
           ],
           "title": "Suitability",
           "type": "string"
+        },
+        "p_gain_above_threshold": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "P(step adds >= the documented gain threshold)",
+          "title": "P Gain Above Threshold"
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "enum": [
+                "recommended",
+                "optional",
+                "not_worth_adding",
+                "needs_survey",
+                "not_feasible"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verdict"
         },
         "reason": {
           "description": "Short human-readable reason built from rule codes/KB, not LLM",
@@ -502,9 +759,21 @@
           "type": "number"
         },
         "contribution": {
-          "description": "weight * sub_score",
+          "description": "weight * sub_score (posterior mean if the input is uncertain)",
           "title": "Contribution",
           "type": "number"
+        },
+        "contribution_distribution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when the component's input is uncertain (intensity, imputed fields)"
         },
         "inputs_used": {
           "additionalProperties": {
@@ -536,24 +805,26 @@
     "ScoreResult": {
       "properties": {
         "score": {
-          "description": "Rounded weighted sum",
+          "description": "Rounded weighted sum (of the posterior mean inputs)",
           "maximum": 100,
           "minimum": 0,
           "title": "Score",
           "type": "integer"
         },
-        "score_interval": {
+        "score_distribution": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Interval"
+              "$ref": "#/$defs/Distribution"
             },
             {
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Score over posterior samples"
         },
         "band": {
+          "description": "Mode of band_probabilities (most probable band)",
           "enum": [
             "Highly efficient",
             "Good",
@@ -568,8 +839,23 @@
           "additionalProperties": {
             "type": "number"
           },
+          "description": "P(each band); sums to 1",
           "title": "Band Probabilities",
           "type": "object"
+        },
+        "p_poor_or_very_poor": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "P Poor Or Very Poor"
         },
         "components": {
           "items": {
@@ -594,6 +880,42 @@
       "title": "ScoreResult",
       "type": "object"
     },
+    "TailProbability": {
+      "description": "Probability that the quantity falls beyond a meaningful threshold, e.g. P(saving < 0).",
+      "properties": {
+        "label": {
+          "description": "Human-readable event, e.g. 'bill rises by more than \u00a3100/yr'",
+          "title": "Label",
+          "type": "string"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "below",
+            "above"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Probability",
+          "type": "number"
+        }
+      },
+      "required": [
+        "label",
+        "threshold",
+        "direction",
+        "probability"
+      ],
+      "title": "TailProbability",
+      "type": "object"
+    },
     "ValueImpact": {
       "properties": {
         "current_value_gbp": {
@@ -605,7 +927,20 @@
               "type": "null"
             }
           ],
+          "description": "Baseline valuation (never a historical sale price)",
           "title": "Current Value Gbp"
+        },
+        "current_value_distribution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when the current value is model-estimated rather than provided"
         },
         "band_before": {
           "anyOf": [
@@ -636,7 +971,7 @@
         "uplift_pct": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Interval"
+              "$ref": "#/$defs/Distribution"
             },
             {
               "type": "null"
@@ -647,7 +982,7 @@
         "value_after_gbp": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Interval"
+              "$ref": "#/$defs/Distribution"
             },
             {
               "type": "null"
@@ -657,6 +992,7 @@
         },
         "method": {
           "enum": [
+            "bayesian_hedonic",
             "hedonic_quantile",
             "dr_learner",
             "green_twin_matching",
@@ -700,7 +1036,7 @@
   },
   "properties": {
     "schema_version": {
-      "default": "0.2.0",
+      "default": "0.3.0",
       "title": "Schema Version",
       "type": "string"
     },
@@ -722,19 +1058,19 @@
       "$ref": "#/$defs/EnergyBreakdown"
     },
     "electricity_saving_kwh": {
-      "$ref": "#/$defs/Interval",
+      "$ref": "#/$defs/Distribution",
       "description": "baseline - after; negative = increase"
     },
     "gas_saving_kwh": {
-      "$ref": "#/$defs/Interval"
+      "$ref": "#/$defs/Distribution"
     },
     "purchased_energy_saving_kwh": {
-      "$ref": "#/$defs/Interval"
+      "$ref": "#/$defs/Distribution"
     },
     "improvement_potential_pct": {
       "anyOf": [
         {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         {
           "type": "null"
@@ -755,10 +1091,25 @@
       "default": null,
       "title": "Improvement Potential Unavailable Reason"
     },
+    "improvement_potential_p_top_decile": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "P(this home is in the top 10% by improvement potential) for ranking",
+      "title": "Improvement Potential P Top Decile"
+    },
     "carbon_saving_kgco2e": {
       "anyOf": [
         {
-          "$ref": "#/$defs/Interval"
+          "$ref": "#/$defs/Distribution"
         },
         {
           "type": "null"
@@ -792,7 +1143,7 @@
       "type": "string"
     },
     "bill_saving_gbp": {
-      "$ref": "#/$defs/Interval"
+      "$ref": "#/$defs/Distribution"
     },
     "score_before": {
       "$ref": "#/$defs/ScoreResult"

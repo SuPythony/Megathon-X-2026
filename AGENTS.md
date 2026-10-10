@@ -12,12 +12,52 @@ Every UK home gets a calibrated **physics digital twin**. From it we compute:
 4. **Per-fuel energy savings** and **carbon**.
 5. An indicative **property-value range**.
 
-Every uncertain number carries a **Bayesian 90% credible interval**. A **tool-only LLM** explains results and answers what-ifs by rerunning the models. **Jev**, a System-1 model, routes questions and screens feasibility. A **Three.js 3D twin** shows retrofits inside and outside the house. A **Lloyds dashboard** (locality heat map, segments, Green Profits) turns this into green-lending demand.
+Every uncertain number carries a **full Bayesian distribution** (mean, median, mode, std, percentiles, 90% interval, tail probabilities). A **tool-only LLM** explains results and answers what-ifs by rerunning the models. **Jev**, a System-1 model, routes questions and screens feasibility. A **Three.js 3D twin** shows retrofits inside and outside the house. A **Lloyds dashboard** (locality heat map, segments, Green Profits) turns this into green-lending demand.
 
-- Plan: `docs/IMPLEMENTATION_PLAN.md`
+- Plan: `docs/IMPLEMENTATION_PLAN.md` (tiers) and `docs/IMPLEMENTATION_PLAN_v2.md` (build blocks)
+- System design: `deliverables/SYSTEM_DESIGN.pdf` (source `deliverables/src/build_system_design.py`)
 - Submission PDF: `deliverables/M1.pdf` (source `deliverables/src/build_m1.py`)
 - Living strategy doc: https://claude.ai/code/artifact/5db02f30-587d-4e5a-9bec-16e560798f48
 - Git remote: https://github.com/IIIT-ECell/megathon26-megamind.git
+
+## Core philosophies
+1. **Physics is the source of truth.** Every number (energy, savings, carbon, rating) comes from the Level-1 digital twin of each home. ML sets priors, ranks, estimates value and checks results; it never produces a customer's savings directly.
+2. **Bayesian in thought.** Each home is calibrated against its own meter readings. Every output is a full distribution (mean, median, mode, std, percentiles, 90% interval, tail probabilities) plus P(Poor), P(suitable), P(on front). Missing data never becomes zero; it widens the range.
+3. **Rerun, never add up.** A retrofit is a change to the twin's parameters; every what-if reruns the model. Interactions come from the physics. Savings are always per fuel.
+4. **Grounded explanation.** The LLM only quotes tool outputs; a validator rejects any other number; Jev only routes questions and screens feasibility. No backing → "unavailable", never a guess.
+5. **Explainability first.** Score waterfalls, heat loss per building element, EBM contributions, value coefficients, and a reason on every recommendation or veto.
+6. **See it to believe it.** A living 3D twin: heat loss glows, retrofits appear as you add them, numbers update live, all driven by the same calibrated model.
+
+*In one line:* a Bayesian-calibrated physics twin of every home, which you can see in 3D, explain in plain language and act on, where every number is backed by physics and the range it comes with.
+
+## Coding guidelines (hackathon: speed first)
+This is a hackathon. **Speed is the goal, not bug-free code.** A working, good-looking demo beats a perfect module nobody sees.
+
+**Move fast**
+- Build the thinnest end-to-end path first (SH1–SH3 through twin → score → retrofits → API → UI), then deepen. Never polish a block in isolation.
+- Work against `contracts/examples/` and mocks from day one; never wait for another block.
+- Reuse libraries and existing code; copy-paste is fine; no premature abstractions or frameworks.
+- Hardcode and precompute where it helps the demo (showcase homes, cached packages). Cache every slow or paid call.
+- Timebox: stuck for ~45 minutes → cut scope, use the fallback, or ask. `# TODO` / `# HACK` comments are fine.
+- Commit small and often; merge to `main` quickly; don't break the demo path.
+- Use AI coding agents freely, but read the numbers they produce.
+
+**Tests: only where judges look.** Don't chase coverage. Keep these green, and add little else:
+- Contracts validate; monotonic sub-scores; per-fuel signs (electricity can rise); improvement potential `null` when the baseline is 0.
+- The LLM numeric validator; no `mock` result reaches the demo.
+
+**Non-negotiables, even when rushing** (each one costs marks if broken):
+- Inputs and outputs use `contracts/`; every result has `provenance`.
+- Uncertain numbers are `Distribution`s built with `contracts.summarise`.
+- Missing ≠ 0; savings per fuel; packages are rerun, never summed.
+- The LLM never produces a number; value is always "indicative"; no keys in git.
+
+**UI: one look everywhere**
+- One design system in `web/src/theme` (colour, type, spacing tokens) and shared components: `NumberWithRange`, `DistributionCard`, `ScoreWaterfall`, `ProvenanceTag`, `StatusBadge`. Never restyle per page.
+- Brand palette, matching the PDFs: green `#0b6e4f` primary, blue `#2a6fdb` accent, neutral greys. Colour-blind-safe scales (viridis/cividis) for heat loss and maps. Red only for increases and negative savings.
+- One font family (Inter), an 8 px spacing grid, card layout, the same chart style (Recharts) on every screen. The 3D twin uses the same palette.
+- Every number shows unit + headline + 90% range; tapping it opens the `DistributionCard` (mean, median, mode, std, percentiles, tails). Labels: "estimate", "projected", "indicative", "estimated from home type".
+- Polish the demo journey first (score → ladder → 3D → loan → chat) and make it look great; simple loading, empty and error states; works offline for showcase homes.
 
 ## Decisions (do not relitigate without the team lead)
 | Decision | Detail |
@@ -27,7 +67,7 @@ Every uncertain number carries a **Bayesian 90% credible interval**. A **tool-on
 | Learned models | **EBM primary**, XGBoost baseline. Learned models calibrate, rank, value, or act as surrogates; they never directly produce customer savings. |
 | LLM | Tool-only. Never computes or estimates numbers. Every what-if → `run_scenario`. A numeric validator checks every answer. |
 | Jev | TypeSafe "System 1" model (not JEPA). Used **only** for what-if routing, feasibility layer 2 and the explanation check. **Never** for kWh/£/CO2/score. Rule vetoes always win. Falls back to Claude structured output or rules. |
-| Value | Always a **range**, labelled **indicative** (association, not proven causation). Methods: hedonic quantile → green-twin matching → DR-learner. |
+| Value | Always a **range**, labelled **indicative** (association, not proven causation). Primary: **Bayesian hierarchical hedonic** model on real UK sales; baseline OLS without the rating; repeat-sales and matching only as stretch checks. |
 | Plan | Phases and checkpoints, not clock time. Build order is Tier A → B → C → D. |
 | Hardware | GPU available, used for Tier-D models (twin v2, DeepONet, GraphSAGE, PINO, vision). |
 | Showcase homes | SH1 (Victorian terrace, conservation area), SH2 (1970s cavity semi), SH3 (all-electric 3rd-floor flat). See `contracts/examples/`. |
@@ -74,7 +114,7 @@ Every uncertain number carries a **Bayesian 90% credible interval**. A **tool-on
 - JSON Schema: `python -m contracts.export_schemas` → `contracts/schema/`.
 - Units:
   - kWh/yr, GBP, kgCO2e, m2, W/m2K, W/K.
-  - Uncertain values are `Interval {mean, lo, hi, level, unit}`.
+  - Uncertain values are a `Distribution` (full posterior summary: mean, median, mode, std, P1–P99, 50%/90% credible intervals, tail probabilities, worst-5% mean, skewness, histogram). Build it only with `contracts.summarise.summarise(samples, unit)`; known-exact values use `exact()`, categories use `category_probabilities()`.
   - Every result has `provenance.engine`.
 
 ## Repo map
@@ -105,7 +145,7 @@ cp .env.example .env            # fill only what you have; see Keys
 - Seeds: 42 by default; record `seed` + `data_version` in every `metrics.json`.
 - Artefacts: `artifacts/<model_id>/<version>/{model.*, metrics.json, config.json}`.
 - Cache every LLM and Jev call (`cache/`) so evaluations replay without keys.
-- Code comments/docs in English; numbers in the UI always show the unit + interval.
+- Code comments/docs in English; numbers in the UI always show the unit + headline + 90% range (full `Distribution` on tap).
 - Never let a `provenance.engine == "mock"` result reach the demo or evaluation.
 
 ## Verified (10 Oct 2026)
