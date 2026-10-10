@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import glob
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -43,16 +44,29 @@ def log(*a):
     print(time.strftime("%H:%M:%S"), *a, flush=True)
 
 
-def load_epc(epc_dir: str, limit_files: int | None) -> pd.DataFrame:
+# EPC methodology eras by lodgement date (D-20). Each era rates homes with its own fixed fuel-price table and
+# carbon factors, so SAP/EIR/CO2 are only comparable WITHIN an era. Boundaries approximate [to verify].
+ERAS = {
+    "sap2009": ("2008-01-01", "2012-03-31"),   # RdSAP on SAP 2009
+    "sap2012": ("2012-04-01", "2025-06-14"),   # RdSAP 9.9x on SAP 2012
+    "rdsap10": ("2025-06-15", "2100-01-01"),   # RdSAP 10 on SAP 10.2 (deflator 0.36, grid elec ~0.136 kgCO2/kWh)
+}
+
+
+def load_epc(epc_dir: str, limit_files: int | None, era: str = "all") -> pd.DataFrame:
     # newest year first; keep only the latest certificate per property as we go (memory-safe on millions of rows)
     files = sorted(glob.glob(f"{epc_dir}/certificates-*.parquet"), reverse=True)[: limit_files or None]
-    log(f"EPC files: {[Path(f).name for f in files]}")
+    lo_d, hi_d = (pd.Timestamp(x) for x in ERAS[era]) if era != "all" else (pd.Timestamp("1900"), pd.Timestamp("2100"))
+    files = [fp for fp in files if lo_d.year <= int(re.search(r"(\d{4})", Path(fp).name).group(1)) <= hi_d.year]
+    log(f"EPC files ({era}): {[Path(f).name for f in files]}")
     keep_cols = ["uprn", "certificate", "lodgement_date", "property_type", "built_form", "age_band", "tfa",
                  "sap", "eir", "co2_m2", "pe_m2", "s_energy_efficiency"] + ATTR + EXTRAS
     seen: set = set()
     feats = []
     for fp in files:
-        b = epc_features.latest_per_property(epc_features.build(pd.read_parquet(fp)))[keep_cols]
+        b = epc_features.build(pd.read_parquet(fp))
+        b = b[b["lodgement_date"].between(lo_d, hi_d)]  # latest certificate WITHIN the era
+        b = epc_features.latest_per_property(b)[keep_cols]
         key = b["uprn"].fillna("cert:" + b["certificate"].astype(str))
         b = b[~key.isin(seen)]
         seen.update(key[key.index.isin(b.index)])
@@ -60,6 +74,8 @@ def load_epc(epc_dir: str, limit_files: int | None) -> pd.DataFrame:
             b[c] = b[c].astype("float32")
         feats.append(b)
         log(f"  {Path(fp).name}: +{len(b):,} properties")
+    if not feats:
+        return pd.DataFrame(columns=keep_cols + ["split"])
     f = pd.concat(feats, ignore_index=True)
     f = f[(f["tfa"].between(15, 1000)) & (f["sap"] >= 1)]
     f = f.dropna(subset=ATTR + list(TARGETS))
@@ -97,12 +113,31 @@ def main() -> None:
     ap.add_argument("--version", default="v1")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--min-cell", type=int, default=30)
+    ap.add_argument("--era", default="rdsap10", choices=["all", *ERAS],
+                    help="EPC methodology era for the final weights (D-20); other eras are fitted as a stability check")
     a = ap.parse_args()
     bw = brief_weights()
     metrics: dict = {"seed": a.seed}
 
     # ------------------------------------------------------------------ EPC: attribute weights
-    f = load_epc(a.epc_dir, a.limit_files)
+    # ------------------------------------------------------------------ era stability (D-20): same fit, each era alone
+    metrics["era_stability"] = {"boundaries": ERAS, "note": "SAP/EIR/CO2 use each era's own fixed fuel prices "
+                                "and carbon factors; weights are fitted within one era only"}
+    for era in ERAS:
+        if era == a.era:
+            continue
+        fe = load_epc(a.epc_dir, a.limit_files, era)
+        tre = fe[fe.split == "train"]
+        if len(tre) < 1000:
+            log(f"era {era}: too few certificates ({len(tre)}), skipped")
+            continue
+        metrics["era_stability"][era] = {"n": len(fe), **{
+            t: L.simplex_nnls(tre[ATTR], tre[f"y_{t}"]).weights for t in TARGETS}}
+        log(f"era {era}: n={len(fe):,}", json.dumps(metrics["era_stability"][era]["sap"]))
+        del fe, tre
+
+    f = load_epc(a.epc_dir, a.limit_files, a.era)
+    metrics["era"] = a.era
     tr, va, te = (f[f.split == s] for s in ("train", "val", "test"))
     log(f"EPC properties: {len(f):,} (train {len(tr):,} / val {len(va):,} / test {len(te):,})")
     metrics["epc"] = {"n": len(f), "n_train": len(tr), "n_val": len(va), "n_test": len(te), "targets": {}}

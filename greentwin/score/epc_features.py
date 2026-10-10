@@ -21,6 +21,7 @@ STARS = {"very poor": 1, "poor": 2, "average": 3, "good": 4, "very good": 5}
 _U = re.compile(r"thermal transmittance\s*([0-9.]+)", re.I)
 _MM = re.compile(r"(\d+)\+?\s*mm", re.I)
 ABSENT = ("dwelling above", "premises above", "dwelling below", "premises below")
+SEP = "\x1f"  # field separator for composite lookup keys (EPC text can contain "|")
 ABSENT_ELEMENT = -1.0  # sentinel: element does not exist (dwelling above/below); pandas would turn None into NaN
 
 
@@ -308,16 +309,16 @@ def build(df: pd.DataFrame) -> pd.DataFrame:
     out["roof_absent"] = (roof == ABSENT_ELEMENT).astype(float)
     out["floor_absent"] = (floor == ABSENT_ELEMENT).astype(float)
 
-    key = df["MAINHEAT_DESCRIPTION"].fillna("") + "|" + df["MAIN_FUEL"].fillna("") + "|" + \
-        df["MAINHEAT_ENERGY_EFF"].fillna("") + "|" + df["MAINHEATCONT_DESCRIPTION"].fillna("")
-    hs = _map_unique(key, lambda k: getattr(heating_system(*[x or None for x in k.split("|")]), "value", None))
+    key = df["MAINHEAT_DESCRIPTION"].fillna("") + SEP + df["MAIN_FUEL"].fillna("") + SEP + \
+        df["MAINHEAT_ENERGY_EFF"].fillna("") + SEP + df["MAINHEATCONT_DESCRIPTION"].fillna("")
+    hs = _map_unique(key, lambda k: getattr(heating_system(*[x or None for x in k.split(SEP)]), "value", None))
     out["heating_system"] = hs.astype(object)
     out["s_heating_system"] = [heating_score(h) for h in hs]
 
-    gkey = df["WINDOWS_DESCRIPTION"].fillna("§") + "|" + df["GLAZED_TYPE"].fillna("") + "|" + \
+    gkey = df["WINDOWS_DESCRIPTION"].fillna("§") + SEP + df["GLAZED_TYPE"].fillna("") + SEP + \
         df["MULTI_GLAZE_PROPORTION"].fillna("")
     out["s_windows_glazing"] = _map_unique(
-        gkey, lambda k: (lambda a, b, c: glazing_score(None if a == "§" else a, b or None, c or None))(*k.split("|")))
+        gkey, lambda k: (lambda a, b, c: glazing_score(None if a == "§" else a, b or None, c or None))(*k.split(SEP)))
 
     kwp = [pv_kwp(p, t, ty) for p, t, ty in zip(df["PHOTO_SUPPLY"], out["tfa"], df["PROPERTY_TYPE"])]
     out["pv_kwp_est"] = kwp

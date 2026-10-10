@@ -27,6 +27,8 @@ Branch: `worktree-p3-green-score`. Research background: `docs/score/GREEN_SCORE_
 | D-17 | NEED assumptions: floor-area band midpoints (band 5 = 250 m²), PV flag = 3 kWp, "not gas" = electric | Decided |
 | D-18 | Cross-target weights via EPC↔NEED archetype cells, within-floor-area-band, Shapley (LMG) ratios | Decided |
 | D-19 | Learned score reported as `ScoreResult.alternatives` (contract addition) | Decided; needs consumer review |
+| D-20 | EPC targets are era-specific (fuel prices, carbon factors): fit final weights on the RdSAP 10 era only; other eras = stability check | Decided (raised by user, 11 Oct 2026) |
+| D-21 | Priors fitted from real data (band mix, loft depth by age, NEED peer kWh/m²) | Done |
 
 ---
 
@@ -119,6 +121,25 @@ This is an ecological (cell-level) analysis: it shows how components relate on a
 
 ## D-19 Where the learned score lives
 `ScoreResult.alternatives: list[AlternativeScore]` (name, weights, score, band, distribution, weights_version, method). The headline `score` and `band` always use the brief's weights. `GreenHomeScorer` loads the latest `artifacts/score_weights/v*/weights.json` automatically (`learned_weights_dir=None` turns it off). Contract addition: needs review by the UI and LLM owners.
+
+## D-20 Prices and carbon factors change with the EPC era
+The SAP rating is a **cost** rating and the EIR is a **carbon** rating. Each SAP version prices energy with its own fixed fuel-price table and uses its own carbon factors, and the EPC register mixes certificates from 2008 to 2026. Pooling them means a home's target depends on *when* it was assessed, not only on its fabric and systems. Electric heating moves most: SAP 10.2's grid electricity factor (≈ 0.136 kgCO₂/kWh vs ≈ 0.519 in SAP 2012 [to verify exact values]) raises the EIR of electrically heated homes, and the new price table moves their SAP rating. That would bias the **heating** weight.
+
+| Era (`ERAS` in `train_score_weights.py`) | Lodgement dates [boundaries to verify] | Method |
+| --- | --- | --- |
+| `sap2009` | 2008 – Mar 2012 | RdSAP on SAP 2009 |
+| `sap2012` | Apr 2012 – 14 Jun 2025 | RdSAP 9.9x on SAP 2012 |
+| `rdsap10` | from 15 Jun 2025 | RdSAP 10 on SAP 10.2 (deflator 0.36) |
+
+Decision: the final weights are fitted on **RdSAP 10 certificates only** (the methodology, prices and grid carbon that current EPCs use, and what a homeowner sees on a new EPC). Each property's latest certificate *within the era* is used. The same fit on the other eras is reported as a stability check (`metrics.era_stability`). Stage 2 cell means use the same era. NEED meter data is one year (2023), so it has no price drift. Using the £ cost fields was avoided from the start because they are in each era's price year.
+
+Dev evidence of the effect (10% sample): SAP-target heating weight 0.590 in the SAP 2009 era vs 0.416 pooled.
+
+## D-21 Priors fitted from data
+`scripts/fit_score_priors.py` → `greentwin/score/priors.json`:
+- National band mix (latest certificate per property, lodged in the last 10 years, n = 3,529,238 in the 25% sample): A 1.1%, B 15.7%, C 39.8%, D 33.3%, E 8.4%, F 1.3%, G 0.4%. Used when neither the local-authority mix nor a rating is available.
+- Loft depth by age band (pitched lofts with a recorded depth, n = 3,103,402): e.g. 1900–1929 homes have 0 mm in 29.1% of cases, 2007–2011 homes in 0.4%. Used for unknown loft depths (D-04).
+- NEED peer median metered kWh/m² by property type × floor-area band (cells with ≥ 100 homes). Used for the `high_intensity` key issue, so large homes are compared with large homes.
 
 ---
 
