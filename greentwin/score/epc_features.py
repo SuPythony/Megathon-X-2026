@@ -256,11 +256,14 @@ PITCH_FACTOR = 1.15    # sloped roof area per m2 of footprint
 
 
 def pv_kwp(pct, tfa, ptype) -> float:
+    """PHOTO_SUPPLY is null on every new-build (SAP) certificate: unknown, NOT 'no PV' (D-22)."""
     try:
         p = float(pct)
     except (TypeError, ValueError):
-        return 0.0 if pct is None or (isinstance(pct, float) and np.isnan(pct)) else np.nan
-    if np.isnan(p) or p <= 0:
+        return np.nan
+    if np.isnan(p):
+        return np.nan
+    if p <= 0:
         return 0.0
     storeys = 1 if str(ptype).lower() in ("bungalow", "flat", "maisonette") else 2
     return p / 100 * float(tfa) / storeys * PITCH_FACTOR * PV_KWP_PER_M2

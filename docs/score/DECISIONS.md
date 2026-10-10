@@ -29,6 +29,7 @@ Branch: `worktree-p3-green-score`. Research background: `docs/score/GREEN_SCORE_
 | D-19 | Learned score reported as `ScoreResult.alternatives` (contract addition) | Decided; needs consumer review |
 | D-20 | EPC targets are era-specific (fuel prices, carbon factors): fit final weights on the RdSAP 10 era only; other eras = stability check | Decided (raised by user, 11 Oct 2026) |
 | D-21 | Priors fitted from real data (band mix, loft depth by age, NEED peer kWh/m²) | Done |
+| D-22 | Missing `PHOTO_SUPPLY` = unknown PV, not "no PV" (bug found in v1 results) | Fixed |
 
 ---
 
@@ -141,6 +142,9 @@ Dev evidence of the effect (10% sample): SAP-target heating weight 0.590 in the 
 - Loft depth by age band (pitched lofts with a recorded depth, n = 3,103,402): e.g. 1900–1929 homes have 0 mm in 29.1% of cases, 2007–2011 homes in 0.4%. Used for unknown loft depths (D-04).
 - NEED peer median metered kWh/m² by property type × floor-area band (cells with ≥ 100 homes). Used for the `high_intensity` key issue, so large homes are compared with large homes.
 
+## D-22 Missing PV field is unknown, not zero
+The first full v1 run gave renewables a weight of 0.020, and exactly 0 on both carbon targets. Investigation (2026 certificates, 25% sample, n = 345,722): `PHOTO_SUPPLY` is null on 14.8% of rows, and on **100% of new-build SAP certificates** (report type 3) vs 4.1% of RdSAP ones. Those homes average SAP 84.5 vs 68.3. The parser had turned null into 0 kWp, so the greenest homes looked like "no PV", which pulled the renewables weight down. This broke our own "missing ≠ 0" rule. Fix: null ⇒ NaN; such rows are excluded from the weight fits instead of being scored as having no PV (test `test_missing_pv_is_unknown_not_zero`). Separately, a genuinely lower carbon weight for PV under SAP 10.2 is expected: the low grid-electricity factor means PV displaces less carbon.
+
 ---
 
 ## Proofs
@@ -194,6 +198,38 @@ Intensity 170.5 kWh/m²/yr (90% 163.8–177.4). **Score 49/100, Poor** (90% 48.5
 
 ### SH3: 2004 all-electric flat, 62 m², EPC C (SAP 70), 12 months
 Intensity 74.2 kWh/m²/yr. **Score 65/100, Good**. Insulation 100 (roof and floor dropped: dwellings above and below; cavity as built 2004 → 100). Heating 35 (storage heaters) is the main drag, plus programmer-only controls.
+
+---
+
+## Results: learned weights v1 (RdSAP 10 era, PV fix applied)
+Full tables: [LEARNED_WEIGHTS.md](LEARNED_WEIGHTS.md). Reproduce: `uv run python scripts/train_score_weights.py --epc-dir data/interim/epc25 --boot 100 --version v1`.
+
+| Component | Brief | Learned v1 | 90% bootstrap |
+| --- | --- | --- | --- |
+| Energy efficiency | 0.25 | 0.213 | 0.163–0.305 |
+| Energy intensity | 0.20 | 0.203 | 0.148–0.247 |
+| Insulation | 0.15 | **0.247** | 0.203–0.285 |
+| Heating system | 0.15 | 0.192 | 0.158–0.221 |
+| Windows & glazing | 0.10 | **0.049** | 0.040–0.056 |
+| Renewables | 0.10 | 0.045 | 0.037–0.052 |
+| Smart management | 0.05 | 0.050 | 0.041–0.057 |
+
+- **The brief's weights are close to the data on energy efficiency, intensity and smart management.** The data puts more on insulation and heating and less on glazing and renewables.
+- Held-out R² (447,139 RdSAP 10 properties, attribute block only): learned beats the brief's weights and equal weights on all four modelled targets, e.g. SAP 0.320 vs 0.293 vs 0.281. Non-linear ceiling (monotone LightGBM incl. extras) 0.579: the additive form leaves accuracy on the table, as expected for a transparent score.
+- Era stability (D-20), SAP target heating weight: SAP 2009 era 0.52, SAP 2012 era 0.38, RdSAP 10 era 0.43. It moves with the methodology, which is why only one era is used.
+- Candidate extras (LightGBM |SHAP| share, SAP target): low-energy lighting 0.101 and open fireplaces 0.074 carry real signal. Evidence for D-08 (score lighting).
+- Brief vs learned on 66,761 EPC test homes: Spearman 0.980, same band 82.6%, mean |difference| 2.6 points; Poor or Very poor 15.1% (brief) vs 18.9% (learned).
+
+### Worked examples with both scores
+`uv run python scripts/score_showcase.py` (priors and NEED peers now fitted from data, D-21):
+
+| Home | Headline (brief weights) | Learned v1 | Peer median kWh/m² (NEED, same type × size) | Key issues |
+| --- | --- | --- | --- | --- |
+| SH1 Victorian terrace, EPC E | **30, Poor** | 30, Poor | 144 (home: 219) | high intensity (high), poor insulation, old heating, single glazing, no renewables, basic controls |
+| SH2 1970s semi, EPC D | **49, Poor** | 49, Poor | 163 (home: 171) | high intensity (medium), poor insulation, no renewables |
+| SH3 2004 flat, EPC C | **65, Good** | 70, Good | 87 (home: 74) | storage heating, no renewables, basic controls |
+
+SH3 gains 5 points under the learned weights because full insulation (sub-score 100) is weighted 0.247 instead of 0.15.
 
 ---
 

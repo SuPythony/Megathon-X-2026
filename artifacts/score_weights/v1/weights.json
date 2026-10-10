@@ -1,0 +1,13 @@
+{
+  "weights": {
+    "energy_efficiency": 0.2134,
+    "energy_intensity": 0.2035,
+    "insulation": 0.2474,
+    "heating_system": 0.1921,
+    "windows_glazing": 0.0489,
+    "renewable_energy": 0.0449,
+    "smart_energy_management": 0.0498
+  },
+  "method": "cross-target simplex NNLS (D-06)",
+  "version": "v1"
+}

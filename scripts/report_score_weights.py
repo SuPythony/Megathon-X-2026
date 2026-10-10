@@ -65,6 +65,18 @@ def main() -> None:
     p(f"Bayesian check ({b['prior']}), posterior mean [90% CrI]: " + ", ".join(
         f"{NAME[a]} {b['mean'][a]:.3f} [{b['p5'][a]:.3f}, {b['p95'][a]:.3f}]" for a in ATTR) + ".\n")
 
+    es = mt.get("era_stability", {})
+    eras = [k for k in es if k not in ("boundaries", "note")]
+    if eras:
+        p(f"### Stability across EPC methodology eras (D-20)\n\nFinal weights use the **{mt.get('era', 'all')}** era "
+          "only. Same stage-1 fit on the older eras (each with its own fuel prices and carbon factors), SAP target:\n")
+        p("| Era | n | " + " | ".join(NAME[a] for a in ATTR) + " |\n| --- " * 1 + "| --- " * (len(ATTR) + 1) + "|")
+        for k in eras:
+            w = es[k]["sap"]
+            p(f"| {k} | {es[k]['n']:,} | " + " | ".join(f"{w[a]:.3f}" for a in ATTR) + " |")
+        w = e["targets"]["sap"]["nnls_weights"]
+        p(f"| **{mt.get('era')}** (used) | {e['n']:,} | " + " | ".join(f"{w[a]:.3f}" for a in ATTR) + " |\n")
+
     d = mt["need_per_home_diagnostic"]
     p(f"## Stage 2: energy efficiency and intensity, from real meters\n\n**Per home (rejected):** NEED "
       f"{d['n']:,} homes; held-out R² {d['ee_on_metered']['r2_test']:.3f} (EPC band + proxies → metered kWh/m²) and "

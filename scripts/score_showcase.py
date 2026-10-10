@@ -39,6 +39,12 @@ def main() -> None:
             inp = "; ".join(f"{k}={v}" for k, v in c.inputs_used.items())
             print(f"| {c.name} | {c.weight:.2f} | {c.sub_score:.1f} | {c.contribution:.2f} | {inp} |")
         print(f"| **Total** | 1.00 | | **{sum(c.contribution for c in r.components):.2f} -> {r.score}** | |")
+        for alt in r.alternatives:
+            aci = alt.score_distribution.interval(0.9)
+            print(f"\nLearned-weights companion ({alt.weights_version}): **{alt.score}/100, {alt.band}** "
+                  f"(90% {aci.lo:.1f}-{aci.hi:.1f}); contributions: " + ", ".join(
+                      f"{c.name} {alt.weights[c.name] * c.sub_score:.2f}" for c in r.components))
+        print(f"Peer context: {r.peer_context}")
         print("\nKey issues: " + "; ".join(f"{i.code} ({i.severity})" for i in r.key_issues))
         print("Band probabilities: " + ", ".join(f"{k} {v:.2f}" for k, v in r.band_probabilities.items() if v))
 

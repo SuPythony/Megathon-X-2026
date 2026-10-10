@@ -276,7 +276,8 @@ def main() -> None:
         "ratio_int_boot_p5_p95": np.percentile(boot_ratio[:, 1], [5, 95]).round(4).tolist(),
         "corr_metered_vs_epc_sap": round(float(np.corrcoef(cells.metered_kwh_m2_median, cells.s_energy_efficiency)[0, 1]), 4),
     }
-    cells.to_csv(ROOT / "artifacts" / "score_cells.csv", index=False)
+    (ROOT / "artifacts" / "score_weights" / a.version).mkdir(parents=True, exist_ok=True)
+    cells.to_csv(ROOT / "artifacts" / "score_weights" / a.version / "cells.csv", index=False)
     log("cells", json.dumps({k: metrics["cells"][k] for k in ("fit_ee_on_metered", "fit_int_on_sap",
                                                                "ratio_ee_to_attributes", "ratio_int_to_attributes")}))
 

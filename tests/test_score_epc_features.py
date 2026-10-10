@@ -42,6 +42,13 @@ def test_heating_parsing():
     assert hs("Community scheme", "mains gas (community)", "Good", None) == HeatingSystem.district_heating
 
 
+def test_missing_pv_is_unknown_not_zero():
+    assert np.isnan(E.pv_kwp(None, 100, "House"))
+    assert np.isnan(E.pv_kwp(float("nan"), 100, "House"))
+    assert E.pv_kwp("0", 100, "House") == 0.0
+    assert E.pv_kwp("40", 100, "House") > 0
+
+
 def test_glazing_and_controls():
     assert E.glazing_score("Single glazed", None, None) == 0
     assert E.glazing_score("Fully double glazed", "double glazing installed during or after 2002", "100") == 80

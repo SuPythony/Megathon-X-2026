@@ -1,0 +1,10 @@
+{
+  "epc_dir": "data/interim/epc25",
+  "need": "data/raw/need/anon2025_4million.zip",
+  "limit_files": null,
+  "boot": 100,
+  "version": "v1",
+  "seed": 42,
+  "min_cell": 30,
+  "era": "rdsap10"
+}
