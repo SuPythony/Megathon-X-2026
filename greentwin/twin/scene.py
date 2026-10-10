@@ -237,36 +237,27 @@ def _sill(kind: str, h: float, ceiling: float) -> float:
 
 
 # --------------------------------------------------------------------------- appliance placement
-COUNTER_HEIGHT_M = 0.9
-
-
-def _layers(vis: ApplianceVisual) -> list[str]:
-    """Vertical bands an appliance occupies: below worktop height ('floor'), above it ('raised'), or both."""
-    bottom, top = vis.mount_height_m, vis.mount_height_m + vis.h
-    return [name for name, hit in (("floor", bottom < COUNTER_HEIGHT_M), ("raised", top > COUNTER_HEIGHT_M)) if hit]
-
-
 class _WallCursor:
-    """Finds free wall space per room and layer (floor-standing vs counter/wall-mounted), stepping around
-    anything already placed, including the user's custom placements."""
+    """Tracks the floor space appliances take up in each room, so no two appliances ever overlap (in plan, at any
+    height: nothing is stacked). Auto-placement walks free wall space; anything else snaps to the nearest free spot."""
 
     ORDER: tuple[Side, ...] = ("back", "left", "right", "front")
     STEP = 0.05
     GAP = 0.05
 
     def __init__(self) -> None:
-        self.occupied: dict[tuple[str, str], list[tuple[float, float, float, float]]] = {}
+        self.occupied: dict[str, list[tuple[float, float, float, float]]] = {}
 
-    def reserve(self, room_id: str, layers: list[str], x: float, y: float, hx: float, hy: float) -> None:
-        for layer in layers:
-            self.occupied.setdefault((room_id, layer), []).append((x - hx, y - hy, x + hx, y + hy))
+    def reserve(self, room_id: str, x: float, y: float, hx: float, hy: float) -> None:
+        self.occupied.setdefault(room_id, []).append((x - hx, y - hy, x + hx, y + hy))
 
-    def free(self, room_id: str, layers: list[str], x: float, y: float, hx: float, hy: float) -> bool:
+    def free(self, room_id: str, x: float, y: float, hx: float, hy: float) -> bool:
         g = self.GAP
         return all(x + hx + g <= a0 or x - hx - g >= a1 or y + hy + g <= b0 or y - hy - g >= b1
-                   for layer in layers for a0, b0, a1, b1 in self.occupied.get((room_id, layer), []))
+                   for a0, b0, a1, b1 in self.occupied.get(room_id, []))
 
-    def place(self, room: SceneRoom, layers: list[str], w: float, d: float) -> Optional[tuple[float, float, float]]:
+    def place(self, room: SceneRoom, w: float, d: float) -> Optional[tuple[float, float, float]]:
+        """First free spot along the walls (back, left, right, front), facing into the room."""
         x0, y0, x1, y1 = _bbox(room)
         for side in self.ORDER:
             along = (x1 - x0) if side in ("back", "front") else (y1 - y0)
@@ -285,10 +276,26 @@ class _WallCursor:
                     x, y = x1 - d / 2, y0 + s + w / 2
                 rot = _FACING[side]
                 hx, hy = _half_extents(w, d, rot)
-                if self.free(room.room_id, layers, x, y, hx, hy):
-                    self.reserve(room.room_id, layers, x, y, hx, hy)
+                if self.free(room.room_id, x, y, hx, hy):
+                    self.reserve(room.room_id, x, y, hx, hy)
                     return x, y, rot
                 s += self.STEP
+        return None
+
+    def nearest(self, room: SceneRoom, w: float, d: float, rot: float, x: float, y: float) -> Optional[tuple[float, float]]:
+        """Free spot inside the room closest to (x, y), for a fixed rotation."""
+        x0, y0, x1, y1 = _bbox(room)
+        hx, hy = _half_extents(w, d, rot)
+        if x1 - x0 < 2 * hx or y1 - y0 < 2 * hy:
+            return None
+        nx = int((x1 - x0 - 2 * hx) / self.STEP) + 1
+        ny = int((y1 - y0 - 2 * hy) / self.STEP) + 1
+        spots = [(x0 + hx + i * self.STEP, y0 + hy + j * self.STEP) for i in range(nx) for j in range(ny)]
+        spots.sort(key=lambda c: (c[0] - x) ** 2 + (c[1] - y) ** 2)
+        for cx, cy in spots:
+            if self.free(room.room_id, cx, cy, hx, hy):
+                self.reserve(room.room_id, cx, cy, hx, hy)
+                return cx, cy
         return None
 
 
@@ -346,20 +353,31 @@ def _place_appliances(
                 if abs(cx - x) > 1e-6 or abs(cy - y) > 1e-6:
                     warnings.append("moved inside the room")
                 x, y = cx, cy
-                layers = _layers(vis)
-                if not cursor.free(room_id, layers, x, y, hx, hy):
-                    warnings.append("overlaps another appliance")
-                cursor.reserve(room_id, layers, x, y, hx, hy)
+                if cursor.free(room_id, x, y, hx, hy):
+                    cursor.reserve(room_id, x, y, hx, hy)
+                else:
+                    spot = cursor.nearest(room, vis.w, vis.d, rot, x, y)
+                    if spot is None:
+                        warnings.append("no free space left in the room; overlaps another appliance")
+                    else:
+                        x, y = spot
+                        warnings.append("moved to avoid another appliance")
             else:
                 mode = "auto"
-                spot = cursor.place(room, _layers(vis), vis.w, vis.d)
-                if spot is None:
-                    x, y, rot = (x0 + x1) / 2, (y0 + y1) / 2, 0.0
-                    warnings.append("no free wall space; placed in the room centre")
-                else:
-                    x, y, rot = spot
-                if p.rotation_deg is not None:
+                if p.rotation_deg is not None:  # fixed rotation: nearest free spot to the room's back wall
                     rot = p.rotation_deg
+                    spot = cursor.nearest(room, vis.w, vis.d, rot, (x0 + x1) / 2, y1)
+                    placed = (spot[0], spot[1], rot) if spot else None
+                else:
+                    placed = cursor.place(room, vis.w, vis.d)
+                    if placed is None:  # walls full: anywhere free in the room
+                        spot = cursor.nearest(room, vis.w, vis.d, 0.0, (x0 + x1) / 2, (y0 + y1) / 2)
+                        placed = (spot[0], spot[1], 0.0) if spot else None
+                if placed is None:
+                    x, y, rot = (x0 + x1) / 2, (y0 + y1) / 2, p.rotation_deg or 0.0
+                    warnings.append("no free space left in the room; overlaps another appliance")
+                else:
+                    x, y, rot = placed
             z = room.floor_z_m + vis.mount_height_m
 
         results[i] = SceneAppliance(

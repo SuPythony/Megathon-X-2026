@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { SceneAppliance, SceneOpening, SceneRoom, SceneWall, Side, Vec2 } from './types'
+import type { SceneAppliance, SceneOpening, SceneRoom, SceneWall, Side, Vec2, Vec3 } from './types'
 
 export const EXPLODE_GAP_M = 2.0
 export const WALL_THICKNESS = { exterior: 0.25, party: 0.25, internal: 0.08 } as const
@@ -40,6 +40,60 @@ export function clampToRoom(room: SceneRoom, app: SceneAppliance, x: number, y: 
   const cx = x1 - x0 >= 2 * hx ? Math.min(Math.max(x, x0 + hx), x1 - hx) : (x0 + x1) / 2
   const cy = y1 - y0 >= 2 * hy ? Math.min(Math.max(y, y0 + hy), y1 - hy) : (y0 + y1) / 2
   return [cx, cy]
+}
+
+const GAP_M = 0.05
+
+/** True when two appliances' floor footprints overlap (with a small gap). Height is ignored: nothing stacks. */
+export function overlaps(a: SceneAppliance, b: SceneAppliance): boolean {
+  const [ahx, ahy] = halfExtents(a.size_m[0], a.size_m[1], a.rotation_deg)
+  const [bhx, bhy] = halfExtents(b.size_m[0], b.size_m[1], b.rotation_deg)
+  return (
+    Math.abs(a.position_m[0] - b.position_m[0]) < ahx + bhx + GAP_M - 1e-6 &&
+    Math.abs(a.position_m[1] - b.position_m[1]) < ahy + bhy + GAP_M - 1e-6
+  )
+}
+
+/** Nearest free spot in the room to (x, y) for this appliance, or null if the room is full. Same rule as
+ * scene.py's _WallCursor.nearest. */
+export function findFree(room: SceneRoom, app: SceneAppliance, others: SceneAppliance[], x: number, y: number): Vec2 | null {
+  const [x0, y0, x1, y1] = bbox(room)
+  const [hx, hy] = halfExtents(app.size_m[0], app.size_m[1], app.rotation_deg)
+  if (x1 - x0 < 2 * hx || y1 - y0 < 2 * hy) return null
+  const step = 0.05
+  const spots: Vec2[] = []
+  for (let cx = x0 + hx; cx <= x1 - hx + 1e-9; cx += step)
+    for (let cy = y0 + hy; cy <= y1 - hy + 1e-9; cy += step) spots.push([cx, cy])
+  spots.sort((p, q) => (p[0] - x) ** 2 + (p[1] - y) ** 2 - ((q[0] - x) ** 2 + (q[1] - y) ** 2))
+  for (const [cx, cy] of spots) {
+    const moved = { ...app, position_m: [cx, cy, app.position_m[2]] as Vec3 }
+    if (!others.some((o) => overlaps(moved, o))) return [cx, cy]
+  }
+  return null
+}
+
+const FACING: Record<Side, number> = { back: 0, right: 270, front: 180, left: 90 }
+
+/** First free spot along the room's walls (back, left, right, front), facing into the room: the same walk as
+ * scene.py's auto-placement. Returns [x, y, rotation] or null when the walls are full. */
+export function findWallSpot(room: SceneRoom, app: SceneAppliance, others: SceneAppliance[]): [number, number, number] | null {
+  const [x0, y0, x1, y1] = bbox(room)
+  const [w, d] = app.size_m
+  for (const side of ['back', 'left', 'right', 'front'] as Side[]) {
+    const along = side === 'back' || side === 'front' ? x1 - x0 : y1 - y0
+    const across = side === 'back' || side === 'front' ? y1 - y0 : x1 - x0
+    if (w + 2 * GAP_M > along || d > across) continue
+    for (let s = GAP_M; s + w + GAP_M <= along + 1e-9; s += 0.05) {
+      const [x, y] =
+        side === 'back' ? [x0 + s + w / 2, y1 - d / 2]
+          : side === 'front' ? [x1 - s - w / 2, y0 + d / 2]
+            : side === 'left' ? [x0 + d / 2, y1 - s - w / 2]
+              : [x1 - d / 2, y0 + s + w / 2]
+      const cand = { ...app, rotation_deg: FACING[side], position_m: [x, y, app.position_m[2]] as Vec3 }
+      if (!others.some((o) => overlaps(cand, o))) return [x, y, FACING[side]]
+    }
+  }
+  return null
 }
 
 const INWARD: Record<Side, Vec2> = { front: [0, 1], back: [0, -1], left: [1, 0], right: [-1, 0] }

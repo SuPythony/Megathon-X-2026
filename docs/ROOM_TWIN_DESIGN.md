@@ -261,7 +261,10 @@ Party walls get faded neighbour blocks (left / right / back, and above / below f
 ### 7.3 Appliances: custom placement (`greentwin/twin/appliance_visuals.json`)
 - Each appliance type has its own size, shape, colours, icon and mounting (floor / counter / wall / outdoor). 19 types.
 - **Custom:** the user drops an appliance in a room: `{"appliance_id", "type", "room_id", "u", "v", "rotation_deg"}`. `u`/`v` are 0..1 across the room's width and depth, so placements survive rescaling. Rotation defaults to facing away from the nearest wall. Out-of-room positions are clamped back in, with a warning.
-- **Auto:** no `u`/`v` → placed along free wall space (back, left, right, front), stepping around custom-placed items. Floor-level and counter/wall-mounted items share walls by height band (hob above oven, TV above a console); tall items (fridge-freezer, cylinder) block both bands.
+- **No overlaps, ever.** No two appliances share floor space, at any height (nothing is stacked). This holds in the backend and in the viewer.
+- **Auto:** no `u`/`v` → placed along free wall space (back, left, right, front), stepping around custom-placed items. When the walls are full, it goes in the free spot nearest the room centre.
+- **Custom positions that would overlap** snap to the nearest free spot, with a warning. In the viewer, a drag slides along whatever it bumps into, rotation moves the item if it no longer fits, and a full room refuses new items.
+- Worktop items (hob, microwave, kettle) are drawn on their own base cabinet.
 - **Outdoor:** `room_id: "outside"`; EV charger auto-mounts on the front wall, hot tub in the garden; custom via `x_m`/`y_m`.
 - Unusual rooms (hob in a bedroom) warn but are allowed. Unknown types or rooms raise.
 - Schema for the input: `greentwin/twin/examples/appliance_placement.schema.json`.

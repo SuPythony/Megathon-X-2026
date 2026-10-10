@@ -39,12 +39,12 @@ def test_auto_placed_appliances_sit_inside_rooms_without_overlap(aid):
     apps = [AppliancePlacement(appliance_id=f"a{i}", type=t, room_id=room.key)
             for i, t in enumerate(["fridge_freezer", "washing_machine", "dishwasher", "hob", "kettle"])]
     scene = build_scene(build_layout(aid), "T", apps)
-    floor = [a for a in scene.appliances if a.mount == "floor"]
+    placed = scene.appliances
     for a in scene.appliances:
         assert a.placement == "auto"
         assert _inside(a, scene), f"{a.type} outside {a.room_id}"
-    for i, p in enumerate(floor):
-        for q in floor[i + 1:]:
+    for i, p in enumerate(placed):
+        for q in placed[i + 1:]:
             (px, py, _), (qx, qy, _) = p.position_m, q.position_m
             phx, phy = _half_extents(p.size_m[0], p.size_m[1], p.rotation_deg)
             qhx, qhy = _half_extents(q.size_m[0], q.size_m[1], q.rotation_deg)
@@ -87,7 +87,7 @@ def test_auto_placement_steps_around_custom_items_and_keeps_order():
     assert ff.placement == "custom" and not _overlap(ff, wm) and not _overlap(ff, dw) and not _overlap(wm, dw)
 
 
-def test_example_scenes_have_no_3d_overlaps(tmp_path):
+def test_example_scenes_have_no_overlaps_at_any_height(tmp_path):
     for path in write_examples(tmp_path):
         if not path.name.endswith(".scene.json"):
             continue
@@ -96,10 +96,27 @@ def test_example_scenes_have_no_3d_overlaps(tmp_path):
             for q in apps[i + 1:]:
                 if p.room_id is None or p.room_id != q.room_id:
                     continue
-                pz, qz = p.position_m[2], q.position_m[2]
-                if pz + p.size_m[2] <= qz or qz + q.size_m[2] <= pz:
-                    continue  # stacked, e.g. hob above oven
                 assert not _overlap(p, q), f"{path.name}: {p.type} overlaps {q.type}"
+
+
+def test_custom_overlap_is_moved_to_nearest_free_spot():
+    apps = [AppliancePlacement(appliance_id=f"f{i}", type="fridge_freezer", room_id="kitchen", u=0.5, v=0.5)
+            for i in range(3)]
+    scene = build_scene(build_layout("victorian_terrace_2bed"), "T", apps)
+    a, b, c = scene.appliances
+    assert not a.warnings and "moved to avoid another appliance" in b.warnings
+    assert not _overlap(a, b) and not _overlap(a, c) and not _overlap(b, c)
+
+
+def test_crowded_room_never_overlaps():
+    # Far more than fits along the walls of a small bathroom: the rest go anywhere free, then warn.
+    apps = [AppliancePlacement(appliance_id=f"d{i}", type="dehumidifier", room_id="bath") for i in range(40)]
+    scene = build_scene(build_layout("victorian_terrace_2bed"), "T", apps)
+    ok = [x for x in scene.appliances if not x.warnings]
+    for i, p in enumerate(ok):
+        for q in ok[i + 1:]:
+            assert not _overlap(p, q)
+    assert all("no free space" in w for x in scene.appliances for w in x.warnings)
 
 
 def test_appliance_on_upper_floor_gets_storey_height():

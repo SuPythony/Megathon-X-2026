@@ -117,6 +117,14 @@ function Appliance({ app, scene }: { app: SceneAppliance; scene: RoomScene }) {
       onPointerOut={() => { document.body.style.cursor = 'auto' }}
     >
       <Body app={app} opacity={vis === 'faded' ? 0.15 : 1} />
+      {app.mount === 'counter' && room && z - room.floor_z_m > 0.05 && (
+        // Worktop items stand on their own base cabinet, since nothing is stacked under them.
+        <mesh position={[0, -h / 2 - (z - room.floor_z_m) / 2, 0]}>
+          <boxGeometry args={[w, z - room.floor_z_m, d]} />
+          <meshStandardMaterial key={vis === 'faded' ? 't' : 'o'} color="#d9d2c4" transparent={vis === 'faded'}
+            opacity={vis === 'faded' ? 0.15 : 1} roughness={0.7} />
+        </mesh>
+      )}
       {isSelected && (
         <mesh>
           <boxGeometry args={[w + 0.06, h + 0.06, d + 0.06]} />

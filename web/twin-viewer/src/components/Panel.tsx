@@ -50,7 +50,7 @@ function HouseSummary({ scene }: { scene: RoomScene }) {
 }
 
 function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
-  const { appliances, selectedAppliance, selectRoom, selectAppliance, rotateAppliance, removeAppliance, addAppliance } =
+  const { appliances, selectedAppliance, notice, selectRoom, selectAppliance, rotateAppliance, removeAppliance, addAppliance } =
     useViewer()
   const [newType, setNewType] = useState('')
   const room = scene.rooms.find((r) => r.room_id === roomId)!
@@ -80,7 +80,7 @@ function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
 
       <section className="card">
         <h3>Appliances ({mine.length})</h3>
-        <p className="hint">Drag an appliance to move it. Positions are saved as a fraction of the room, so they survive rescaling.</p>
+        <p className="hint">Drag an appliance to move it; appliances never overlap. Positions are saved as a fraction of the room, so they survive rescaling.</p>
         <ul className="app-list">
           {mine.map((a) => (
             <li key={a.appliance_id} className={a.appliance_id === selectedAppliance ? 'active' : ''}>
@@ -100,6 +100,7 @@ function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
             {sel.warnings.map((w) => <p key={w} className="warn">{w}</p>)}
           </div>
         )}
+        {notice && <p className="warn">{notice}</p>}
         <div className="add-row">
           <select value={newType} onChange={(e) => setNewType(e.target.value)} aria-label="Appliance type">
             <option value="">Add appliance…</option>
