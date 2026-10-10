@@ -90,6 +90,30 @@ button, select { font: inherit; }
 .compass-label { background: var(--green); font-weight: 700; }
 .empty { padding: 16px; }
 
+.topbar .primary-btn { background: var(--green); color: #fff; border-color: var(--green); }
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(20, 30, 28, 0.45); display: flex; align-items: center; justify-content: center;
+  padding: 16px; z-index: 10;
+}
+.modal {
+  width: min(520px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; background: var(--card);
+  border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 16px;
+}
+.modal h2 { margin: 0; font-size: 20px; }
+.modal p { margin: 0; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.field > span { font-weight: 600; }
+.field input:not([type=file]) { height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.field input:disabled { background: var(--bg); }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.ok { color: var(--green); font-size: 12px; }
+.err { color: var(--red); font-size: 12px; }
+.modal .muted { font-size: 13px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.modal-actions button { height: 36px; padding: 0 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); cursor: pointer; }
+.modal-actions .primary { background: var(--green); color: #fff; border-color: var(--green); }
+.modal-actions .primary:disabled { opacity: 0.5; cursor: default; }
+
 @media (max-width: 800px) {
   .stage { flex-direction: column; }
   .viewport { min-height: 55vh; }

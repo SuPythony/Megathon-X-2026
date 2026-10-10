@@ -7,11 +7,15 @@ Based on commit `7220322` and contracts `0.4.0`. Companion spec for the physics 
 
 ## 1. What changes
 
-The twin is now built from three user inputs:
+The twin is now built from these user inputs (`greentwin/twin/intake.py`, `TwinIntake`):
 
-1. **Floor plan photo**
-2. **Fuse box (consumer unit) photo**
-3. **High-energy appliances, entered room by room**: the user picks a type and answers basic size questions.
+1. **Location**: the user types their postcode, and only the **postcode district** (outward code, e.g. `M14`) is kept. The viewer reduces it in the browser, so the full postcode never leaves the device (AGENTS.md rule 8). The district gives the weather area and local context. Postcodes in Scotland or Northern Ireland get a warning, since our data covers England & Wales.
+2. **EPC certificate number** (RRN, 20 digits as `0000-0000-0000-0000-0000`), accepted with or without dashes. The data layer uses it to fetch the home's EPC (floor area, built form, age, fabric, heating), which then drives `fit_layout` and `params_from_property`. "I don't have one" is allowed: the twin then starts from the archetype and floor plan only. **Needs Part 0:** a lookup by RRN; `EPCLookup` is the seam, `NoEPCLookup` the stand-in until then.
+3. **Floor plan photo**
+4. **Fuse box (consumer unit) photo**, with explicit consent for interior photos.
+5. **High-energy appliances, entered room by room**: the user picks a type and answers basic size questions.
+
+Schema: `greentwin/twin/examples/twin_intake.schema.json`. The viewer's "New home" form produces this JSON; processing it needs the twin API (not built yet).
 
 In the demo, the user can **click any room in the 3D house and view it on its own**, with that room's heat loss and appliance energy.
 

@@ -562,7 +562,10 @@ def write_examples(out_dir: Path = HERE / "examples") -> list[Path]:
         path = out_dir / f"{aid}.scene.json"
         path.write_text(scene.model_dump_json(indent=2), encoding="utf-8")
         paths.append(path)
-    for name, model in (("room_scene", RoomScene), ("appliance_placement", AppliancePlacement)):
+    from greentwin.twin.intake import TwinIntake  # local import: intake imports this module
+
+    for name, model in (("room_scene", RoomScene), ("appliance_placement", AppliancePlacement),
+                        ("twin_intake", TwinIntake)):
         path = out_dir / f"{name}.schema.json"
         path.write_text(json.dumps(model.model_json_schema(), indent=2), encoding="utf-8")
         paths.append(path)

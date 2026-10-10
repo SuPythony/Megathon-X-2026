@@ -1,9 +1,10 @@
 import { CameraControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { Appliances } from './components/Appliances'
 import { House, storeyOffset } from './components/House'
+import { IntakeForm } from './components/IntakeForm'
 import { Panel } from './components/Panel'
 import { bbox } from './geometry'
 import { useViewer } from './store'
@@ -63,12 +64,17 @@ export default function App() {
   const { scenes, sceneKey, setScene, showRoof, toggleRoof, explode, toggleExplode, selectedRoom, selectRoom } =
     useViewer()
   const scene = scenes[sceneKey]
+  const [intakeOpen, setIntakeOpen] = useState(false)
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') selectRoom(null) }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (intakeOpen) setIntakeOpen(false)
+      else selectRoom(null)
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selectRoom])
+  }, [selectRoom, intakeOpen])
 
   if (!scene) return <p className="empty">No scenes found. Run <code>npm run sync-data</code>.</p>
 
@@ -83,12 +89,14 @@ export default function App() {
         </select>
         <button className={showRoof ? 'toggle on' : 'toggle'} onClick={toggleRoof} disabled={!!selectedRoom || explode}>Roof</button>
         <button className={explode ? 'toggle on' : 'toggle'} onClick={toggleExplode}>Explode floors</button>
+        <button className="primary-btn" onClick={() => setIntakeOpen(true)}>New home</button>
         <span className="hint-inline">{selectedRoom ? 'Esc to return to the whole house' : 'Click a room to isolate it'}</span>
       </header>
       <main className="stage">
         <div className="viewport"><Viewport scene={scene} /></div>
         <Panel scene={scene} />
       </main>
+      {intakeOpen && <IntakeForm onClose={() => setIntakeOpen(false)} />}
     </div>
   )
 }
