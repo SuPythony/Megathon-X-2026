@@ -4,6 +4,13 @@ Physics model owner: _teammate_. Digital twin wrapper owner: Satyarth.
 Based on repo commit `a1ba6e4`, contracts schema `0.4.0` (`contracts/models.py`, `greentwin/interfaces.py`).
 Status: **draft to agree**. Items marked **AGREE** need a decision from both of us before coding.
 
+> **Update (11 Oct 2026): the wrapper side is built.** `params_from_property`, weather arrays, prior samples and
+> `simulate` (vmap) all exist and run end to end on a **stand-in** `run_physics` (`greentwin/twin/physics_stub.py`).
+> Put your function in **`greentwin/twin/physics.py`** and it's picked up automatically. Then check it with
+> `pytest tests/test_physics_contract.py`. Key lists in code: `greentwin/twin/physics_api.py`.
+> The stub took a provisional position on each open decision (section 10); please confirm or replace.
+> Full guide: `docs/DIGITAL_TWIN_HANDOFF.md`.
+
 ---
 
 ## 1. Who owns what
@@ -221,6 +228,15 @@ Option A (monthly steady state) vs Option B (4–6 node RC graph, `diffrax` ODE)
 ---
 
 ## 10. Open decisions (both of us)
+
+Provisional positions taken by the stub (change them by changing your `physics.py`; the wrapper adapts):
+1. `heating_fuel`: static `FuelConfig(heating_fuel, hot_water_fuel)` (`physics_api.FuelConfig`).
+2. Other fuels: returned as `other_fuel_kwh` (not in `TwinRun` yet).
+3. Setpoint: heating demand from `mean_temp_c`, so `setpoint_c` matters; HDD isn't used by the stub.
+4. Option A (monthly steady state).
+5. Party walls: U = 0.
+6. Ownership of `rating.py`, `electricity.py`, `generate.py`: still open.
+
 
 1. `heating_fuel` handling: static `FuelConfig`, or fuel-agnostic output (§3.3).
 2. Oil / LPG / solid / district output (§5.4).

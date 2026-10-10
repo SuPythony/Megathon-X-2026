@@ -1,7 +1,7 @@
 # Room-level Digital Twin: Design
 
 Owner: Satyarth (Part 1, digital twin). Status: **draft, proposed**. Nothing in `contracts/` has been changed yet. The contract additions in §6 need team sign-off first.
-Based on commit `7220322` and contracts `0.4.0`. Companion spec for the physics teammate: `docs/digitaltwinvariables.md`.
+Based on commit `7220322` and contracts `0.4.0`. Companion spec for the physics teammate: `docs/digitaltwinvariables.md`. What the twin offers the other parts and how to call it: `docs/DIGITAL_TWIN_HANDOFF.md`.
 
 ---
 
