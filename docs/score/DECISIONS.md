@@ -235,11 +235,11 @@ SH1 with an estimated rating SAP ~ N(60, 3) vs recorded 48: projected score ≥ 
 
 ---
 
-## Worked examples (headline score, brief's fixed weights; mapping v0.3.0)
-`uv run python scripts/score_showcase.py` (4,000 samples, seed 42; intensity from the stub, D-13). Scores before the D-24 loft change are kept in brackets.
+## Worked examples (headline score, brief's fixed weights; mapping v0.4.0)
+`uv run python scripts/score_showcase.py` (4,000 samples, seed 42; intensity from the stub, D-13). Earlier scores in brackets: v0.2.0 → v0.3.0 (loft, D-24) → v0.4.0 (lighting, D-26). The showcase homes have no recorded lighting share, so it is sampled from the EPC prior (mean 82%), which widens the 90% intervals.
 
 ### SH1: Victorian mid-terrace, 85 m², EPC E (SAP 48), 11 months metered
-Intensity 219.2 kWh/m²/yr (90% 210.0–228.4); NEED peer median for a mid-terrace of 51–100 m² is 144.4. **Score 33/100, Poor** (90% 32.8–33.9; P(Poor or Very poor) = 1.00) [was 30].
+Intensity 219.2 kWh/m²/yr (90% 210.0–228.4); NEED peer median for a mid-terrace of 51–100 m² is 144.4. **Score 35/100, Poor** (90% 33.2–35.7; P(Poor or Very poor) = 1.00) [30 → 33 → 35].
 
 | Component | Weight | Sub-score | Contribution | Why |
 | --- | --- | --- | --- | --- |
@@ -249,48 +249,48 @@ Intensity 219.2 kWh/m²/yr (90% 210.0–228.4); NEED peer median for a mid-terra
 | Heating system | 0.15 | 20.0 | 3.00 | non-condensing gas 30 − (22 − 12) years = 20 |
 | Windows & glazing | 0.10 | 24.0 | 2.40 | 60% single (0) + 40% double pre-2002 (60) = 24 |
 | Renewables | 0.10 | 0.0 | 0.00 | no PV |
-| Smart | 0.05 | 20.0 | 1.00 | programmer only |
-| **Total** | 1.00 | | **33.36 → 33** | |
+| Smart (controls + lighting) | 0.05 | 49.3 | 2.47 | 0.53 × programmer only (20) + 0.47 × sampled lighting (mean 82%) |
+| **Total** | 1.00 | | **34.83 → 35** | |
 
 Key issues: high intensity vs peers (high), poor insulation: walls (high), old heating (medium), single glazing (high), no renewables, basic controls. Compare the brief's own example (rating E, poor insulation, single glazing, gas boiler → 38, Poor).
 
 ### SH2: 1970s cavity semi, 95 m², EPC D (SAP 60), 12 months
-Intensity 170.5 kWh/m²/yr (90% 163.8–177.4); peer median 162.9. **Score 51/100, Moderate** (90% 51.0–51.8; P(Poor or Very poor) = 0.00) [was 49, Poor]. Contributions: EE 15.00, intensity 12.78, insulation 7.57 (unfilled cavity 25 ×0.45 + 100 mm loft 86.8 ×0.40 + floor 30 ×0.15 = 50.5), heating 8.10 (condensing gas 55 − 1 for 13 years), glazing 6.00, renewables 0, smart 2.00 → 51.45 → 51. Key issues still name the unfilled cavity (walls sub-score 25, D-24). Filling the cavity (wall 25 → 75) adds 0.15 × 0.45 × 50 = 3.4 points → 55.
+Intensity 170.5 kWh/m²/yr (90% 163.8–177.4); peer median 162.9. **Score 52/100, Moderate** (90% 50.8–53.2; P(Poor or Very poor) = 0.00) [49 Poor → 51 → 52]. Contributions: EE 15.00, intensity 12.78, insulation 7.57 (unfilled cavity 25 ×0.45 + 100 mm loft 86.8 ×0.40 + floor 30 ×0.15 = 50.5), heating 8.10 (condensing gas 55 − 1 for 13 years), glazing 6.00, renewables 0, smart 3.00 (0.53 × 40 + 0.47 × sampled lighting) → 52.44 → 52. Key issues still name the unfilled cavity (walls sub-score 25, D-24). Filling the cavity (wall 25 → 75) adds 0.15 × 0.45 × 50 = 3.4 points → 55.
 
 ### SH3: 2004 all-electric flat, 62 m², EPC C (SAP 70), 12 months
-Intensity 74.2 kWh/m²/yr; peer median 87.4. **Score 65/100, Good** [unchanged]. Insulation 100 (roof and floor dropped: dwellings above and below; cavity as built 2004 → 100). Heating 35 (storage heaters) is the main drag, plus programmer-only controls.
+Intensity 74.2 kWh/m²/yr; peer median 87.4. **Score 67/100, Good** (90% 65.2–67.4) [65 → 65 → 67]. Insulation 100 (roof and floor dropped: dwellings above and below; cavity as built 2004 → 100). Heating 35 (storage heaters) is the main drag, plus programmer-only controls.
 
 ---
 
-## Results: learned weights v2 (current; RdSAP 10 era, PV fix, mapping v0.3.0)
-Full tables: [LEARNED_WEIGHTS.md](LEARNED_WEIGHTS.md). Reproduce: `uv run python scripts/train_score_weights.py --epc-dir data/interim/epc25 --boot 100 --version v2`. v1 (mapping v0.2.0) kept in `artifacts/score_weights/v1` for comparison.
+## Results: learned weights v3 (current; RdSAP 10 era, PV fix, mapping v0.4.0 with lighting)
+Full tables: [LEARNED_WEIGHTS.md](LEARNED_WEIGHTS.md). Reproduce: `uv run python scripts/train_score_weights.py --epc-dir data/interim/epc25 --boot 100 --version v3`. Earlier versions kept in `artifacts/score_weights/` (v1: mapping v0.2.0; v2: v0.3.0).
 
-| Component | Brief | Learned v1 | **Learned v2** | v2 90% bootstrap |
-| --- | --- | --- | --- | --- |
-| Energy efficiency | 0.25 | 0.213 | **0.223** | 0.170–0.324 |
-| Energy intensity | 0.20 | 0.203 | **0.208** | 0.149–0.253 |
-| Insulation | 0.15 | 0.247 | **0.230** | 0.187–0.268 |
-| Heating system | 0.15 | 0.192 | **0.196** | 0.159–0.229 |
-| Windows & glazing | 0.10 | 0.049 | **0.051** | 0.042–0.060 |
-| Renewables | 0.10 | 0.045 | **0.046** | 0.037–0.053 |
-| Smart management | 0.05 | 0.050 | **0.046** | 0.038–0.054 |
+| Component | Brief | v1 | v2 | **v3** | v3 90% bootstrap |
+| --- | --- | --- | --- | --- | --- |
+| Energy efficiency | 0.25 | 0.213 | 0.223 | **0.311** | 0.228–0.413 |
+| Energy intensity | 0.20 | 0.203 | 0.208 | **0.185** | 0.127–0.232 |
+| Insulation | 0.15 | 0.247 | 0.230 | **0.186** | 0.154–0.224 |
+| Heating system | 0.15 | 0.192 | 0.196 | **0.158** | 0.131–0.190 |
+| Windows & glazing | 0.10 | 0.049 | 0.051 | **0.038** | 0.031–0.045 |
+| Renewables | 0.10 | 0.045 | 0.046 | **0.036** | 0.029–0.043 |
+| Smart management (+ lighting) | 0.05 | 0.050 | 0.046 | **0.087** | 0.072–0.105 |
 
-- **The brief's weights are close to the data on energy efficiency, intensity and smart management.** The data puts more on insulation and heating and less on glazing and renewables. The weights barely moved between v1 and v2 (largest change 0.017), so they are robust to the loft-curve change.
-- Held-out R² (447,139 RdSAP 10 properties, attribute block only): learned beats the brief's weights and equal weights on all four modelled targets, e.g. SAP 0.303 vs 0.275 vs 0.262. v2's R² is slightly below v1's (SAP 0.320): with the new curve, "insulated (assumed)" lofts (scored at 100 mm) sit at 86.8 points, compressing loft differences on the EPC. Non-linear ceiling (monotone LightGBM incl. extras) 0.589.
-- Era stability (D-20), SAP target heating weight (v2): SAP 2009 era 0.572 (n = 1,342,875), SAP 2012 era 0.466 (n = 3,623,688), RdSAP 10 era 0.440 (n = 447,139, used). It moves with the methodology, which is why only one era is used. (v1, before the PV fix and loft change: 0.52 / 0.38 / 0.43.)
-- Candidate extras (LightGBM |SHAP| share, SAP target, v1): low-energy lighting 0.101 and open fireplaces 0.074 carry real signal. Evidence for D-08 (score lighting).
-- Brief vs learned on 66,761 EPC test homes: Spearman 0.983, same band 83.2%, mean |difference| 2.7 points; Poor or Very poor 11.0% (brief) vs 10.7% (learned).
+- **Stable across versions:** glazing and renewables are below the brief in every version; smart management roughly doubles once lighting is part of it.
+- **Least stable piece: stage 2 (energy-efficiency ratio).** It rests on ~106 archetype cells. The EE-to-attributes ratio moved from 0.391 (v2, 90% 0.255–0.679) to 0.616 (v3, 90% 0.390–0.970): the intervals overlap, so this is within noise, but it is why EE swings between versions. Region in the cells (README backlog) and the NEED full dataset would tighten it.
+- Held-out R² (446,421 RdSAP 10 properties, attribute block only): learned beats the brief's weights and equal weights on all four modelled targets, e.g. SAP 0.329 vs 0.280 vs 0.292. Lighting lifted the attribute block on every target (v2 SAP 0.303). Non-linear ceiling (monotone LightGBM) 0.587.
+- Era stability (D-20), SAP target heating weight (v3): SAP 2009 era 0.568 (n = 1,342,875), SAP 2012 era 0.446 (n = 3,623,688), RdSAP 10 era 0.391 (used).
+- Brief vs learned on 66,670 EPC test homes: Spearman 0.987, same band 74.9%, mean |difference| 4.0 points; learned scores run higher (mean 62.6 vs 58.7) and flag fewer homes Poor or Very poor (5.0% vs 8.6%), because the learned weights lean on energy efficiency and away from glazing and renewables, which many homes lack.
 
 ### Worked examples with both scores
 `uv run python scripts/score_showcase.py` (priors and NEED peers fitted from data, D-21):
 
-| Home | Headline (brief weights) | Learned v2 | Peer median kWh/m² (NEED, same type × size) | Key issues |
+| Home | Headline (brief weights) | Learned v3 | Peer median kWh/m² (NEED, same type × size) | Key issues |
 | --- | --- | --- | --- | --- |
-| SH1 Victorian terrace, EPC E | **33, Poor** | 35, Poor | 144 (home: 219) | high intensity (high), poor insulation: walls, old heating, single glazing, no renewables, basic controls |
-| SH2 1970s semi, EPC D | **51, Moderate** | 54, Moderate | 163 (home: 171) | high intensity (medium), poor insulation: walls, no renewables |
-| SH3 2004 flat, EPC C | **65, Good** | 70, Good | 87 (home: 74) | storage heating, no renewables, basic controls |
+| SH1 Victorian terrace, EPC E | **35, Poor** | 39, Poor | 144 (home: 219) | high intensity (high), poor insulation: walls, old heating, single glazing, no renewables, basic controls |
+| SH2 1970s semi, EPC D | **52, Moderate** | 56, Moderate | 163 (home: 171) | high intensity (medium), poor insulation: walls, no renewables |
+| SH3 2004 flat, EPC C | **67, Good** | 70, Good | 87 (home: 74) | storage heating, no renewables, basic controls |
 
-SH3 gains 5 points under the learned weights because full insulation (sub-score 100) is weighted 0.230 instead of 0.15.
+The learned score runs 3–4 points higher on all three homes, mostly because energy efficiency (each home's recorded SAP) is weighted 0.311 instead of 0.25.
 
 ---
 
