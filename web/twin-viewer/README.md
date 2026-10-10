@@ -31,6 +31,13 @@ npm run dev        # copies greentwin/twin/examples/*.scene.json + appliance_vis
 - **Offline:** single retrofits come from scenarios precomputed into the scene JSON. Packages and changed
   appliances need the server, and the panel says so.
 
+## Geometry and input quality
+The **Geometry** card (house view, showcase homes) shows whether the layout is a house-type estimate, a photo draft or
+confirmed by you. You can correct the width, depth, ceiling height, which way the front faces and the built form,
+then press **Confirm geometry**. The twin server rebuilds the house and its energy on your dimensions, and later
+retrofit runs use them. The bar shows how much of the home's heat loss rests on confirmed or recorded inputs vs
+defaults.
+
 ## Appliance questions
 Adding an appliance asks its size questions (`appliance_energy.json`: fridge size and age, drum kg, TV inches, shower
 kW...). The answers can be edited for the selected appliance. Answers are exported with placements and drive the

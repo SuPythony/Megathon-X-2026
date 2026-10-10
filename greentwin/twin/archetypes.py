@@ -27,6 +27,7 @@ RoomType = Literal[
     "living", "kitchen", "dining", "bedroom", "bathroom", "wc", "hall", "landing",
     "utility", "study", "garage", "conservatory", "other",
 ]
+GeometrySource = Literal["archetype_default", "epc_fitted", "vision_fitted", "user_confirmed"]
 ArchetypeId = Literal[
     "victorian_terrace_2bed",
     "interwar_semi_3bed",
@@ -133,6 +134,8 @@ class TwinLayout(BaseModel):
     room_types: dict[str, RoomType]
     walls: list[LayoutWall]
     openings: list[LayoutOpening]
+    geometry_source: GeometrySource = Field(
+        "archetype_default", description="archetype_default < epc_fitted < vision_fitted < user_confirmed")
 
     def envelope(self) -> Envelope:
         opening_area: dict[str, float] = {}
@@ -349,11 +352,19 @@ def build_layout(
     built_form: Optional[BuiltForm] = None,
     front_azimuth_deg: float = 180.0,
     room_labels: Optional[dict[str, str]] = None,
+    footprint_m: Optional[tuple[float, float]] = None,
+    geometry_source: Optional[GeometrySource] = None,
 ) -> TwinLayout:
-    """Fit an archetype to one home. Scales both axes equally so the layout keeps its proportions."""
+    """Fit an archetype to one home. With a total floor area both axes scale equally (proportions kept); with a
+    confirmed footprint (width, depth) each axis scales to match it."""
     arch = get_archetype(archetype_id)
-    s = math.sqrt(total_floor_area_m2 / arch.reference_floor_area_m2) if total_floor_area_m2 else 1.0
-    width, depth = arch.width_m * s, arch.depth_m * s
+    if footprint_m:
+        sx, sy = footprint_m[0] / arch.width_m, footprint_m[1] / arch.depth_m
+    else:
+        sx = sy = math.sqrt(total_floor_area_m2 / arch.reference_floor_area_m2) if total_floor_area_m2 else 1.0
+    s = max(sx, sy)  # tolerance scale for boundary checks
+    width, depth = arch.width_m * sx, arch.depth_m * sy
+    source = geometry_source or ("epc_fitted" if total_floor_area_m2 else "archetype_default")
     height = ceiling_height_m or arch.ceiling_height_m
     form = built_form or arch.default_built_form
     party = party_sides_for(arch, form)
@@ -366,7 +377,7 @@ def build_layout(
     eps = 1e-6
 
     for tr in arch.rooms:
-        x0, y0, x1, y1 = tr.x0 * s, tr.y0 * s, tr.x1 * s, tr.y1 * s
+        x0, y0, x1, y1 = tr.x0 * sx, tr.y0 * sy, tr.x1 * sx, tr.y1 * sy
         rid = tr.key
         rooms.append(Room(
             room_id=rid, label=labels.get(rid, tr.label), storey=tr.storey,
@@ -410,5 +421,5 @@ def build_layout(
         footprint_m=(round(width, 3), round(depth, 3)), ceiling_height_m=height,
         front_azimuth_deg=front_azimuth_deg % 360.0, party_sides=list(party),
         roof_exposed=arch.roof_exposed, ground_floor_exposed=arch.ground_floor_exposed,
-        rooms=rooms, room_types=room_types, walls=walls, openings=openings,
+        rooms=rooms, room_types=room_types, walls=walls, openings=openings, geometry_source=source,
     )

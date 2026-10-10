@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from contracts.models import EnergyUsageMonth, Property, WeatherMonth
 from greentwin.twin.appliances import DAYS, ApplianceSummary, summarise_appliances
 from greentwin.twin.archetypes import TwinLayout
+from greentwin.twin.geometry import GeometryConfirmation, apply_geometry, from_layout
 from greentwin.twin.household import (
     HotWaterSystem,
     apply_user_heating,
@@ -33,6 +34,7 @@ from greentwin.twin.household import (
 from greentwin.twin.intake import TwinIntake
 from greentwin.twin.params import ExtendedTwinParams, fuel_config, params_with_sources, sap_occupancy
 from greentwin.twin.physics_api import EXTRA_PARAM_KEYS, PHYSICS_PARAM_KEYS, FuelConfig
+from greentwin.twin.provenance import InputProvenance, ProvenanceSummary, build_provenance, provenance_summary
 from greentwin.twin.scene import AppliancePlacement
 from greentwin.twin.thermal import ThermalMass, thermal_mass
 from greentwin.twin.weather import filled_fields, synthetic_months, typical_year, weather_arrays
@@ -127,6 +129,9 @@ class PhysicsInputs(BaseModel):
     heating_system: HeatingSystemInfo
     hot_water: HotWaterSystem
     thermal_mass: ThermalMass
+    geometry: GeometryConfirmation = Field(description="The geometry used, and whether the user confirmed it")
+    input_provenance: list[InputProvenance]
+    provenance_summary: ProvenanceSummary
     occupancy: dict[str, str | float]
     heating_behaviour: dict[str, object]
     appliances: ApplianceSummary | None
@@ -173,12 +178,25 @@ def _schedules(months: Sequence[str], summary: Optional[ApplianceSummary]) -> di
     }
 
 
-def _priors(params: ExtendedTwinParams, sources: dict[str, str], household: dict, has_appliances: bool) -> list[Prior]:
+def heat_loss_prior_sigma(params: ExtendedTwinParams, prov: list[InputProvenance], geometry_confirmed: bool) -> float:
+    """Wider when the fabric rests on unverified U-values and unconfirmed geometry: 0.10 (all measured, confirmed)
+    to 0.30 (all defaults, house-type geometry)."""
+    status = {p.field: p.status for p in prov}
+    pairs = [("wall_area_m2", "wall_u"), ("roof_area_m2", "roof_u"), ("floor_area_m2", "floor_u"),
+             ("window_area_m2", "window_u"), ("door_area_m2", "door_u")]
+    ua = {u: getattr(params, a) * getattr(params, u) for a, u in pairs}
+    total = sum(ua.values()) or 1.0
+    unknown_u = sum(v for u, v in ua.items() if status.get(u) not in ("measured", "recorded", "confirmed")) / total
+    return round(0.10 + 0.15 * unknown_u + (0.0 if geometry_confirmed else 0.05), 3)
+
+
+def _priors(params: ExtendedTwinParams, sources: dict[str, str], household: dict, has_appliances: bool,
+            hl_sigma: float = 0.25) -> list[Prior]:
     user_stat = "user" in sources.get("setpoint_c", "")
     return [
-        Prior(param="heat_loss_multiplier", kind="lognormal", mu=0.0, sigma=0.25, base=params.heat_loss_multiplier,
-              lower=0.4, upper=2.0, rationale="Scales the RdSAP-default fabric + ventilation loss; defaults are "
-              "uncertain (to_verify) and older homes often use less than default models predict"),
+        Prior(param="heat_loss_multiplier", kind="lognormal", mu=0.0, sigma=hl_sigma, base=params.heat_loss_multiplier,
+              lower=0.4, upper=2.0, rationale="Scales the fabric + ventilation loss; width set by input provenance "
+              "(unverified U-values and unconfirmed geometry widen it)"),
         Prior(param="setpoint_c", kind="normal_add", mu=0.0, sigma=household["setpoint_sd"], base=params.setpoint_c,
               lower=14.0, upper=24.0, rationale="Mean internal temperature: " + ("user thermostat" if user_stat else "default")),
         Prior(param="baseload_kwh_per_day", kind="lognormal", mu=0.0, sigma=0.2 if has_appliances else 0.3,
@@ -253,6 +271,9 @@ def build_physics_inputs(
     # The user's heating answers replace the EPC's (EPCs can be years old)
     prop, heating_conflicts, heating_sources = apply_user_heating(
         prop, intake.heating_system if intake else None, intake.hot_water_source if intake else None)
+    geometry_flags: list[str] = []
+    if intake and intake.geometry:  # the user's confirmed (or corrected) geometry wins over any fitted layout
+        layout, geometry_flags = apply_geometry(intake.geometry, prop)
     occupants = intake.occupants if intake else None
     presence = intake.daytime_occupancy if intake else None
     n_guess = float(occupants) if occupants else sap_occupancy(prop.floor_area_m2)
@@ -308,7 +329,7 @@ def build_physics_inputs(
 
     to_verify = sorted(k for k, s in sources.items() if "to_verify" in s)
     assumptions = sorted(k for k, s in sources.items() if "assumption" in s or "default" in s)
-    flags = list(heating_conflicts)
+    flags = list(heating_conflicts) + geometry_flags
     if meter:
         flags += meter_fuel_conflicts(prop, meter.gas_kwh, bool(summary and summary.gas_cooking_kwh_per_day > 0))
     if weather.source == "synthetic":
@@ -319,6 +340,17 @@ def build_physics_inputs(
         flags.append(f"heating fuel {prop.heating.main_fuel}: TwinRun has no output field for it yet (open decision)")
 
     household = {"setpoint_sd": behaviour.setpoint_sd, "hours_sd": behaviour.hours_sd}
+    used_layout = layout or _layout_for(prop)
+    geometry_source = used_layout.geometry_source if layout is not None else "epc_fitted"
+    refs = {"house_type": f"house_type:{used_layout.archetype_id}"}
+    if intake:
+        refs["intake"] = f"intake:{intake.intake_id}"
+        if intake.epc_rrn:
+            refs["epc"] = f"epc:{intake.epc_rrn}"
+    prov = build_provenance(params.model_dump(), sources, geometry_source, refs, weather.source,
+                            meter.source if meter else None)
+    geometry = intake.geometry if intake and intake.geometry else from_layout(used_layout)
+    hl_sigma = heat_loss_prior_sigma(params, prov, geometry.confirmed_by_user)
     return PhysicsInputs(
         property_id=prop.property_id,
         created=date.today().isoformat(),
@@ -332,15 +364,17 @@ def build_physics_inputs(
         heating_system=HeatingSystemInfo(system=prop.heating.main_system.value, fuel=prop.heating.main_fuel,
                                          efficiency=params.heating_efficiency, source=sources["heating_efficiency"]),
         hot_water=hws,
-        thermal_mass=thermal_mass(prop, layout or _layout_for(prop), intake.internal_walls if intake else None,
-                                  _band(prop)),
+        thermal_mass=thermal_mass(prop, used_layout, intake.internal_walls if intake else None, _band(prop)),
+        geometry=geometry,
+        input_provenance=prov,
+        provenance_summary=provenance_summary(prov, params.model_dump(), geometry_source),
         occupancy=occ.model_dump(),
         heating_behaviour=behaviour.model_dump(),
         appliances=summary,
         weather=weather,
         schedules=_schedules(weather.months, summary),
         meter=meter,
-        priors=_priors(params, sources, household, summary is not None),
+        priors=_priors(params, sources, household, summary is not None, hl_sigma),
         observation_model=ObservationModel(notes=[
             "Gas: summer months identify hot water (+ gas cooking); winter slope vs temperature identifies heat loss.",
             "Electricity: identifies baseload; for electric heating it also carries the heating signal.",

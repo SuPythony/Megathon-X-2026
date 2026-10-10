@@ -117,6 +117,106 @@
       "title": "AppliancePlacement",
       "type": "object"
     },
+    "BuiltForm": {
+      "enum": [
+        "detached",
+        "semi_detached",
+        "mid_terrace",
+        "end_terrace",
+        "enclosed_mid_terrace",
+        "not_applicable"
+      ],
+      "title": "BuiltForm",
+      "type": "string"
+    },
+    "GeometryConfirmation": {
+      "properties": {
+        "archetype_id": {
+          "enum": [
+            "victorian_terrace_2bed",
+            "interwar_semi_3bed",
+            "postwar_detached_4bed",
+            "modern_terrace_3bed",
+            "bungalow_2bed",
+            "flat_2bed"
+          ],
+          "title": "Archetype Id",
+          "type": "string"
+        },
+        "footprint_width_m": {
+          "description": "Across the front",
+          "exclusiveMaximum": 40,
+          "exclusiveMinimum": 2,
+          "title": "Footprint Width M",
+          "type": "number"
+        },
+        "footprint_depth_m": {
+          "description": "Front to back",
+          "exclusiveMaximum": 40,
+          "exclusiveMinimum": 2,
+          "title": "Footprint Depth M",
+          "type": "number"
+        },
+        "ceiling_height_m": {
+          "default": 2.4,
+          "maximum": 4.0,
+          "minimum": 2.0,
+          "title": "Ceiling Height M",
+          "type": "number"
+        },
+        "front_azimuth_deg": {
+          "default": 180.0,
+          "description": "Way the front faces; 180 = south",
+          "exclusiveMaximum": 360,
+          "minimum": 0,
+          "title": "Front Azimuth Deg",
+          "type": "number"
+        },
+        "built_form": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BuiltForm"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "room_labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Room Labels",
+          "type": "object"
+        },
+        "confirmed_by_user": {
+          "default": false,
+          "description": "True only after the user pressed confirm",
+          "title": "Confirmed By User",
+          "type": "boolean"
+        },
+        "confirmed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confirmed At"
+        }
+      },
+      "required": [
+        "archetype_id",
+        "footprint_width_m",
+        "footprint_depth_m"
+      ],
+      "title": "GeometryConfirmation",
+      "type": "object"
+    },
     "MeterReading": {
       "description": "One month of bills or smart-meter data as the user entered it. Missing values stay None, never 0.",
       "properties": {
@@ -359,6 +459,18 @@
       "default": null,
       "description": "Do internal walls sound solid or hollow when knocked? (thermal mass)",
       "title": "Internal Walls"
+    },
+    "geometry": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GeometryConfirmation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "House type and dimensions as the user confirmed or corrected them"
     },
     "warnings": {
       "items": {

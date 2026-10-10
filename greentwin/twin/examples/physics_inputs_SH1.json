@@ -180,6 +180,394 @@
     "partitions": "assumption by age (pre-1950 masonry, later plasterboard)",
     "source": "construction x layout areas, kappa from rdsap_defaults.json (to_verify)"
   },
+  "geometry": {
+    "archetype_id": "victorian_terrace_2bed",
+    "footprint_width_m": 5.05,
+    "footprint_depth_m": 8.416,
+    "ceiling_height_m": 2.7,
+    "front_azimuth_deg": 180.0,
+    "built_form": "mid_terrace",
+    "room_labels": {
+      "living": "Living room",
+      "kitchen": "Kitchen",
+      "bed1": "Bedroom 1",
+      "bed2": "Bedroom 2",
+      "bath": "Bathroom"
+    },
+    "confirmed_by_user": false,
+    "confirmed_at": null
+  },
+  "input_provenance": [
+    {
+      "field": "air_changes_per_hour",
+      "value": 0.96,
+      "source": "assumption",
+      "status": "assumption",
+      "confirmed": false,
+      "detail": "assumption by age band, less draught proofing",
+      "ref": null
+    },
+    {
+      "field": "baseload_kwh_per_day",
+      "value": 4.543,
+      "source": "appliance_list",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "appliance list (typical_estimate) + sap_2012 lighting",
+      "ref": "intake:example-SH1"
+    },
+    {
+      "field": "battery_kwh",
+      "value": 0.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc",
+      "ref": null
+    },
+    {
+      "field": "door_area_m2",
+      "value": 3.6,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:victorian_terrace_2bed (floor plan)",
+      "ref": "house_type:victorian_terrace_2bed"
+    },
+    {
+      "field": "door_u",
+      "value": 3.0,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "floor_area_m2",
+      "value": 42.5,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:victorian_terrace_2bed (floor plan)",
+      "ref": "house_type:victorian_terrace_2bed"
+    },
+    {
+      "field": "floor_u",
+      "value": 0.42,
+      "source": "derived",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "iso13370 (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "heat_capacity_kj_per_k",
+      "value": 26385.0,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "construction x layout areas, kappa from rdsap_defaults.json (to_verify); partitions: assumption by age (pre-1950 masonry, later plasterboard)",
+      "ref": null
+    },
+    {
+      "field": "heat_loss_multiplier",
+      "value": 1.0,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "default 1.0 (calibrated)",
+      "ref": null
+    },
+    {
+      "field": "heating_efficiency",
+      "value": 0.7,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default by system (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "heating_fuel",
+      "value": "mains_gas",
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc",
+      "ref": null
+    },
+    {
+      "field": "heating_hours_per_day",
+      "value": 7.0,
+      "source": "user_stated",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule",
+      "ref": "intake:example-SH1"
+    },
+    {
+      "field": "hot_water_efficiency",
+      "value": 0.63,
+      "source": "assumption",
+      "status": "assumption",
+      "confirmed": false,
+      "detail": "assumption from main system (boiler summer penalty 0.9; heat pump cylinder 2.0; electric 1.0)",
+      "ref": null
+    },
+    {
+      "field": "hot_water_fuel",
+      "value": "mains_gas",
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc heating.hot_water",
+      "ref": null
+    },
+    {
+      "field": "hot_water_kwh_per_day",
+      "value": 2.23,
+      "source": "sap_formula",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "sap_2012 appendix J demand less electric shower use (floor 40%)",
+      "ref": null
+    },
+    {
+      "field": "hot_water_standing_loss_kwh_per_day",
+      "value": 1.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc cylinder_insulated (assumption: 1.0 / 3.0 kWh/day)",
+      "ref": null
+    },
+    {
+      "field": "internal_gains_w",
+      "value": 261.4,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "metabolic (occupancy) + appliance schedules + sap lighting, less evaporation",
+      "ref": null
+    },
+    {
+      "field": "lighting_share_of_baseload",
+      "value": 0.368,
+      "source": "sap_formula",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "sap_2012 appendix L",
+      "ref": null
+    },
+    {
+      "field": "occupants",
+      "value": 3.0,
+      "source": "user_stated",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "user, presence user",
+      "ref": "intake:example-SH1"
+    },
+    {
+      "field": "party_wall_area_m2",
+      "value": 90.9,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:victorian_terrace_2bed (floor plan)",
+      "ref": "house_type:victorian_terrace_2bed"
+    },
+    {
+      "field": "postcode_district",
+      "value": "M14",
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc / intake",
+      "ref": null
+    },
+    {
+      "field": "pv_azimuth_deg",
+      "value": 180.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc or 180",
+      "ref": null
+    },
+    {
+      "field": "pv_kwp",
+      "value": 0.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc",
+      "ref": null
+    },
+    {
+      "field": "pv_tilt_deg",
+      "value": 35.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc or 35",
+      "ref": null
+    },
+    {
+      "field": "roof_area_m2",
+      "value": 42.5,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:victorian_terrace_2bed (floor plan)",
+      "ref": "house_type:victorian_terrace_2bed"
+    },
+    {
+      "field": "roof_u",
+      "value": 0.68,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default loft table (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "setpoint_c",
+      "value": 19.0,
+      "source": "user_stated",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule (calibrated)",
+      "ref": "intake:example-SH1"
+    },
+    {
+      "field": "shower_electric_kwh_per_day",
+      "value": 2.55,
+      "source": "appliance_list",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "appliance list (electric shower)",
+      "ref": "intake:example-SH1"
+    },
+    {
+      "field": "solar_gain_factor",
+      "value": 1.0,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "twinparams_default",
+      "ref": null
+    },
+    {
+      "field": "tariff",
+      "value": "standard",
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "default standard",
+      "ref": null
+    },
+    {
+      "field": "thermal_bridging_y",
+      "value": 0.15,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "twinparams_default",
+      "ref": null
+    },
+    {
+      "field": "thermal_mass_kj_per_m2k",
+      "value": 310.4,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "construction x layout areas, kappa from rdsap_defaults.json (to_verify); partitions: assumption by age (pre-1950 masonry, later plasterboard)",
+      "ref": null
+    },
+    {
+      "field": "volume_m3",
+      "value": 229.53,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:victorian_terrace_2bed (floor plan)",
+      "ref": "house_type:victorian_terrace_2bed"
+    },
+    {
+      "field": "wall_area_m2",
+      "value": 43.36,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:victorian_terrace_2bed (floor plan)",
+      "ref": "house_type:victorian_terrace_2bed"
+    },
+    {
+      "field": "wall_u",
+      "value": 2.1,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "window_area_m2",
+      "value": 7.58,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:victorian_terrace_2bed (floor plan)",
+      "ref": "house_type:victorian_terrace_2bed"
+    },
+    {
+      "field": "window_u",
+      "value": 4.0,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default glazing (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "weather",
+      "value": null,
+      "source": "synthetic",
+      "status": "synthetic",
+      "confirmed": false,
+      "detail": "weather source: synthetic",
+      "ref": null
+    },
+    {
+      "field": "meter_readings",
+      "value": null,
+      "source": "meter",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "usage records",
+      "ref": "intake:example-SH1"
+    }
+  ],
+  "provenance_summary": {
+    "geometry_source": "epc_fitted",
+    "counts_by_status": {
+      "assumption": 2,
+      "stated": 5,
+      "recorded": 9,
+      "estimated": 9,
+      "to_verify": 8,
+      "default": 5,
+      "synthetic": 1
+    },
+    "heat_loss_share_by_status": {
+      "to_verify": 71.1,
+      "assumption": 28.9
+    },
+    "confirmed_or_recorded_heat_loss_pct": 0.0,
+    "default_or_unverified_heat_loss_pct": 100.0
+  },
   "occupancy": {
     "occupants": 3.0,
     "presence": "part_day",
@@ -949,11 +1337,11 @@
       "param": "heat_loss_multiplier",
       "kind": "lognormal",
       "mu": 0.0,
-      "sigma": 0.25,
+      "sigma": 0.3,
       "base": 1.0,
       "lower": 0.4,
       "upper": 2.0,
-      "rationale": "Scales the RdSAP-default fabric + ventilation loss; defaults are uncertain (to_verify) and older homes often use less than default models predict"
+      "rationale": "Scales the fabric + ventilation loss; width set by input provenance (unverified U-values and unconfirmed geometry widen it)"
     },
     {
       "param": "setpoint_c",

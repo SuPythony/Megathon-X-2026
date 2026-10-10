@@ -238,5 +238,6 @@ def fit_layout(extraction: FloorPlanExtraction, prop: Optional[Property] = None,
         built_form=built_form,
         front_azimuth_deg=extraction.front_azimuth_deg if extraction.front_azimuth_deg is not None else 180.0,
         room_labels=labels,
+        geometry_source="vision_fitted",
     )
     return FittedLayout(layout=layout, area_source=source, unmatched_rooms=unmatched, needs_confirmation=needs)

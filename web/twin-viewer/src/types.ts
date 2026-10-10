@@ -181,7 +181,32 @@ export interface RoomScene {
   energy?: EnergyOverlay | null
   retrofits?: RetrofitOption[]
   scenarios?: Record<string, ScenarioView>
+  geometry_source: string
+  geometry?: GeometryConfirmation | null
+  input_quality?: ProvenanceSummary | null
   basis: string
+}
+
+// greentwin/twin/geometry.py
+export interface GeometryConfirmation {
+  archetype_id: string
+  footprint_width_m: number
+  footprint_depth_m: number
+  ceiling_height_m: number
+  front_azimuth_deg: number
+  built_form: string | null
+  room_labels: Record<string, string>
+  confirmed_by_user: boolean
+  confirmed_at: string | null
+}
+
+// greentwin/twin/provenance.py
+export interface ProvenanceSummary {
+  geometry_source: string
+  counts_by_status: Record<string, number>
+  heat_loss_share_by_status: Record<string, number>
+  confirmed_or_recorded_heat_loss_pct: number
+  default_or_unverified_heat_loss_pct: number
 }
 
 // appliance_energy.json: the size questions per appliance type

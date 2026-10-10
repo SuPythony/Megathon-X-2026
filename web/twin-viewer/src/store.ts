@@ -52,6 +52,7 @@ interface ViewerState {
   setView: (v: 'before' | 'after') => void
   runTwin: () => Promise<void>
   updateAnswers: (id: string, answers: Record<string, string>) => void
+  replaceScene: (scene: RoomScene) => void
   moveAppliance: (id: string, x: number, y: number) => void
   rotateAppliance: (id: string, by: number) => void
   removeAppliance: (id: string) => void
@@ -121,7 +122,10 @@ export const useViewer = create<ViewerState>((set, get) => ({
     try {
       const res = await fetch('/api/twin/run', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ property_id: sc.property_id, retrofit_ids: s.retrofitIds, appliances: exportPlacements(sc, s.appliances) }),
+        body: JSON.stringify({
+          property_id: sc.property_id, retrofit_ids: s.retrofitIds, appliances: exportPlacements(sc, s.appliances),
+          geometry: sc.geometry_source === 'user_confirmed' ? sc.geometry : null,
+        }),
       })
       if (!res.ok) throw new Error(await res.text())
       const data = await res.json() as { baseline_rooms: EnergyOverlay; scenario: ScenarioView }
@@ -137,6 +141,13 @@ export const useViewer = create<ViewerState>((set, get) => ({
       set({ twinBusy: false })
     }
   },
+
+  // A rebuilt scene (e.g. confirmed geometry) replaces the current one; the package re-runs on it.
+  replaceScene: (sc) =>
+    set((s) => ({
+      scenes: { ...s.scenes, [s.sceneKey]: sc }, appliances: sc.appliances, baselineRooms: sc.energy ?? null,
+      scenario: null, selectedAppliance: null,
+    })),
 
   updateAnswers: (id, answers) =>
     set((s) => ({ appliances: s.appliances.map((a) => (a.appliance_id === id ? { ...a, answers } : a)) })),

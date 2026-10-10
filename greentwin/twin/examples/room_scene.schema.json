@@ -1107,6 +1107,40 @@
       "title": "Retrofits",
       "type": "array"
     },
+    "geometry_source": {
+      "default": "archetype_default",
+      "description": "archetype_default / epc_fitted / vision_fitted / user_confirmed",
+      "title": "Geometry Source",
+      "type": "string"
+    },
+    "geometry": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "GeometryConfirmation used (dimensions, confirmed_by_user, confirmed_at)",
+      "title": "Geometry"
+    },
+    "input_quality": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ProvenanceSummary of the physics inputs",
+      "title": "Input Quality"
+    },
     "scenarios": {
       "additionalProperties": {
         "$ref": "#/$defs/ScenarioView"

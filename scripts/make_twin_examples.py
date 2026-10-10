@@ -44,6 +44,8 @@ def main() -> None:
         scene = build_scene(sc.layout, pid, sc.appliances)
         scene.energy = energy_overlay(alloc, calibrated=False, weather_source=pkg.weather.source)
         scene.retrofits = retrofit_options(sc.layout, sc.prop)
+        scene.geometry = pkg.geometry.model_dump(mode="json")
+        scene.input_quality = pkg.provenance_summary.model_dump(mode="json")
         for option in [None, *[r for r in scene.retrofits if r.applicable]]:
             ids = [] if option is None else [option.retrofit_id]
             view = run_scenario(twin, sc.layout, samples, ids, sc.appliances, weather_source=pkg.weather.source)

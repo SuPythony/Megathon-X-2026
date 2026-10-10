@@ -70,7 +70,7 @@ export default function App() {
     heatTint, toggleHeatTint, retrofitIds, view, setView, runTwin, appliances } = useViewer()
   const scene = scenes[sceneKey]
   const [intakeOpen, setIntakeOpen] = useState(false)
-  const energyKey = applianceKey(appliances) + [...retrofitIds].sort().join('+')
+  const energyKey = applianceKey(appliances) + [...retrofitIds].sort().join('+') + (scene?.geometry?.confirmed_at ?? '')
 
   // Re-run the twin when the package or the appliances' energy-relevant fields change (debounced).
   useEffect(() => {

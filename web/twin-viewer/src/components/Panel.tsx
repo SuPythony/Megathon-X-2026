@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react'
 import { bbox, roomStats } from '../geometry'
 import { QUESTIONS, VISUALS, currentRooms, defaultAnswers, exportPlacements, useViewer } from '../store'
+import { GeometryCard } from './GeometryCard'
 import { RetrofitPanel } from './RetrofitPanel'
 import type { Range, RoomScene } from '../types'
 
@@ -184,6 +185,7 @@ export function Panel({ scene }: { scene: RoomScene }) {
   return (
     <aside className="panel">
       {selectedRoom ? <RoomDetail scene={scene} roomId={selectedRoom} /> : <HouseSummary scene={scene} />}
+      {!selectedRoom && <GeometryCard key={`${scene.property_id}:${scene.geometry?.confirmed_at ?? ''}`} scene={scene} />}
       <RetrofitPanel scene={scene} />
       <section className="card actions">
         <button onClick={() => download(`${scene.property_id}_appliances.json`, exportPlacements(scene, appliances))}>

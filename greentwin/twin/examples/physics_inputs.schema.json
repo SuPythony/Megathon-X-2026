@@ -245,6 +245,18 @@
       "title": "ApplianceSummary",
       "type": "object"
     },
+    "BuiltForm": {
+      "enum": [
+        "detached",
+        "semi_detached",
+        "mid_terrace",
+        "end_terrace",
+        "enclosed_mid_terrace",
+        "not_applicable"
+      ],
+      "title": "BuiltForm",
+      "type": "string"
+    },
     "Element": {
       "properties": {
         "element": {
@@ -506,6 +518,94 @@
       "title": "ExtendedTwinParams",
       "type": "object"
     },
+    "GeometryConfirmation": {
+      "properties": {
+        "archetype_id": {
+          "enum": [
+            "victorian_terrace_2bed",
+            "interwar_semi_3bed",
+            "postwar_detached_4bed",
+            "modern_terrace_3bed",
+            "bungalow_2bed",
+            "flat_2bed"
+          ],
+          "title": "Archetype Id",
+          "type": "string"
+        },
+        "footprint_width_m": {
+          "description": "Across the front",
+          "exclusiveMaximum": 40,
+          "exclusiveMinimum": 2,
+          "title": "Footprint Width M",
+          "type": "number"
+        },
+        "footprint_depth_m": {
+          "description": "Front to back",
+          "exclusiveMaximum": 40,
+          "exclusiveMinimum": 2,
+          "title": "Footprint Depth M",
+          "type": "number"
+        },
+        "ceiling_height_m": {
+          "default": 2.4,
+          "maximum": 4.0,
+          "minimum": 2.0,
+          "title": "Ceiling Height M",
+          "type": "number"
+        },
+        "front_azimuth_deg": {
+          "default": 180.0,
+          "description": "Way the front faces; 180 = south",
+          "exclusiveMaximum": 360,
+          "minimum": 0,
+          "title": "Front Azimuth Deg",
+          "type": "number"
+        },
+        "built_form": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BuiltForm"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "room_labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Room Labels",
+          "type": "object"
+        },
+        "confirmed_by_user": {
+          "default": false,
+          "description": "True only after the user pressed confirm",
+          "title": "Confirmed By User",
+          "type": "boolean"
+        },
+        "confirmed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confirmed At"
+        }
+      },
+      "required": [
+        "archetype_id",
+        "footprint_width_m",
+        "footprint_depth_m"
+      ],
+      "title": "GeometryConfirmation",
+      "type": "object"
+    },
     "HeatingSystemInfo": {
       "properties": {
         "system": {
@@ -602,6 +702,97 @@
         "sources"
       ],
       "title": "HotWaterSystem",
+      "type": "object"
+    },
+    "InputProvenance": {
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "source": {
+          "enum": [
+            "user_confirmed",
+            "user_stated",
+            "epc_measured",
+            "epc_recorded",
+            "vision_draft",
+            "layout_confirmed",
+            "layout_house_type",
+            "appliance_list",
+            "rdsap_default",
+            "sap_formula",
+            "derived",
+            "assumption",
+            "default",
+            "synthetic",
+            "meter"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "confirmed",
+            "measured",
+            "recorded",
+            "stated",
+            "estimated",
+            "to_verify",
+            "assumption",
+            "default",
+            "synthetic"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "confirmed": {
+          "description": "The user confirmed this exact value",
+          "title": "Confirmed",
+          "type": "boolean"
+        },
+        "detail": {
+          "description": "Human-readable note of how the value was made",
+          "title": "Detail",
+          "type": "string"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. 'epc:0390-...', 'intake:abc', 'house_type:interwar_semi_3bed'",
+          "title": "Ref"
+        }
+      },
+      "required": [
+        "field",
+        "source",
+        "status",
+        "confirmed",
+        "detail"
+      ],
+      "title": "InputProvenance",
       "type": "object"
     },
     "Meter": {
@@ -759,6 +950,46 @@
         "rationale"
       ],
       "title": "Prior",
+      "type": "object"
+    },
+    "ProvenanceSummary": {
+      "properties": {
+        "geometry_source": {
+          "title": "Geometry Source",
+          "type": "string"
+        },
+        "counts_by_status": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Counts By Status",
+          "type": "object"
+        },
+        "heat_loss_share_by_status": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "% of the heat-loss coefficient (UA + ventilation)",
+          "title": "Heat Loss Share By Status",
+          "type": "object"
+        },
+        "confirmed_or_recorded_heat_loss_pct": {
+          "title": "Confirmed Or Recorded Heat Loss Pct",
+          "type": "number"
+        },
+        "default_or_unverified_heat_loss_pct": {
+          "title": "Default Or Unverified Heat Loss Pct",
+          "type": "number"
+        }
+      },
+      "required": [
+        "geometry_source",
+        "counts_by_status",
+        "heat_loss_share_by_status",
+        "confirmed_or_recorded_heat_loss_pct",
+        "default_or_unverified_heat_loss_pct"
+      ],
+      "title": "ProvenanceSummary",
       "type": "object"
     },
     "Readiness": {
@@ -1021,6 +1252,20 @@
     "thermal_mass": {
       "$ref": "#/$defs/ThermalMass"
     },
+    "geometry": {
+      "$ref": "#/$defs/GeometryConfirmation",
+      "description": "The geometry used, and whether the user confirmed it"
+    },
+    "input_provenance": {
+      "items": {
+        "$ref": "#/$defs/InputProvenance"
+      },
+      "title": "Input Provenance",
+      "type": "array"
+    },
+    "provenance_summary": {
+      "$ref": "#/$defs/ProvenanceSummary"
+    },
     "occupancy": {
       "additionalProperties": {
         "anyOf": [
@@ -1110,6 +1355,9 @@
     "heating_system",
     "hot_water",
     "thermal_mass",
+    "geometry",
+    "input_provenance",
+    "provenance_summary",
     "occupancy",
     "heating_behaviour",
     "appliances",

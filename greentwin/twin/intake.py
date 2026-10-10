@@ -16,6 +16,7 @@ from typing import Literal, Optional, Protocol
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from contracts.models import Property
+from greentwin.twin.geometry import GeometryConfirmation
 from greentwin.twin.scene import AppliancePlacement
 
 _FULL_POSTCODE = re.compile(r"^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})$")
@@ -94,6 +95,8 @@ class TwinIntake(BaseModel):
                                        "heat_pump_cylinder", "instantaneous_electric"]] = None
     internal_walls: Optional[Literal["solid", "hollow"]] = Field(
         None, description="Do internal walls sound solid or hollow when knocked? (thermal mass)")
+    geometry: Optional[GeometryConfirmation] = Field(
+        None, description="House type and dimensions as the user confirmed or corrected them")
     warnings: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")

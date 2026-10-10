@@ -180,6 +180,398 @@
     "partitions": "assumption by age (pre-1950 masonry, later plasterboard)",
     "source": "construction x layout areas, kappa from rdsap_defaults.json (to_verify)"
   },
+  "geometry": {
+    "archetype_id": "interwar_semi_3bed",
+    "footprint_width_m": 6.641,
+    "footprint_depth_m": 7.152,
+    "ceiling_height_m": 2.5,
+    "front_azimuth_deg": 180.0,
+    "built_form": "semi_detached",
+    "room_labels": {
+      "hall": "Hall",
+      "living": "Lounge",
+      "kitchen": "Kitchen",
+      "dining": "Dining room",
+      "bed3": "Bedroom 3",
+      "bed1": "Bedroom 1",
+      "landing": "Landing",
+      "bath": "Bathroom",
+      "bed2": "Bedroom 2"
+    },
+    "confirmed_by_user": false,
+    "confirmed_at": null
+  },
+  "input_provenance": [
+    {
+      "field": "air_changes_per_hour",
+      "value": 0.66,
+      "source": "assumption",
+      "status": "assumption",
+      "confirmed": false,
+      "detail": "assumption by age band, less draught proofing",
+      "ref": null
+    },
+    {
+      "field": "baseload_kwh_per_day",
+      "value": 9.347,
+      "source": "appliance_list",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "appliance list (typical_estimate) + sap_2012 lighting",
+      "ref": "intake:example-SH2"
+    },
+    {
+      "field": "battery_kwh",
+      "value": 0.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc",
+      "ref": null
+    },
+    {
+      "field": "door_area_m2",
+      "value": 3.6,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:interwar_semi_3bed (floor plan)",
+      "ref": "house_type:interwar_semi_3bed"
+    },
+    {
+      "field": "door_u",
+      "value": 3.0,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "floor_area_m2",
+      "value": 47.5,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:interwar_semi_3bed (floor plan)",
+      "ref": "house_type:interwar_semi_3bed"
+    },
+    {
+      "field": "floor_u",
+      "value": 0.632,
+      "source": "derived",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "iso13370 (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "heat_capacity_kj_per_k",
+      "value": 24400.0,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "construction x layout areas, kappa from rdsap_defaults.json (to_verify); partitions: assumption by age (pre-1950 masonry, later plasterboard)",
+      "ref": null
+    },
+    {
+      "field": "heat_loss_multiplier",
+      "value": 1.0,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "default 1.0 (calibrated)",
+      "ref": null
+    },
+    {
+      "field": "heating_efficiency",
+      "value": 0.84,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default by system (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "heating_fuel",
+      "value": "mains_gas",
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc",
+      "ref": null
+    },
+    {
+      "field": "heating_hours_per_day",
+      "value": 9.0,
+      "source": "user_stated",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule",
+      "ref": "intake:example-SH2"
+    },
+    {
+      "field": "hot_water_efficiency",
+      "value": 0.756,
+      "source": "assumption",
+      "status": "assumption",
+      "confirmed": false,
+      "detail": "assumption from main system (boiler summer penalty 0.9; heat pump cylinder 2.0; electric 1.0)",
+      "ref": null
+    },
+    {
+      "field": "hot_water_fuel",
+      "value": "mains_gas",
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc heating.hot_water",
+      "ref": null
+    },
+    {
+      "field": "hot_water_kwh_per_day",
+      "value": 5.857,
+      "source": "sap_formula",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "sap_2012 appendix J demand less electric shower use (floor 40%)",
+      "ref": null
+    },
+    {
+      "field": "hot_water_standing_loss_kwh_per_day",
+      "value": 0.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc cylinder_insulated (assumption: 1.0 / 3.0 kWh/day)",
+      "ref": null
+    },
+    {
+      "field": "internal_gains_w",
+      "value": 360.0,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "metabolic (occupancy) + appliance schedules + sap lighting, less evaporation",
+      "ref": null
+    },
+    {
+      "field": "lighting_share_of_baseload",
+      "value": 0.216,
+      "source": "sap_formula",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "sap_2012 appendix L",
+      "ref": null
+    },
+    {
+      "field": "occupants",
+      "value": 4.0,
+      "source": "user_stated",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "user, presence user",
+      "ref": "intake:example-SH2"
+    },
+    {
+      "field": "party_wall_area_m2",
+      "value": 35.76,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:interwar_semi_3bed (floor plan)",
+      "ref": "house_type:interwar_semi_3bed"
+    },
+    {
+      "field": "postcode_district",
+      "value": "BS16",
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc / intake",
+      "ref": null
+    },
+    {
+      "field": "pv_azimuth_deg",
+      "value": 180.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc or 180",
+      "ref": null
+    },
+    {
+      "field": "pv_kwp",
+      "value": 0.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc",
+      "ref": null
+    },
+    {
+      "field": "pv_tilt_deg",
+      "value": 35.0,
+      "source": "epc_recorded",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "epc or 35",
+      "ref": null
+    },
+    {
+      "field": "roof_area_m2",
+      "value": 47.5,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:interwar_semi_3bed (floor plan)",
+      "ref": "house_type:interwar_semi_3bed"
+    },
+    {
+      "field": "roof_u",
+      "value": 0.4,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default loft table (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "setpoint_c",
+      "value": 20.0,
+      "source": "user_stated",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule (calibrated)",
+      "ref": "intake:example-SH2"
+    },
+    {
+      "field": "shower_electric_kwh_per_day",
+      "value": 0.0,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "none listed",
+      "ref": null
+    },
+    {
+      "field": "solar_gain_factor",
+      "value": 1.0,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "twinparams_default",
+      "ref": null
+    },
+    {
+      "field": "tariff",
+      "value": "standard",
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "default standard",
+      "ref": null
+    },
+    {
+      "field": "thermal_bridging_y",
+      "value": 0.15,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "twinparams_default",
+      "ref": null
+    },
+    {
+      "field": "thermal_mass_kj_per_m2k",
+      "value": 256.8,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "construction x layout areas, kappa from rdsap_defaults.json (to_verify); partitions: assumption by age (pre-1950 masonry, later plasterboard)",
+      "ref": null
+    },
+    {
+      "field": "volume_m3",
+      "value": 237.5,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:interwar_semi_3bed (floor plan)",
+      "ref": "house_type:interwar_semi_3bed"
+    },
+    {
+      "field": "wall_area_m2",
+      "value": 83.6,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:interwar_semi_3bed (floor plan)",
+      "ref": "house_type:interwar_semi_3bed"
+    },
+    {
+      "field": "wall_u",
+      "value": 1.5,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "window_area_m2",
+      "value": 14.97,
+      "source": "layout_house_type",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "layout:interwar_semi_3bed (floor plan)",
+      "ref": "house_type:interwar_semi_3bed"
+    },
+    {
+      "field": "window_u",
+      "value": 2.8,
+      "source": "rdsap_default",
+      "status": "to_verify",
+      "confirmed": false,
+      "detail": "rdsap_default glazing (to_verify)",
+      "ref": null
+    },
+    {
+      "field": "weather",
+      "value": null,
+      "source": "synthetic",
+      "status": "synthetic",
+      "confirmed": false,
+      "detail": "weather source: synthetic",
+      "ref": null
+    },
+    {
+      "field": "meter_readings",
+      "value": null,
+      "source": "meter",
+      "status": "recorded",
+      "confirmed": false,
+      "detail": "usage records",
+      "ref": "intake:example-SH2"
+    }
+  ],
+  "provenance_summary": {
+    "geometry_source": "epc_fitted",
+    "counts_by_status": {
+      "assumption": 2,
+      "stated": 4,
+      "recorded": 9,
+      "estimated": 9,
+      "to_verify": 8,
+      "default": 6,
+      "synthetic": 1
+    },
+    "heat_loss_share_by_status": {
+      "to_verify": 81.5,
+      "assumption": 18.5
+    },
+    "confirmed_or_recorded_heat_loss_pct": 0.0,
+    "default_or_unverified_heat_loss_pct": 100.0
+  },
   "occupancy": {
     "occupants": 4.0,
     "presence": "part_day",
@@ -947,11 +1339,11 @@
       "param": "heat_loss_multiplier",
       "kind": "lognormal",
       "mu": 0.0,
-      "sigma": 0.25,
+      "sigma": 0.3,
       "base": 1.0,
       "lower": 0.4,
       "upper": 2.0,
-      "rationale": "Scales the RdSAP-default fabric + ventilation loss; defaults are uncertain (to_verify) and older homes often use less than default models predict"
+      "rationale": "Scales the fabric + ventilation loss; width set by input provenance (unverified U-values and unconfirmed geometry widen it)"
     },
     {
       "param": "setpoint_c",

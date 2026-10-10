@@ -323,6 +323,9 @@ class RoomScene(BaseModel):
     appliances: list[SceneAppliance]
     energy: Optional[EnergyOverlay] = Field(None, description="Per-room numbers from the twin, when it has run")
     retrofits: list[RetrofitOption] = Field(default_factory=list)
+    geometry_source: str = Field("archetype_default", description="archetype_default / epc_fitted / vision_fitted / user_confirmed")
+    geometry: Optional[dict] = Field(None, description="GeometryConfirmation used (dimensions, confirmed_by_user, confirmed_at)")
+    input_quality: Optional[dict] = Field(None, description="ProvenanceSummary of the physics inputs")
     scenarios: dict[str, ScenarioView] = Field(
         default_factory=dict, description="Precomputed packages by scenario_key (offline fallback for the viewer)")
     basis: str = BASIS_LABEL
@@ -613,6 +616,7 @@ def build_scene(layout: TwinLayout, property_id: str,
         features=_features(layout, style, rooms, roof), context=_context(layout),
         appliances=_place_appliances(appliances or [], rooms, layout.room_types, layout.footprint_m),
         retrofits=retrofit_options(layout),
+        geometry_source=layout.geometry_source,
     )
 
 
