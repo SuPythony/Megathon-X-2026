@@ -4,6 +4,7 @@
 | --- | --- |
 | [GREEN_SCORE_STANDARDS.md](GREEN_SCORE_STANDARDS.md) | UK standards research (SAP 10.2 / RdSAP 10, reformed HEM EPC, NEED, Part L, AECB, LETI, EnerPHit, MEES, ECO4); full parameter catalogue with EPC/NEED fields and how a homeowner supplies each one; ML options for learning weights |
 | [DECISIONS.md](DECISIONS.md) | Every decision (D-xx) with its reason, quantitative proofs (P-xx), worked examples for SH1–SH3, data on hand |
+| [MERGE_NOTES.md](MERGE_NOTES.md) | **What teammates must update when this work merges**: contract changes, mapping versions, per-part actions, dependencies, checklist |
 | [LEARNED_WEIGHTS.md](LEARNED_WEIGHTS.md) | Generated results of the weight learning: final weights with intervals, per-target fits, baselines, Bayesian check, brief-vs-learned agreement, limitations |
 
 ## Code map
