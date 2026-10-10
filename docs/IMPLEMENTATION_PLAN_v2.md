@@ -1,5 +1,7 @@
 # GreenTwin — Implementation Plan v2 (build blocks)
 
+> **Current structure:** the system is now organised as five parts (see `SYSTEM_DESIGN.pdf` and `LLD.pdf` in the repo root). The blocks below map onto them: B2+B3 → Part 1 + Part 2 (coupled core), B4 score → Part 3, B4 retrofits → Part 2, B5 → Part 4, B6 → Part 5 + orchestrator, B1 → Part 0.
+
 Megathon X · Lloyds PS2 · Team MegaMind
 
 v1 (`IMPLEMENTATION_PLAN.md`) listed every idea by tier. This version groups the work into **8 build blocks**. Each block is a complete piece of the system that can be built, tested and documented from start to finish. Blocks connect only through the contracts in `contracts/`, so all of them can start on day one against stubs or mocks. Owners are assigned separately.

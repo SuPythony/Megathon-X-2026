@@ -1,0 +1,61 @@
+{
+  "$defs": {
+    "ChatTurn": {
+      "properties": {
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "ChatTurn",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "customer_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Customer Id"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "history": {
+      "items": {
+        "$ref": "#/$defs/ChatTurn"
+      },
+      "title": "History",
+      "type": "array"
+    }
+  },
+  "required": [
+    "property_id",
+    "message"
+  ],
+  "title": "ChatRequest",
+  "type": "object"
+}

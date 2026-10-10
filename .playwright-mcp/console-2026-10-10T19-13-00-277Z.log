@@ -1,0 +1,1 @@
+[    1965ms] [ERROR] Global Message: API request failed SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ https://cma-asset.ukdataservice.ac.uk/globalMessage.js:54

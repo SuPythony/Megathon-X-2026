@@ -1,0 +1,620 @@
+{
+  "$defs": {
+    "BuiltForm": {
+      "enum": [
+        "detached",
+        "semi_detached",
+        "mid_terrace",
+        "end_terrace",
+        "enclosed_mid_terrace",
+        "not_applicable"
+      ],
+      "title": "BuiltForm",
+      "type": "string"
+    },
+    "CredibleInterval": {
+      "description": "Central (equal-tailed) credible interval, e.g. level 0.9 = P5..P95.",
+      "properties": {
+        "level": {
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Level",
+          "type": "number"
+        },
+        "lo": {
+          "title": "Lo",
+          "type": "number"
+        },
+        "hi": {
+          "title": "Hi",
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
+        "lo",
+        "hi"
+      ],
+      "title": "CredibleInterval",
+      "type": "object"
+    },
+    "Distribution": {
+      "description": "Full posterior summary of an uncertain quantity (replaces the old mean/lo/hi Interval).\n\nBuilt from posterior samples by ``contracts.summarise.summarise``. A known-exact value\n(e.g. gas after a heat pump removes the boiler) is a degenerate distribution: std = 0.",
+      "properties": {
+        "unit": {
+          "description": "e.g. 'kWh/yr', 'GBP/yr', 'kgCO2e/yr', 'points', '%'",
+          "title": "Unit",
+          "type": "string"
+        },
+        "n_samples": {
+          "description": "Posterior samples the summary was computed from",
+          "minimum": 1,
+          "title": "N Samples",
+          "type": "integer"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "median": {
+          "description": "Equals percentiles.p50",
+          "title": "Median",
+          "type": "number"
+        },
+        "mode": {
+          "description": "Most likely value: peak of the sample density (KDE)",
+          "title": "Mode",
+          "type": "number"
+        },
+        "std": {
+          "minimum": 0,
+          "title": "Std",
+          "type": "number"
+        },
+        "skewness": {
+          "default": 0.0,
+          "description": "Sample skewness; |skew| > 0.5 -> headline uses the median",
+          "title": "Skewness",
+          "type": "number"
+        },
+        "percentiles": {
+          "$ref": "#/$defs/Percentiles"
+        },
+        "credible_intervals": {
+          "description": "At least the 50% and 90% intervals",
+          "items": {
+            "$ref": "#/$defs/CredibleInterval"
+          },
+          "title": "Credible Intervals",
+          "type": "array"
+        },
+        "tail_probabilities": {
+          "items": {
+            "$ref": "#/$defs/TailProbability"
+          },
+          "title": "Tail Probabilities",
+          "type": "array"
+        },
+        "worst_tail": {
+          "default": "low",
+          "description": "Which side is the bad outcome (low for savings, high for costs)",
+          "enum": [
+            "low",
+            "high"
+          ],
+          "title": "Worst Tail",
+          "type": "string"
+        },
+        "worst_5pct_mean": {
+          "description": "Mean of the worst 5% of samples (expected shortfall)",
+          "title": "Worst 5Pct Mean",
+          "type": "number"
+        },
+        "histogram": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Histogram"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "headline": {
+          "default": "mean",
+          "description": "Which centre the UI/LLM shows first",
+          "enum": [
+            "mean",
+            "median"
+          ],
+          "title": "Headline",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unit",
+        "n_samples",
+        "mean",
+        "median",
+        "mode",
+        "std",
+        "percentiles",
+        "credible_intervals",
+        "worst_5pct_mean"
+      ],
+      "title": "Distribution",
+      "type": "object"
+    },
+    "Histogram": {
+      "description": "Sample histogram for the UI density plot; len(bin_edges) == len(counts) + 1.",
+      "properties": {
+        "bin_edges": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Bin Edges",
+          "type": "array"
+        },
+        "counts": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Counts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "bin_edges",
+        "counts"
+      ],
+      "title": "Histogram",
+      "type": "object"
+    },
+    "Percentiles": {
+      "description": "Posterior percentiles; must be non-decreasing from p1 to p99.",
+      "properties": {
+        "p1": {
+          "title": "P1",
+          "type": "number"
+        },
+        "p5": {
+          "title": "P5",
+          "type": "number"
+        },
+        "p10": {
+          "title": "P10",
+          "type": "number"
+        },
+        "p25": {
+          "title": "P25",
+          "type": "number"
+        },
+        "p50": {
+          "title": "P50",
+          "type": "number"
+        },
+        "p75": {
+          "title": "P75",
+          "type": "number"
+        },
+        "p90": {
+          "title": "P90",
+          "type": "number"
+        },
+        "p95": {
+          "title": "P95",
+          "type": "number"
+        },
+        "p99": {
+          "title": "P99",
+          "type": "number"
+        }
+      },
+      "required": [
+        "p1",
+        "p5",
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90",
+        "p95",
+        "p99"
+      ],
+      "title": "Percentiles",
+      "type": "object"
+    },
+    "PropertyType": {
+      "enum": [
+        "house",
+        "bungalow",
+        "flat",
+        "maisonette"
+      ],
+      "title": "PropertyType",
+      "type": "string"
+    },
+    "RetrofitSlot": {
+      "description": "Where a retrofit object appears in the 3D scene.",
+      "properties": {
+        "retrofit_id": {
+          "title": "Retrofit Id",
+          "type": "string"
+        },
+        "anchor": {
+          "enum": [
+            "roof_face",
+            "outside_wall",
+            "loft",
+            "wall_inner",
+            "windows",
+            "plant_cupboard",
+            "floor",
+            "room"
+          ],
+          "title": "Anchor",
+          "type": "string"
+        },
+        "surface_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Surface Id"
+        },
+        "position_m": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Position M"
+        },
+        "status": {
+          "enum": [
+            "feasible",
+            "feasible_with_conditions",
+            "needs_survey",
+            "infeasible"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "retrofit_id",
+        "anchor",
+        "status"
+      ],
+      "title": "RetrofitSlot",
+      "type": "object"
+    },
+    "RoofType": {
+      "enum": [
+        "pitched_loft",
+        "pitched_room_in_roof",
+        "flat",
+        "another_dwelling_above"
+      ],
+      "title": "RoofType",
+      "type": "string"
+    },
+    "Room": {
+      "properties": {
+        "room_id": {
+          "title": "Room Id",
+          "type": "string"
+        },
+        "label": {
+          "description": "e.g. 'living room', 'kitchen', 'bedroom 1', 'loft'",
+          "title": "Label",
+          "type": "string"
+        },
+        "storey": {
+          "default": 0,
+          "title": "Storey",
+          "type": "integer"
+        },
+        "polygon_m": {
+          "description": "Floor polygon in metres, house-local coordinates",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Polygon M",
+          "type": "array"
+        },
+        "area_m2": {
+          "title": "Area M2",
+          "type": "number"
+        },
+        "ceiling_height_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ceiling Height M"
+        },
+        "confidence": {
+          "default": 1.0,
+          "description": "1.0 once confirmed by the agent",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        }
+      },
+      "required": [
+        "room_id",
+        "label",
+        "polygon_m",
+        "area_m2"
+      ],
+      "title": "Room",
+      "type": "object"
+    },
+    "SceneSurface": {
+      "description": "One renderable building surface for the 3D twin.",
+      "properties": {
+        "surface_id": {
+          "title": "Surface Id",
+          "type": "string"
+        },
+        "element": {
+          "enum": [
+            "roof",
+            "walls",
+            "floor",
+            "windows",
+            "doors",
+            "party_walls"
+          ],
+          "title": "Element",
+          "type": "string"
+        },
+        "orientation_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Outward normal azimuth, 180 = south",
+          "title": "Orientation Deg"
+        },
+        "area_m2": {
+          "title": "Area M2",
+          "type": "number"
+        },
+        "u_value": {
+          "title": "U Value",
+          "type": "number"
+        },
+        "heat_loss_share_pct": {
+          "description": "Posterior mean share of total heat loss; drives colour",
+          "title": "Heat Loss Share Pct",
+          "type": "number"
+        },
+        "heat_loss_share": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "estimated": {
+          "default": true,
+          "title": "Estimated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "surface_id",
+        "element",
+        "area_m2",
+        "u_value",
+        "heat_loss_share_pct"
+      ],
+      "title": "SceneSurface",
+      "type": "object"
+    },
+    "TailProbability": {
+      "description": "Probability that the quantity falls beyond a meaningful threshold, e.g. P(saving < 0).",
+      "properties": {
+        "label": {
+          "description": "Human-readable event, e.g. 'bill rises by more than \u00a3100/yr'",
+          "title": "Label",
+          "type": "string"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "below",
+            "above"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Probability",
+          "type": "number"
+        }
+      },
+      "required": [
+        "label",
+        "threshold",
+        "direction",
+        "probability"
+      ],
+      "title": "TailProbability",
+      "type": "object"
+    }
+  },
+  "description": "Everything the 3D viewer needs. The scene never calculates: numbers come from ScenarioResult.",
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Set when the scene shows a retrofit package",
+      "title": "Scenario Id"
+    },
+    "geometry_source": {
+      "enum": [
+        "parametric",
+        "floor_plan"
+      ],
+      "title": "Geometry Source",
+      "type": "string"
+    },
+    "property_type": {
+      "$ref": "#/$defs/PropertyType"
+    },
+    "built_form": {
+      "$ref": "#/$defs/BuiltForm"
+    },
+    "storeys": {
+      "title": "Storeys",
+      "type": "integer"
+    },
+    "footprint_m": {
+      "description": "(width, depth) of the parametric box",
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Footprint M",
+      "type": "array"
+    },
+    "roof_type": {
+      "$ref": "#/$defs/RoofType"
+    },
+    "roof_pitch_deg": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Roof Pitch Deg"
+    },
+    "surfaces": {
+      "items": {
+        "$ref": "#/$defs/SceneSurface"
+      },
+      "title": "Surfaces",
+      "type": "array"
+    },
+    "rooms": {
+      "items": {
+        "$ref": "#/$defs/Room"
+      },
+      "title": "Rooms",
+      "type": "array"
+    },
+    "retrofit_slots": {
+      "items": {
+        "$ref": "#/$defs/RetrofitSlot"
+      },
+      "title": "Retrofit Slots",
+      "type": "array"
+    },
+    "heat_loss_label": {
+      "default": "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills",
+      "title": "Heat Loss Label",
+      "type": "string"
+    }
+  },
+  "required": [
+    "property_id",
+    "geometry_source",
+    "property_type",
+    "built_form",
+    "storeys",
+    "footprint_m",
+    "roof_type",
+    "surfaces"
+  ],
+  "title": "TwinScene",
+  "type": "object"
+}

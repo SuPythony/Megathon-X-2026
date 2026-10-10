@@ -1,0 +1,48 @@
+{
+  "answer": "MOCK: Adding a heat pump removes your gas use (about 7,150 kWh/yr) but raises electricity by about 2,300 kWh/yr, so your bill change is centred near zero (-£35/yr, 90% range -£180 to +£110). These are estimates from your home's model, not guarantees.",
+  "route": {
+    "intent": "numeric",
+    "confidence": 0.93,
+    "needs_clarification": false,
+    "router": "claude_fallback",
+    "scenario": {
+      "scenario_id": "SH2-hp",
+      "property_id": "SH2",
+      "retrofits": [
+        {
+          "retrofit_id": "air_source_heat_pump"
+        }
+      ]
+    }
+  },
+  "tool_calls": [
+    {
+      "name": "run_scenario",
+      "input": {
+        "scenario_id": "SH2-hp"
+      },
+      "output_ref": "SH2-hp"
+    }
+  ],
+  "citations": [
+    {
+      "source": "tool_result",
+      "ref": "SH2-hp"
+    }
+  ],
+  "check": {
+    "numbers_found": [
+      "7,150",
+      "2,300",
+      "35",
+      "180",
+      "110",
+      "90"
+    ],
+    "unsupported_numbers": [],
+    "passed": true
+  },
+  "scenario_result_id": "SH2-hp",
+  "fallback": "none",
+  "model": null
+}

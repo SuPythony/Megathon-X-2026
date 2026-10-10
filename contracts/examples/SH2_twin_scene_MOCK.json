@@ -1,0 +1,143 @@
+{
+  "property_id": "SH2",
+  "scenario_id": null,
+  "geometry_source": "parametric",
+  "property_type": "house",
+  "built_form": "semi_detached",
+  "storeys": 2,
+  "footprint_m": [
+    8.0,
+    6.0
+  ],
+  "roof_type": "pitched_loft",
+  "roof_pitch_deg": 35,
+  "surfaces": [
+    {
+      "surface_id": "roof_s",
+      "element": "roof",
+      "orientation_deg": 180,
+      "area_m2": 48,
+      "u_value": 2.3,
+      "heat_loss_share_pct": 15,
+      "estimated": true
+    },
+    {
+      "surface_id": "roof_n",
+      "element": "roof",
+      "orientation_deg": 0,
+      "area_m2": 48,
+      "u_value": 2.3,
+      "heat_loss_share_pct": 0,
+      "estimated": true
+    },
+    {
+      "surface_id": "wall_s",
+      "element": "walls",
+      "orientation_deg": 180,
+      "area_m2": 38,
+      "u_value": 1.5,
+      "heat_loss_share_pct": 9,
+      "estimated": true
+    },
+    {
+      "surface_id": "wall_n",
+      "element": "walls",
+      "orientation_deg": 0,
+      "area_m2": 38,
+      "u_value": 1.5,
+      "heat_loss_share_pct": 9,
+      "estimated": true
+    },
+    {
+      "surface_id": "wall_e",
+      "element": "walls",
+      "orientation_deg": 90,
+      "area_m2": 40,
+      "u_value": 1.5,
+      "heat_loss_share_pct": 10,
+      "estimated": true
+    },
+    {
+      "surface_id": "win_s",
+      "element": "windows",
+      "orientation_deg": 180,
+      "area_m2": 9,
+      "u_value": 2.8,
+      "heat_loss_share_pct": 12,
+      "estimated": true
+    },
+    {
+      "surface_id": "win_n",
+      "element": "windows",
+      "orientation_deg": 0,
+      "area_m2": 7,
+      "u_value": 2.8,
+      "heat_loss_share_pct": 8,
+      "estimated": true
+    },
+    {
+      "surface_id": "floor",
+      "element": "floor",
+      "orientation_deg": null,
+      "area_m2": 48,
+      "u_value": 0.7,
+      "heat_loss_share_pct": 12,
+      "estimated": true
+    },
+    {
+      "surface_id": "door",
+      "element": "doors",
+      "orientation_deg": 0,
+      "area_m2": 3.7,
+      "u_value": 3.0,
+      "heat_loss_share_pct": 4,
+      "estimated": true
+    },
+    {
+      "surface_id": "party",
+      "element": "party_walls",
+      "orientation_deg": 270,
+      "area_m2": 40,
+      "u_value": 0.0,
+      "heat_loss_share_pct": 0,
+      "estimated": true
+    }
+  ],
+  "rooms": [],
+  "retrofit_slots": [
+    {
+      "retrofit_id": "solar_pv",
+      "anchor": "roof_face",
+      "surface_id": "roof_s",
+      "status": "feasible"
+    },
+    {
+      "retrofit_id": "air_source_heat_pump",
+      "anchor": "outside_wall",
+      "surface_id": "wall_e",
+      "position_m": [
+        8.4,
+        3.0,
+        0.0
+      ],
+      "status": "feasible"
+    },
+    {
+      "retrofit_id": "loft_insulation",
+      "anchor": "loft",
+      "status": "feasible"
+    },
+    {
+      "retrofit_id": "cavity_wall_insulation",
+      "anchor": "outside_wall",
+      "status": "feasible"
+    },
+    {
+      "retrofit_id": "external_wall_insulation",
+      "anchor": "outside_wall",
+      "status": "infeasible",
+      "reason": "Not a solid wall"
+    }
+  ],
+  "heat_loss_label": "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills"
+}

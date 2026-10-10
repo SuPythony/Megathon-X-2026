@@ -1,0 +1,599 @@
+{
+  "$defs": {
+    "AreaEPCStats": {
+      "description": "One row of the GOV.UK 'Live tables on Energy Performance of Buildings Certificates' (MHCLG).\n\nCounts of EPCs LODGED in a period (not the dwelling stock): tables D1 (bands), D3 (floor area, modelled\nenergy, CO2, fuel cost), EB4 (property type). Used for population calibration targets, download/mapper\nvalidation, twin standard-mode validation, peer context and dashboard layers.",
+      "properties": {
+        "area_code": {
+          "description": "LA code, region name or 'E+W'",
+          "title": "Area Code",
+          "type": "string"
+        },
+        "area_type": {
+          "enum": [
+            "local_authority",
+            "region",
+            "england_wales",
+            "england",
+            "wales"
+          ],
+          "title": "Area Type",
+          "type": "string"
+        },
+        "period": {
+          "description": "'YYYY/Q' quarter or 'YYYY' year",
+          "title": "Period",
+          "type": "string"
+        },
+        "dwellings": {
+          "default": "all",
+          "enum": [
+            "all",
+            "existing",
+            "new"
+          ],
+          "title": "Dwellings",
+          "type": "string"
+        },
+        "lodgements": {
+          "title": "Lodgements",
+          "type": "integer"
+        },
+        "total_floor_area_m2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Floor Area M2"
+        },
+        "band_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "A..G + 'not_recorded' (table D1/EB1)",
+          "title": "Band Counts",
+          "type": "object"
+        },
+        "mean_energy_kwh_m2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "EPC modelled energy (table D3/EB3)",
+          "title": "Mean Energy Kwh M2"
+        },
+        "mean_energy_kwh_per_dwelling": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mean Energy Kwh Per Dwelling"
+        },
+        "mean_co2_t_per_dwelling": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mean Co2 T Per Dwelling"
+        },
+        "mean_fuel_cost_gbp": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mean Fuel Cost Gbp"
+        },
+        "property_type_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "table EB4/NB4",
+          "title": "Property Type Counts",
+          "type": "object"
+        },
+        "source_tables": {
+          "description": "e.g. ['D1', 'D3']",
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Tables",
+          "type": "array"
+        },
+        "release": {
+          "description": "e.g. 'data to June 2026 (30 July 2026)'",
+          "title": "Release",
+          "type": "string"
+        }
+      },
+      "required": [
+        "area_code",
+        "area_type",
+        "period",
+        "lodgements",
+        "release"
+      ],
+      "title": "AreaEPCStats",
+      "type": "object"
+    },
+    "CredibleInterval": {
+      "description": "Central (equal-tailed) credible interval, e.g. level 0.9 = P5..P95.",
+      "properties": {
+        "level": {
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Level",
+          "type": "number"
+        },
+        "lo": {
+          "title": "Lo",
+          "type": "number"
+        },
+        "hi": {
+          "title": "Hi",
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
+        "lo",
+        "hi"
+      ],
+      "title": "CredibleInterval",
+      "type": "object"
+    },
+    "Distribution": {
+      "description": "Full posterior summary of an uncertain quantity (replaces the old mean/lo/hi Interval).\n\nBuilt from posterior samples by ``contracts.summarise.summarise``. A known-exact value\n(e.g. gas after a heat pump removes the boiler) is a degenerate distribution: std = 0.",
+      "properties": {
+        "unit": {
+          "description": "e.g. 'kWh/yr', 'GBP/yr', 'kgCO2e/yr', 'points', '%'",
+          "title": "Unit",
+          "type": "string"
+        },
+        "n_samples": {
+          "description": "Posterior samples the summary was computed from",
+          "minimum": 1,
+          "title": "N Samples",
+          "type": "integer"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "median": {
+          "description": "Equals percentiles.p50",
+          "title": "Median",
+          "type": "number"
+        },
+        "mode": {
+          "description": "Most likely value: peak of the sample density (KDE)",
+          "title": "Mode",
+          "type": "number"
+        },
+        "std": {
+          "minimum": 0,
+          "title": "Std",
+          "type": "number"
+        },
+        "skewness": {
+          "default": 0.0,
+          "description": "Sample skewness; |skew| > 0.5 -> headline uses the median",
+          "title": "Skewness",
+          "type": "number"
+        },
+        "percentiles": {
+          "$ref": "#/$defs/Percentiles"
+        },
+        "credible_intervals": {
+          "description": "At least the 50% and 90% intervals",
+          "items": {
+            "$ref": "#/$defs/CredibleInterval"
+          },
+          "title": "Credible Intervals",
+          "type": "array"
+        },
+        "tail_probabilities": {
+          "items": {
+            "$ref": "#/$defs/TailProbability"
+          },
+          "title": "Tail Probabilities",
+          "type": "array"
+        },
+        "worst_tail": {
+          "default": "low",
+          "description": "Which side is the bad outcome (low for savings, high for costs)",
+          "enum": [
+            "low",
+            "high"
+          ],
+          "title": "Worst Tail",
+          "type": "string"
+        },
+        "worst_5pct_mean": {
+          "description": "Mean of the worst 5% of samples (expected shortfall)",
+          "title": "Worst 5Pct Mean",
+          "type": "number"
+        },
+        "histogram": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Histogram"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "headline": {
+          "default": "mean",
+          "description": "Which centre the UI/LLM shows first",
+          "enum": [
+            "mean",
+            "median"
+          ],
+          "title": "Headline",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unit",
+        "n_samples",
+        "mean",
+        "median",
+        "mode",
+        "std",
+        "percentiles",
+        "credible_intervals",
+        "worst_5pct_mean"
+      ],
+      "title": "Distribution",
+      "type": "object"
+    },
+    "Histogram": {
+      "description": "Sample histogram for the UI density plot; len(bin_edges) == len(counts) + 1.",
+      "properties": {
+        "bin_edges": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Bin Edges",
+          "type": "array"
+        },
+        "counts": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Counts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "bin_edges",
+        "counts"
+      ],
+      "title": "Histogram",
+      "type": "object"
+    },
+    "LSOAConsumption": {
+      "description": "DESNZ sub-national domestic consumption by LSOA (real, annual). Label for the GNN area model.",
+      "properties": {
+        "lsoa_code": {
+          "title": "Lsoa Code",
+          "type": "string"
+        },
+        "year": {
+          "title": "Year",
+          "type": "integer"
+        },
+        "fuel": {
+          "enum": [
+            "electricity",
+            "gas"
+          ],
+          "title": "Fuel",
+          "type": "string"
+        },
+        "meters": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Meters"
+        },
+        "mean_kwh": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Null when suppressed",
+          "title": "Mean Kwh"
+        },
+        "median_kwh": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Median Kwh"
+        }
+      },
+      "required": [
+        "lsoa_code",
+        "year",
+        "fuel"
+      ],
+      "title": "LSOAConsumption",
+      "type": "object"
+    },
+    "Percentiles": {
+      "description": "Posterior percentiles; must be non-decreasing from p1 to p99.",
+      "properties": {
+        "p1": {
+          "title": "P1",
+          "type": "number"
+        },
+        "p5": {
+          "title": "P5",
+          "type": "number"
+        },
+        "p10": {
+          "title": "P10",
+          "type": "number"
+        },
+        "p25": {
+          "title": "P25",
+          "type": "number"
+        },
+        "p50": {
+          "title": "P50",
+          "type": "number"
+        },
+        "p75": {
+          "title": "P75",
+          "type": "number"
+        },
+        "p90": {
+          "title": "P90",
+          "type": "number"
+        },
+        "p95": {
+          "title": "P95",
+          "type": "number"
+        },
+        "p99": {
+          "title": "P99",
+          "type": "number"
+        }
+      },
+      "required": [
+        "p1",
+        "p5",
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90",
+        "p95",
+        "p99"
+      ],
+      "title": "Percentiles",
+      "type": "object"
+    },
+    "TailProbability": {
+      "description": "Probability that the quantity falls beyond a meaningful threshold, e.g. P(saving < 0).",
+      "properties": {
+        "label": {
+          "description": "Human-readable event, e.g. 'bill rises by more than \u00a3100/yr'",
+          "title": "Label",
+          "type": "string"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "below",
+            "above"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Probability",
+          "type": "number"
+        }
+      },
+      "required": [
+        "label",
+        "threshold",
+        "direction",
+        "probability"
+      ],
+      "title": "TailProbability",
+      "type": "object"
+    }
+  },
+  "description": "One area on the Lloyds heat map (LSOA or local authority). Synthetic customer layers are labelled.",
+  "properties": {
+    "area_code": {
+      "title": "Area Code",
+      "type": "string"
+    },
+    "area_type": {
+      "enum": [
+        "lsoa",
+        "local_authority",
+        "postcode_district"
+      ],
+      "title": "Area Type",
+      "type": "string"
+    },
+    "n_homes_modelled": {
+      "title": "N Homes Modelled",
+      "type": "integer"
+    },
+    "share_green": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Share with score >= 65"
+    },
+    "share_poor": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "finance_demand_gbp": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "carbon_potential_t": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "gnn_expected_electricity_kwh": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "gnn_expected_gas_kwh": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "observed": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LSOAConsumption"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "epc_stats": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AreaEPCStats"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Official EPC live-table figures (LA level)"
+    },
+    "off_gas_grid_share": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Off Gas Grid Share"
+    },
+    "synthetic_customers": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Synthetic customer base; always labelled",
+      "title": "Synthetic Customers"
+    }
+  },
+  "required": [
+    "area_code",
+    "area_type",
+    "n_homes_modelled"
+  ],
+  "title": "DashboardArea",
+  "type": "object"
+}

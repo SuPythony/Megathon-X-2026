@@ -232,6 +232,19 @@
           "default": null,
           "description": "EPC modelled current cost",
           "title": "Estimated Annual Energy Cost Gbp"
+        },
+        "energy_consumption_kwh_m2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "EPC modelled primary energy (kWh/m2/yr); validation target for the twin's standard mode",
+          "title": "Energy Consumption Kwh M2"
         }
       },
       "title": "EPCInfo",
@@ -426,6 +439,7 @@
             }
           ],
           "default": null,
+          "description": "LSOA 2021 code (ONS postcode directory)",
           "title": "Lsoa Code"
         },
         "local_authority": {
@@ -438,7 +452,21 @@
             }
           ],
           "default": null,
+          "description": "Local authority name",
           "title": "Local Authority"
+        },
+        "local_authority_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ONS LA code, e.g. 'E08000003'; joins EPC live tables",
+          "title": "Local Authority Code"
         },
         "region": {
           "description": "ONS region, e.g. 'North West'",
@@ -657,7 +685,7 @@
   },
   "properties": {
     "schema_version": {
-      "default": "0.3.0",
+      "default": "0.4.0",
       "title": "Schema Version",
       "type": "string"
     },
@@ -800,6 +828,21 @@
       ],
       "default": null,
       "title": "Draught Proofed Pct"
+    },
+    "low_energy_lighting_pct": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "EPC LOW_ENERGY_LIGHTING",
+      "title": "Low Energy Lighting Pct"
     },
     "heating": {
       "$ref": "#/$defs/Heating"

@@ -1,0 +1,116 @@
+{
+  "description": "Evaluation label (PS section 9). Synthetic labels name the generator rule that made them.",
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "label_type": {
+      "enum": [
+        "per_fuel_saving",
+        "package_saving",
+        "improvement_potential",
+        "feasibility",
+        "relevance",
+        "value_impact_method_check",
+        "rating_change"
+      ],
+      "title": "Label Type",
+      "type": "string"
+    },
+    "retrofit_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Retrofit Ids",
+      "type": "array"
+    },
+    "fuel": {
+      "anyOf": [
+        {
+          "enum": [
+            "electricity",
+            "gas",
+            "purchased"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fuel"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    },
+    "origin": {
+      "enum": [
+        "synthetic_generator",
+        "epc_recommendation",
+        "epc_history",
+        "rules",
+        "observed"
+      ],
+      "title": "Origin",
+      "type": "string"
+    },
+    "rule_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Generator/rule that produced it (documented)",
+      "title": "Rule Id"
+    },
+    "generator_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Generator Version"
+    }
+  },
+  "required": [
+    "property_id",
+    "label_type",
+    "origin"
+  ],
+  "title": "ReferenceLabel",
+  "type": "object"
+}

@@ -15,7 +15,9 @@
         "heating",
         "renewables",
         "controls",
-        "airtightness"
+        "airtightness",
+        "lighting",
+        "tariff"
       ],
       "title": "Category",
       "type": "string"
@@ -31,7 +33,7 @@
           }
         ]
       },
-      "description": "Parameter changes applied to the physics twin",
+      "description": "TwinParams edits: a number sets the field; a string 'x<k>' multiplies it (e.g. 'x0.25'); other strings set a categorical field (e.g. tariff)",
       "title": "Twin Edits",
       "type": "object"
     },
@@ -158,6 +160,12 @@
       "default": null,
       "description": "Continuous sizing bounds, e.g. {'kwp_min':1,'kwp_max':6}",
       "title": "Sizing"
+    },
+    "changes_kwh": {
+      "default": true,
+      "description": "False for tariff switches: bills change, energy does not",
+      "title": "Changes Kwh",
+      "type": "boolean"
     },
     "source": {
       "description": "Citation for cost/impact assumptions",

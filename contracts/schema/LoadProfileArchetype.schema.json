@@ -1,0 +1,53 @@
+{
+  "description": "Half-hourly electricity load shape clustered from London smart-meter data.",
+  "properties": {
+    "archetype_id": {
+      "title": "Archetype Id",
+      "type": "string"
+    },
+    "season": {
+      "enum": [
+        "winter",
+        "spring",
+        "summer",
+        "autumn"
+      ],
+      "title": "Season",
+      "type": "string"
+    },
+    "day_type": {
+      "enum": [
+        "weekday",
+        "weekend"
+      ],
+      "title": "Day Type",
+      "type": "string"
+    },
+    "half_hourly_share": {
+      "description": "48 values summing to 1 (share of daily kWh)",
+      "items": {
+        "type": "number"
+      },
+      "title": "Half Hourly Share",
+      "type": "array"
+    },
+    "n_households": {
+      "title": "N Households",
+      "type": "integer"
+    },
+    "source": {
+      "default": "London Datastore: Smart Meter Energy Consumption Data in London Households (LCL)",
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "archetype_id",
+    "season",
+    "day_type",
+    "half_hourly_share",
+    "n_households"
+  ],
+  "title": "LoadProfileArchetype",
+  "type": "object"
+}

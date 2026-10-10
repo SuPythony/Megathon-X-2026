@@ -27,12 +27,12 @@ MONTHS = [f"2025-{m:02d}" for m in range(1, 13)]
 
 HOMES = [
     {
-        "schema_version": "0.3.0",
+        "schema_version": "0.4.0",
         "property_id": "SH1",
         "customer_id": "C-SH1",
         "source": "showcase",
         "split": None,
-        "location": {"postcode_district": "M14", "lsoa_code": None, "local_authority": "Manchester",
+        "location": {"postcode_district": "M14", "lsoa_code": None, "local_authority": "Manchester", "local_authority_code": "E08000003",
                      "region": "North West", "lat": 53.447, "lon": -2.222, "altitude_m": 40},
         "property_type": "house", "built_form": "mid_terrace",
         "construction_age_band": "1900-1929", "year_built": 1905, "storeys": 2,
@@ -58,12 +58,12 @@ HOMES = [
         "_story": "Victorian solid-wall mid-terrace in a conservation area: EWI blocked -> internal wall insulation; classic 'fabric first, then heat pump' path; one missing month.",
     },
     {
-        "schema_version": "0.3.0",
+        "schema_version": "0.4.0",
         "property_id": "SH2",
         "customer_id": "C-SH2",
         "source": "showcase",
         "split": None,
-        "location": {"postcode_district": "BS16", "lsoa_code": None, "local_authority": "South Gloucestershire",
+        "location": {"postcode_district": "BS16", "lsoa_code": None, "local_authority": "South Gloucestershire", "local_authority_code": "E06000025",
                      "region": "South West", "lat": 51.487, "lon": -2.512, "altitude_m": 60},
         "property_type": "house", "built_form": "semi_detached",
         "construction_age_band": "1967-1975", "year_built": 1972, "storeys": 2,
@@ -88,12 +88,12 @@ HOMES = [
         "_story": "1970s cavity semi: every common retrofit feasible; the best Pareto and green-loan demo; shows electricity rising after a heat pump.",
     },
     {
-        "schema_version": "0.3.0",
+        "schema_version": "0.4.0",
         "property_id": "SH3",
         "customer_id": "C-SH3",
         "source": "showcase",
         "split": None,
-        "location": {"postcode_district": "CR0", "lsoa_code": None, "local_authority": "Croydon",
+        "location": {"postcode_district": "CR0", "lsoa_code": None, "local_authority": "Croydon", "local_authority_code": "E09000008",
                      "region": "London", "lat": 51.376, "lon": -0.098, "altitude_m": 50},
         "property_type": "flat", "built_form": "not_applicable",
         "construction_age_band": "2003-2006", "year_built": 2004, "storeys": 1,
@@ -165,7 +165,7 @@ def mock_result() -> dict:
 
 def _mock_result() -> dict:
     return {
-        "schema_version": "0.3.0", "scenario_id": "SH2-pkg-mock", "property_id": "SH2",
+        "schema_version": "0.4.0", "scenario_id": "SH2-pkg-mock", "property_id": "SH2",
         "provenance": {"engine": "mock", "model_version": "mock-0", "data_version": "mock-0", "seed": 42, "n_samples": 0},
         "baseline": {"electricity_import_kwh": dist(3400, 3250, 3550, "kWh/yr"), "gas_kwh": dist(12800, 12300, 13300, "kWh/yr"),
                      "purchased_total_kwh": dist(16200, 15600, 16800, "kWh/yr"), "intensity_kwh_m2": dist(171, 164, 177, "kWh/m2/yr")},
@@ -175,8 +175,14 @@ def _mock_result() -> dict:
                                        tails=[("electricity use rises", 0.0, "below")]),
         "gas_saving_kwh": dist(12800, 12300, 13300, "kWh/yr"),
         "purchased_energy_saving_kwh": dist(11100, 10400, 11800, "kWh/yr"),
-        "improvement_potential_pct": dist(68.5, 64.0, 72.0, "%"),
-        "improvement_potential_p_top_decile": 0.62,
+        "goal": "bills",
+        "improvement_potential": {
+            "pct": dist(68.5, 64.0, 72.0, "%"),
+            "electricity_change_kwh": dist(-1700, -2300, -1200, "kWh/yr", tails=[("electricity use rises", 0.0, "below")]),
+            "gas_change_kwh": dist(12800, 12300, 13300, "kWh/yr"),
+            "included_retrofits": ["cavity_wall_insulation", "loft_insulation", "draught_proofing", "smart_thermostat",
+                                   "double_glazing", "air_source_heat_pump", "solar_pv"],
+            "excluded_needs_survey": [], "p_top_decile": 0.62},
         "carbon_saving_kgco2e": dist(2010, 1880, 2140, "kgCO2e/yr"),
         "emission_factors": {"electricity": 0.19553, "gas": 0.18296},
         "emission_factor_source": "contracts/emission_factors.json (DESNZ 2025: elec generation + T&D; gas gross CV)",
@@ -185,11 +191,19 @@ def _mock_result() -> dict:
         "score_before": {"score": 46, "score_distribution": dist(46.2, 41, 51, "points"), "band": "Poor",
                          "band_probabilities": {"Very poor": 0.0, "Poor": 0.8, "Moderate": 0.2, "Good": 0.0,
                                                 "Highly efficient": 0.0}, "p_poor_or_very_poor": 0.8,
-                         "components": [], "key_issues": ["Unfilled cavity walls", "Gas boiler", "No renewables"]},
+                         "components": [], "rating_source": "recorded_epc",
+                         "peer_context": {"la_share_epc_a_to_c": 0.41, "source": "EPC live table D1, South Gloucestershire"},
+                         "key_issues": [
+                             {"code": "poor_insulation", "label": "Unfilled cavity walls", "severity": "high",
+                              "evidence": {"walls": "cavity, no insulation"}},
+                             {"code": "old_heating", "label": "Gas boiler is the main heat source", "severity": "medium",
+                              "evidence": {"heating": "gas_boiler_condensing"}},
+                             {"code": "no_renewables", "label": "No renewable generation", "severity": "medium",
+                              "evidence": {"pv_kwp": 0}}]},
         "score_after": {"score": 78, "score_distribution": dist(77.8, 74, 82, "points"), "band": "Good",
                         "band_probabilities": {"Very poor": 0.0, "Poor": 0.0, "Moderate": 0.0, "Good": 0.7,
                                                "Highly efficient": 0.3}, "p_poor_or_very_poor": 0.0,
-                        "components": [], "key_issues": []},
+                        "components": [], "key_issues": [], "projected": True, "rating_source": "estimated"},
         "retrofits": [{
             "retrofit_id": "air_source_heat_pump", "order": 3,
             "feasibility": {"retrofit_id": "air_source_heat_pump", "status": "feasible", "decided_by": "rules",
@@ -223,6 +237,48 @@ def _mock_result() -> dict:
     }
 
 
+def mock_scene() -> dict:
+    """Shape-only TwinScene for 3D development (SH2, parametric geometry)."""
+    surf = [("roof_s", "roof", 180, 48, 2.3, 15), ("roof_n", "roof", 0, 48, 2.3, 0),
+            ("wall_s", "walls", 180, 38, 1.5, 9), ("wall_n", "walls", 0, 38, 1.5, 9), ("wall_e", "walls", 90, 40, 1.5, 10),
+            ("win_s", "windows", 180, 9, 2.8, 12), ("win_n", "windows", 0, 7, 2.8, 8), ("floor", "floor", None, 48, 0.7, 12),
+            ("door", "doors", 0, 3.7, 3.0, 4), ("party", "party_walls", 270, 40, 0.0, 0)]
+    return {
+        "property_id": "SH2", "scenario_id": None, "geometry_source": "parametric",
+        "property_type": "house", "built_form": "semi_detached", "storeys": 2, "footprint_m": [8.0, 6.0],
+        "roof_type": "pitched_loft", "roof_pitch_deg": 35,
+        "surfaces": [{"surface_id": i, "element": e, "orientation_deg": o, "area_m2": a, "u_value": u,
+                      "heat_loss_share_pct": sh, "estimated": True} for i, e, o, a, u, sh in surf],
+        "rooms": [],
+        "retrofit_slots": [
+            {"retrofit_id": "solar_pv", "anchor": "roof_face", "surface_id": "roof_s", "status": "feasible"},
+            {"retrofit_id": "air_source_heat_pump", "anchor": "outside_wall", "surface_id": "wall_e",
+             "position_m": [8.4, 3.0, 0.0], "status": "feasible"},
+            {"retrofit_id": "loft_insulation", "anchor": "loft", "status": "feasible"},
+            {"retrofit_id": "cavity_wall_insulation", "anchor": "outside_wall", "status": "feasible"},
+            {"retrofit_id": "external_wall_insulation", "anchor": "outside_wall", "status": "infeasible",
+             "reason": "Not a solid wall"}],
+        "heat_loss_label": BASIS,
+    }
+
+
+def mock_chat() -> dict:
+    """Shape-only ChatResponse for UI/LLM development."""
+    return {
+        "answer": "MOCK: Adding a heat pump removes your gas use (about 7,150 kWh/yr) but raises electricity by about "
+                  "2,300 kWh/yr, so your bill change is centred near zero (-£35/yr, 90% range -£180 to +£110). "
+                  "These are estimates from your home's model, not guarantees.",
+        "route": {"intent": "numeric", "confidence": 0.93, "needs_clarification": False, "router": "claude_fallback",
+                  "scenario": {"scenario_id": "SH2-hp", "property_id": "SH2",
+                               "retrofits": [{"retrofit_id": "air_source_heat_pump"}]}},
+        "tool_calls": [{"name": "run_scenario", "input": {"scenario_id": "SH2-hp"}, "output_ref": "SH2-hp"}],
+        "citations": [{"source": "tool_result", "ref": "SH2-hp"}],
+        "check": {"numbers_found": ["7,150", "2,300", "35", "180", "110", "90"], "unsupported_numbers": [],
+                  "passed": True},
+        "scenario_result_id": "SH2-hp", "fallback": "none", "model": None,
+    }
+
+
 def main() -> None:
     for h in HOMES:
         usage_rows = usage(h)
@@ -232,7 +288,7 @@ def main() -> None:
         (OUT / f"{h['property_id']}_usage_2025.json").write_text(json.dumps(usage_rows, indent=2), encoding="utf-8")
         print(h["property_id"], "-", story)
     (OUT / "SH2_scenario_spec.json").write_text(json.dumps({
-        "schema_version": "0.3.0", "scenario_id": "SH2-pkg-1", "property_id": "SH2",
+        "schema_version": "0.4.0", "scenario_id": "SH2-pkg-1", "property_id": "SH2",
         "retrofits": [{"retrofit_id": "cavity_wall_insulation", "size": None, "stage_year": 0},
                       {"retrofit_id": "loft_insulation", "size": None, "stage_year": 0},
                       {"retrofit_id": "air_source_heat_pump", "size": 7, "stage_year": 1},
@@ -240,6 +296,9 @@ def main() -> None:
         "weather": "typical", "n_samples": 500, "include_value": True, "include_pareto": False,
         "include_element_heat_loss": True, "seed": 42, "goal": "bills", "requested_by": "ui"}, indent=2), encoding="utf-8")
     (OUT / "SH2_scenario_result_MOCK.json").write_text(json.dumps(mock_result(), indent=2), encoding="utf-8")
+    (OUT / "SH2_twin_scene_MOCK.json").write_text(json.dumps(mock_scene(), indent=2), encoding="utf-8")
+    (OUT / "SH2_chat_response_MOCK.json").write_text(json.dumps(mock_chat(), indent=2, ensure_ascii=False),
+                                                     encoding="utf-8")
 
 
 if __name__ == "__main__":

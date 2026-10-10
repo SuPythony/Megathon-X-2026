@@ -1,0 +1,429 @@
+{
+  "$defs": {
+    "CredibleInterval": {
+      "description": "Central (equal-tailed) credible interval, e.g. level 0.9 = P5..P95.",
+      "properties": {
+        "level": {
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Level",
+          "type": "number"
+        },
+        "lo": {
+          "title": "Lo",
+          "type": "number"
+        },
+        "hi": {
+          "title": "Hi",
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
+        "lo",
+        "hi"
+      ],
+      "title": "CredibleInterval",
+      "type": "object"
+    },
+    "Distribution": {
+      "description": "Full posterior summary of an uncertain quantity (replaces the old mean/lo/hi Interval).\n\nBuilt from posterior samples by ``contracts.summarise.summarise``. A known-exact value\n(e.g. gas after a heat pump removes the boiler) is a degenerate distribution: std = 0.",
+      "properties": {
+        "unit": {
+          "description": "e.g. 'kWh/yr', 'GBP/yr', 'kgCO2e/yr', 'points', '%'",
+          "title": "Unit",
+          "type": "string"
+        },
+        "n_samples": {
+          "description": "Posterior samples the summary was computed from",
+          "minimum": 1,
+          "title": "N Samples",
+          "type": "integer"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "median": {
+          "description": "Equals percentiles.p50",
+          "title": "Median",
+          "type": "number"
+        },
+        "mode": {
+          "description": "Most likely value: peak of the sample density (KDE)",
+          "title": "Mode",
+          "type": "number"
+        },
+        "std": {
+          "minimum": 0,
+          "title": "Std",
+          "type": "number"
+        },
+        "skewness": {
+          "default": 0.0,
+          "description": "Sample skewness; |skew| > 0.5 -> headline uses the median",
+          "title": "Skewness",
+          "type": "number"
+        },
+        "percentiles": {
+          "$ref": "#/$defs/Percentiles"
+        },
+        "credible_intervals": {
+          "description": "At least the 50% and 90% intervals",
+          "items": {
+            "$ref": "#/$defs/CredibleInterval"
+          },
+          "title": "Credible Intervals",
+          "type": "array"
+        },
+        "tail_probabilities": {
+          "items": {
+            "$ref": "#/$defs/TailProbability"
+          },
+          "title": "Tail Probabilities",
+          "type": "array"
+        },
+        "worst_tail": {
+          "default": "low",
+          "description": "Which side is the bad outcome (low for savings, high for costs)",
+          "enum": [
+            "low",
+            "high"
+          ],
+          "title": "Worst Tail",
+          "type": "string"
+        },
+        "worst_5pct_mean": {
+          "description": "Mean of the worst 5% of samples (expected shortfall)",
+          "title": "Worst 5Pct Mean",
+          "type": "number"
+        },
+        "histogram": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Histogram"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "headline": {
+          "default": "mean",
+          "description": "Which centre the UI/LLM shows first",
+          "enum": [
+            "mean",
+            "median"
+          ],
+          "title": "Headline",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unit",
+        "n_samples",
+        "mean",
+        "median",
+        "mode",
+        "std",
+        "percentiles",
+        "credible_intervals",
+        "worst_5pct_mean"
+      ],
+      "title": "Distribution",
+      "type": "object"
+    },
+    "FeatureContribution": {
+      "description": "One additive term of a glass-box model (EBM shape function or hedonic coefficient x value).",
+      "properties": {
+        "feature": {
+          "title": "Feature",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The input value for this home",
+          "title": "Value"
+        },
+        "contribution": {
+          "description": "Additive contribution in the model's output unit",
+          "title": "Contribution",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feature",
+        "contribution",
+        "unit"
+      ],
+      "title": "FeatureContribution",
+      "type": "object"
+    },
+    "Histogram": {
+      "description": "Sample histogram for the UI density plot; len(bin_edges) == len(counts) + 1.",
+      "properties": {
+        "bin_edges": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Bin Edges",
+          "type": "array"
+        },
+        "counts": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Counts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "bin_edges",
+        "counts"
+      ],
+      "title": "Histogram",
+      "type": "object"
+    },
+    "Percentiles": {
+      "description": "Posterior percentiles; must be non-decreasing from p1 to p99.",
+      "properties": {
+        "p1": {
+          "title": "P1",
+          "type": "number"
+        },
+        "p5": {
+          "title": "P5",
+          "type": "number"
+        },
+        "p10": {
+          "title": "P10",
+          "type": "number"
+        },
+        "p25": {
+          "title": "P25",
+          "type": "number"
+        },
+        "p50": {
+          "title": "P50",
+          "type": "number"
+        },
+        "p75": {
+          "title": "P75",
+          "type": "number"
+        },
+        "p90": {
+          "title": "P90",
+          "type": "number"
+        },
+        "p95": {
+          "title": "P95",
+          "type": "number"
+        },
+        "p99": {
+          "title": "P99",
+          "type": "number"
+        }
+      },
+      "required": [
+        "p1",
+        "p5",
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90",
+        "p95",
+        "p99"
+      ],
+      "title": "Percentiles",
+      "type": "object"
+    },
+    "TailProbability": {
+      "description": "Probability that the quantity falls beyond a meaningful threshold, e.g. P(saving < 0).",
+      "properties": {
+        "label": {
+          "description": "Human-readable event, e.g. 'bill rises by more than \u00a3100/yr'",
+          "title": "Label",
+          "type": "string"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "below",
+            "above"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Probability",
+          "type": "number"
+        }
+      },
+      "required": [
+        "label",
+        "threshold",
+        "direction",
+        "probability"
+      ],
+      "title": "TailProbability",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "current_value_gbp": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Baseline valuation (never a historical sale price)",
+      "title": "Current Value Gbp"
+    },
+    "current_value_distribution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Set when the current value is model-estimated rather than provided"
+    },
+    "band_before": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Recorded EPC band",
+      "title": "Band Before"
+    },
+    "band_after": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "From RatingEstimate (sap_estimator), not a lodged EPC",
+      "title": "Band After"
+    },
+    "uplift_pct": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "value_after_gbp": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "rating_effect_pct_per_sap_point": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Posterior of beta for this region x type"
+    },
+    "price_drivers": {
+      "description": "Why the home is worth what it is",
+      "items": {
+        "$ref": "#/$defs/FeatureContribution"
+      },
+      "title": "Price Drivers",
+      "type": "array"
+    },
+    "method": {
+      "enum": [
+        "bayesian_hedonic",
+        "hedonic_quantile",
+        "dr_learner",
+        "green_twin_matching",
+        "unavailable"
+      ],
+      "title": "Method",
+      "type": "string"
+    },
+    "label": {
+      "const": "indicative",
+      "default": "indicative",
+      "title": "Label",
+      "type": "string"
+    },
+    "wording": {
+      "default": "Indicative range based on historical associations in sales data; not a promised or proven increase.",
+      "description": "Must accompany every display of the value range",
+      "title": "Wording",
+      "type": "string"
+    },
+    "unavailable_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unavailable Reason"
+    }
+  },
+  "required": [
+    "current_value_gbp",
+    "method"
+  ],
+  "title": "ValueImpact",
+  "type": "object"
+}

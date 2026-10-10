@@ -1,5 +1,5 @@
 {
-  "description": "Historical transaction. Never used as the baseline value.",
+  "description": "Historical transaction (UCL Price Paid-EPC linked data). Never used as the baseline value.",
   "properties": {
     "property_id": {
       "title": "Property Id",
@@ -25,6 +25,18 @@
       "default": null,
       "title": "Energy Rating At Sale"
     },
+    "sap_at_sale": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sap At Sale"
+    },
     "new_build": {
       "anyOf": [
         {
@@ -36,6 +48,40 @@
       ],
       "default": null,
       "title": "New Build"
+    },
+    "tenure": {
+      "anyOf": [
+        {
+          "enum": [
+            "freehold",
+            "leasehold"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tenure"
+    },
+    "split": {
+      "anyOf": [
+        {
+          "enum": [
+            "train",
+            "val",
+            "test"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "By property, assigned once",
+      "title": "Split"
     }
   },
   "required": [

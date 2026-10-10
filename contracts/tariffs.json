@@ -7,7 +7,10 @@
     "url": "https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-october-and-31-december-2026",
     "accessed": "2026-10-10"
   },
-  "period": {"start": "2026-10-01", "end": "2026-12-31"},
+  "period": {
+    "start": "2026-10-01",
+    "end": "2026-12-31"
+  },
   "electricity": {
     "unit_rate_p_per_kwh": 26.32,
     "standing_charge_p_per_day": 54.83,
@@ -21,5 +24,13 @@
   "rules": [
     "Bill saving = sum over fuels of delta_kWh x unit rate. Standing charges change only if a fuel supply is removed entirely (e.g. gas disconnected after a heat pump); that case is reported separately and labelled.",
     "Export tariff for PV is not included until a sourced value is added."
-  ]
+  ],
+  "time_of_use": {
+    "status": "unsourced",
+    "rule": "No time-of-use bill figure is shown until a published supplier tariff (peak/off-peak p/kWh, times) is cited here with URL and access date.",
+    "peak_p_per_kwh": null,
+    "off_peak_p_per_kwh": null,
+    "off_peak_hours": null,
+    "source": null
+  }
 }

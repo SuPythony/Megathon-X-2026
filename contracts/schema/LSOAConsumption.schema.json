@@ -1,0 +1,65 @@
+{
+  "description": "DESNZ sub-national domestic consumption by LSOA (real, annual). Label for the GNN area model.",
+  "properties": {
+    "lsoa_code": {
+      "title": "Lsoa Code",
+      "type": "string"
+    },
+    "year": {
+      "title": "Year",
+      "type": "integer"
+    },
+    "fuel": {
+      "enum": [
+        "electricity",
+        "gas"
+      ],
+      "title": "Fuel",
+      "type": "string"
+    },
+    "meters": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Meters"
+    },
+    "mean_kwh": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Null when suppressed",
+      "title": "Mean Kwh"
+    },
+    "median_kwh": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Median Kwh"
+    }
+  },
+  "required": [
+    "lsoa_code",
+    "year",
+    "fuel"
+  ],
+  "title": "LSOAConsumption",
+  "type": "object"
+}

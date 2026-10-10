@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.3.0",
+  "schema_version": "0.4.0",
   "property_id": "SH3",
   "customer_id": "C-SH3",
   "source": "showcase",
@@ -8,6 +8,7 @@
     "postcode_district": "CR0",
     "lsoa_code": null,
     "local_authority": "Croydon",
+    "local_authority_code": "E09000008",
     "region": "London",
     "lat": 51.376,
     "lon": -0.098,

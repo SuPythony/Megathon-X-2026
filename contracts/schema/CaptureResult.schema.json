@@ -1,0 +1,290 @@
+{
+  "$defs": {
+    "ElementTag": {
+      "description": "One element observed in a photo (vision draft or manual tag).",
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        },
+        "room_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Room Id"
+        },
+        "field": {
+          "description": "Property field it fills, e.g. 'glazing.type', 'heating.main_system', 'roof.loft_insulation_mm'",
+          "title": "Field",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "source": {
+          "enum": [
+            "haiku_vision",
+            "manual"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "confirmed_by_agent": {
+          "default": false,
+          "title": "Confirmed By Agent",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "photo_id",
+        "field",
+        "value",
+        "confidence",
+        "source"
+      ],
+      "title": "ElementTag",
+      "type": "object"
+    },
+    "FloorPlan": {
+      "properties": {
+        "property_id": {
+          "title": "Property Id",
+          "type": "string"
+        },
+        "rooms": {
+          "items": {
+            "$ref": "#/$defs/Room"
+          },
+          "title": "Rooms",
+          "type": "array"
+        },
+        "total_area_m2": {
+          "title": "Total Area M2",
+          "type": "number"
+        },
+        "area_vs_epc_pct": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "(plan - EPC floor area) / EPC floor area x 100",
+          "title": "Area Vs Epc Pct"
+        },
+        "exterior_wall_length_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exterior Wall Length M"
+        },
+        "window_area_m2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Window Area M2"
+        },
+        "source": {
+          "enum": [
+            "haiku_vision",
+            "agent_drawn",
+            "parametric"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "confirmed_by_agent": {
+          "default": false,
+          "title": "Confirmed By Agent",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "property_id",
+        "rooms",
+        "total_area_m2",
+        "source"
+      ],
+      "title": "FloorPlan",
+      "type": "object"
+    },
+    "Room": {
+      "properties": {
+        "room_id": {
+          "title": "Room Id",
+          "type": "string"
+        },
+        "label": {
+          "description": "e.g. 'living room', 'kitchen', 'bedroom 1', 'loft'",
+          "title": "Label",
+          "type": "string"
+        },
+        "storey": {
+          "default": 0,
+          "title": "Storey",
+          "type": "integer"
+        },
+        "polygon_m": {
+          "description": "Floor polygon in metres, house-local coordinates",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Polygon M",
+          "type": "array"
+        },
+        "area_m2": {
+          "title": "Area M2",
+          "type": "number"
+        },
+        "ceiling_height_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ceiling Height M"
+        },
+        "confidence": {
+          "default": 1.0,
+          "description": "1.0 once confirmed by the agent",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        }
+      },
+      "required": [
+        "room_id",
+        "label",
+        "polygon_m",
+        "area_m2"
+      ],
+      "title": "Room",
+      "type": "object"
+    }
+  },
+  "description": "Photo-to-twin output: drafts only. Nothing reaches the twin until the agent confirms it.",
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "floor_plan": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FloorPlan"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "tags": {
+      "items": {
+        "$ref": "#/$defs/ElementTag"
+      },
+      "title": "Tags",
+      "type": "array"
+    },
+    "draft_property_fields": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "title": "Draft Property Fields",
+      "type": "object"
+    },
+    "needs_confirmation": {
+      "description": "Fields below the confidence threshold",
+      "items": {
+        "type": "string"
+      },
+      "title": "Needs Confirmation",
+      "type": "array"
+    },
+    "vision_model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": "claude-haiku-5-5",
+      "description": "None for manual capture",
+      "title": "Vision Model"
+    },
+    "consent_recorded": {
+      "default": false,
+      "title": "Consent Recorded",
+      "type": "boolean"
+    },
+    "faces_blurred": {
+      "default": true,
+      "title": "Faces Blurred",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "property_id"
+  ],
+  "title": "CaptureResult",
+  "type": "object"
+}

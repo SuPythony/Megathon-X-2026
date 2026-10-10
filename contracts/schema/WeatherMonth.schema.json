@@ -1,7 +1,7 @@
 {
   "properties": {
     "area_code": {
-      "description": "LSOA or region code",
+      "description": "Postcode district, LSOA or region code",
       "title": "Area Code",
       "type": "string"
     },

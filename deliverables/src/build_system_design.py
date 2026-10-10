@@ -1,10 +1,13 @@
-"""Build deliverables/SYSTEM_DESIGN.pdf: GreenTwin system design and decoupled build blocks.
+"""Build SYSTEM_DESIGN.pdf (repo root): GreenTwin system design around the five parts.
+
+Dataset tables come from deliverables/src/datasets.py (shared with the LLD).
 
 Run:  python deliverables/src/build_system_design.py
 Needs reportlab. Uses Segoe UI (Windows) or DejaVu Sans (Linux), else Helvetica.
 """
 
 import math
+import sys
 from pathlib import Path
 
 from reportlab.graphics.shapes import Drawing, Line, Polygon, Rect, String
@@ -19,7 +22,7 @@ from reportlab.platypus import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "deliverables" / "SYSTEM_DESIGN.pdf"
+OUT = ROOT / "SYSTEM_DESIGN.pdf"
 
 
 # ----------------------------------------------------------------------------- fonts
@@ -159,193 +162,135 @@ def label(d, x, y, text, size=6.4, color=GREY, anchor="middle", bold=False):
     d.add(String(x, y, text, fontName=FB if bold else F, fontSize=size, fillColor=color, textAnchor=anchor))
 
 
-# ----------------------------------------------------------------------------- diagram 1: architecture
-def architecture():
-    W, H = 482, 616
+
+
+# ----------------------------------------------------------------------------- diagram 1: the five parts
+def parts_overview():
+    W, H = 482, 430
     d = Drawing(W, H)
-    rh, gap = 52, 20
-    xl = 0
-    full = W - 26  # leave a right gutter for the what-if loop
-    ys = [H - 16 - rh - (rh + gap) * i for i in range(8)]  # bottom of each row, top -> bottom
-
-    # Row 1: inputs
-    n, g = 5, 6
-    w = (full - (n - 1) * g) / n
-    inputs = [
-        ("Property & energy", ["EPC, NEED, DESNZ LSOA", "London smart meters"]),
-        ("Sales & market", ["UCL Price Paid–EPC", "UK House Price Index"]),
-        ("Weather & solar", ["HadUK-Grid, Open-Meteo", "PVGIS"]),
-        ("Geo + factors", ["ONS LSOA, IMD, planning", "DESNZ, Ofgem, BEIS"]),
-        ("Customer input", ["EPC lookup, form, memory", "photos → Haiku vision"]),
-    ]
-    for i, (t, ls) in enumerate(inputs):
-        box(d, xl + i * (w + g), ys[0], w, rh, t, ls, tsize=7.6, lsize=6.3)
-    label(d, -2, ys[0] + rh + 4, "INPUTS (PS §9: public + synthetic only)", 6.6, GREEN, "start", True)
-
-    # Row 2: data foundation
-    box(d, xl, ys[1], full, rh, "B1  Data foundation",
-        ["map to contracts · property/customer splits (70/15/15, once) · leakage audit (epc.potential_*)",
-         "annualise metered usage (missing months flagged, never 0) · sourced factors · DuckDB + Parquet"],
-        kind="green")
-
-    # Row 3: twin trio
-    w3 = (full - 2 * 8) / 3
-    box(d, xl, ys[2], w3, rh, "B2  Synthetic generator",
-        ["real EPC homes → twin + behaviour", "usage + reference labels, vs NEED"])
-    box(d, xl + w3 + 8, ys[2], w3, rh, "B2  Level-1 physics twin",
-        ["heat loss ΣU·A + air × degree days", "→ COP / efficiency → kWh per fuel"], kind="core")
-    box(d, xl + 2 * (w3 + 8), ys[2], w3, rh, "B2  Rating estimator",
-        ["SAP 2012 formula on twin (standard)", "anchored to recorded SAP"])
-
-    # Row 4: Bayesian
-    box(d, xl, ys[3], full, rh, "B3  Bayesian calibration + energy prediction",
-        ["EBM prior (no meter data) → NumPyro hierarchical calibration on the home's meter readings",
-         "→ posterior samples → electricity + gas kWh/yr as a full Distribution (mean, mode, std, P1–P99, tails)"],
-        kind="core")
-
-    # Row 5: score / retrofit / value
-    box(d, xl, ys[4], w3, rh, "B4  Green Home Score",
-        ["fixed weights, monotonic sub-scores", "waterfall · P(each band) · issues"])
-    box(d, xl + w3 + 8, ys[4], w3, rh, "B4  Retrofit engine",
-        ["rules → Jev feasibility → twin reruns", "ladder · P(suitable) · Pareto"])
-    box(d, xl + 2 * (w3 + 8), ys[4], w3, rh, "B5  Property value",
-        ["Bayesian hierarchical hedonic", "before vs after · indicative range"])
-
-    # Row 6: scenario engine
-    box(d, xl, ys[5], full, rh, "B6  Scenario engine: run_scenario(ScenarioSpec) → ScenarioResult",
-        ["reruns B2–B5 for every what-if · per-fuel savings, carbon, improvement potential, bills, value",
-         "every number = Distribution + provenance · cached by hash(spec + model versions) · FastAPI"],
-        kind="green")
-
-    # Row 7: KB + LLM
-    wk = (full - 8) / 2
-    box(d, xl, ys[6], wk, rh, "B6  Knowledge base",
-        ["SQL (numbers) · vector (docs, grants)", "graph (rules, constraints, regions)"], kind="panel")
-    box(d, xl + wk + 8, ys[6], wk, rh, "B6  Grounded LLM + Jev router",
-        ["tool-only · numeric validator · template", "fallback · Jev routes + screens feasibility"],
-        kind="panel")
-
-    # Row 8: experience
-    box(d, xl, ys[7], w3, rh, "B7  3D digital twin",
-        ["heat loss glows (estimated)", "retrofits appear, numbers update"], kind="amber")
-    box(d, xl + w3 + 8, ys[7], w3, rh, "B7  Customer app + chat",
-        ["score · ladder · Pareto · loan", "memory · DistributionCard"], kind="amber")
-    box(d, xl + 2 * (w3 + 8), ys[7], w3, rh, "B8  Lloyds dashboard",
-        ["LSOA heat map · GNN areas", "segments · Green Profits"], kind="amber")
-
-    # vertical connectors between rows (centre spine + side spines)
-    cxs = [xl + w3 / 2, xl + w3 + 8 + w3 / 2, xl + 2 * (w3 + 8) + w3 / 2]
-    mid = xl + full / 2
-    for i in range(7):
-        top = ys[i]
-        bot = ys[i + 1] + rh
-        if i in (1, 3, 4):  # fan out / in to three columns
-            for c in cxs:
-                arrow(d, c, top, c, bot)
-        elif i == 2:
-            arrow(d, cxs[1], top, cxs[1], bot)
-            arrow(d, cxs[0], top, cxs[0], bot)
-            arrow(d, cxs[2], top, cxs[2], bot)
-        elif i == 5:
-            arrow(d, xl + wk / 2, top, xl + wk / 2, bot)
-            arrow(d, xl + wk + 8 + wk / 2, top, xl + wk + 8 + wk / 2, bot)
-        elif i == 6:
-            for c in cxs:
-                arrow(d, c, top, c, bot)
-        else:
-            arrow(d, mid, top, mid, bot)
-    # horizontal links within the twin row
-    arrow(d, xl + w3 + 8, ys[2] + rh / 2, xl + w3, ys[2] + rh / 2)
-    arrow(d, xl + 2 * (w3 + 8) - 8, ys[2] + rh / 2, xl + 2 * (w3 + 8), ys[2] + rh / 2)
-
-    # what-if loop on the right gutter: experience -> scenario engine
-    gx = W - 10
-    d.add(Line(xl + full, ys[7] + rh / 2, gx, ys[7] + rh / 2, strokeColor=BLUE, strokeWidth=1.1))
-    d.add(Line(gx, ys[7] + rh / 2, gx, ys[5] + rh / 2, strokeColor=BLUE, strokeWidth=1.1))
-    arrow(d, gx, ys[5] + rh / 2, xl + full, ys[5] + rh / 2, color=BLUE, width=1.1)
-    for k, t in enumerate(["what-if", "reruns", "models"]):
-        label(d, gx + 1, ys[6] + rh / 2 + 8 - k * 8, t, 6.0, BLUE, "middle", True)
+    # Part 0
+    box(d, 0, 384, W, 40, "Part 0 · Data layer",
+        ["EPC records + live tables · NEED · DESNZ LSOA · UCL sales + HPI · weather · smart meters · geography"],
+        kind="green", tsize=8.6)
+    # coupled core outline
+    d.add(Rect(-4, 216, 324, 146, rx=7, ry=7, strokeColor=BLUE, strokeWidth=0.8, strokeDashArray=[3, 2],
+               fillColor=None))
+    label(d, 158, 222, "COUPLED CORE (one team, sequential)", 6.2, BLUE, "middle", True)
+    box(d, 0, 236, 135, 118, "Part 1 · Digital twin",
+        ["physics (JAX, RC model)", "Bayesian calibration", "(NumPyro, posterior samples)", "3D scene for the viewer",
+         "photo-to-twin capture", "electricity layer"], kind="core", tsize=8.2, lsize=6.6)
+    box(d, 180, 236, 135, 118, "Part 2 · Energy & retrofit",
+        ["EBM energy prior (NEED)", "baseline per fuel", "improvement ladder", "savings · carbon · bills",
+         "improvement potential", "rating after · Pareto"], kind="core", tsize=8.2, lsize=6.6)
+    box(d, 350, 298, 132, 56, "Part 3 · Green Home Score",
+        ["fixed weights, monotonic", "waterfall · P(band) · issues"], tsize=7.8, lsize=6.5)
+    box(d, 350, 236, 132, 56, "Part 4 · Property value",
+        ["Bayesian hierarchical", "hedonic · indicative range"], tsize=7.8, lsize=6.5)
+    box(d, 0, 140, 135, 64, "Part 5 · Feasibility & LLM",
+        ["rules → Jev feasibility", "what-if router (Jev)", "tool-only chat + validator"], kind="panel",
+        tsize=7.8, lsize=6.5)
+    box(d, 180, 140, 302, 64, "Orchestrator · run_scenario(ScenarioSpec) → ScenarioResult",
+        ["reruns Parts 1–4 for every what-if · Distributions + provenance", "cache · FastAPI · dashboard aggregation"],
+        kind="green", tsize=7.8, lsize=6.6)
+    for i, (t, ls) in enumerate([("3D twin viewer", ["TwinScene · retrofits appear"]),
+                                 ("Customer app + chat", ["score · ladder · loan · memory"]),
+                                 ("Lloyds dashboard", ["LSOA heat map · GNN · scenarios"])]):
+        box(d, i * 168, 60, 146, 44, t, ls, kind="amber", tsize=7.8, lsize=6.5)
+    # data arrows
+    arrow(d, 67, 384, 67, 354)
+    arrow(d, 247, 384, 247, 354)
+    arrow(d, 416, 384, 416, 354)
+    label(d, 71, 368, "Property, usage, weather", 6.0, GREY, "start")
+    label(d, 251, 368, "NEED, catalogue", 6.0, GREY, "start")
+    label(d, 420, 368, "live tables, sales", 6.0, GREY, "start")
+    # core arrows
+    arrow(d, 135, 300, 180, 300)
+    label(d, 157, 304, "posterior", 5.8)
+    label(d, 157, 290, "samples", 5.8)
+    arrow(d, 315, 326, 350, 326)
+    label(d, 332, 330, "energy,", 5.6)
+    label(d, 332, 316, "rating", 5.6)
+    arrow(d, 315, 264, 350, 264)
+    label(d, 332, 268, "rating", 5.6)
+    label(d, 332, 254, "after", 5.6)
+    arrow(d, 120, 204, 195, 236)
+    label(d, 150, 207, "FeasibilityReport", 6.0, GREY, "start")
+    for x in (247, 416):
+        arrow(d, x, 236, x, 204)
+    arrow(d, 180, 165, 135, 165)
+    label(d, 158, 169, "via tools", 5.8)
+    arrow(d, 200, 140, 73, 104)
+    arrow(d, 260, 140, 241, 104)
+    arrow(d, 420, 140, 409, 104)
+    # legend
+    label(d, 0, 30, "Blue = coupled core (every energy number runs through the twin). Green = data + orchestration. "
+                    "Grey = LLM side (reads only via tools).", 6.4, GREY, "start")
+    label(d, 0, 18, "Parts 0, 3, 4, 5 and the UI are independent: each codes against its interface "
+                    "(greentwin/interfaces.py) and a stub, then plugs in.", 6.4, GREY, "start")
     return d
 
 
-# ----------------------------------------------------------------------------- diagram 2: block dependencies
-def block_graph():
-    W, H = 482, 300
+# ----------------------------------------------------------------------------- diagram 2: end-to-end flow
+def architecture():
+    W, H = 482, 612
     d = Drawing(W, H)
-    bw, bh = 128, 46
-    pos = {
-        "B1": (0, 230), "B2": (177, 230), "B3": (354, 230),
-        "B5": (0, 140), "B4": (177, 140),
-        "B6": (177, 60),
-        "B7": (60, 0), "B8": (294, 0),
-    }
-    meta = {
-        "B1": ("B1  Data foundation", ["data, splits, factors"], "green"),
-        "B2": ("B2  Twin (JAX) + rating + synth", ["physics, labels"], "core"),
-        "B3": ("B3  Bayesian + energy", ["posterior samples"], "core"),
-        "B4": ("B4  Score + retrofits", ["ladder, Pareto"], "plain"),
-        "B5": ("B5  Property value", ["Bayesian hedonic"], "plain"),
-        "B6": ("B6  Scenario + API + LLM", ["run_scenario, chat"], "green"),
-        "B7": ("B7  Customer app + 3D", ["web/"], "amber"),
-        "B8": ("B8  Lloyds dashboard", ["geo + scenarios"], "amber"),
-    }
-    for k, (x, y) in pos.items():
-        t, ls, kind = meta[k]
-        box(d, x, y, bw, bh, t, ls, kind=kind, tsize=7.8)
-
-    def c(k, side):
-        x, y = pos[k]
-        return {"r": (x + bw, y + bh / 2), "l": (x, y + bh / 2), "t": (x + bw / 2, y + bh),
-                "b": (x + bw / 2, y)}[side]
-
-    edges = [
-        ("B1", "r", "B2", "l", "Property, Weather, factors"),
-        ("B2", "r", "B3", "l", "simulate()"),
-        ("B1", "b", "B5", "t", "SaleRecord, HPI"),
-        ("B2", "b", "B4", "t", "apply_retrofits, rating"),
-        ("B3", "b", "B4", "r", "posterior samples"),
-        ("B5", "r", "B4", "l", ""),
-        ("B4", "b", "B6", "t", "ScoreResult, RetrofitEffect, Pareto"),
-        ("B5", "b", "B6", "l", "ValueImpact"),
-        ("B6", "b", "B7", "t", "ScenarioResult (API)"),
-        ("B6", "b", "B8", "t", "/dashboard/*"),
-    ]
-    for a, sa, b, sb, txt in edges:
-        if a == "B5" and b == "B4":
-            continue
-        x1, y1 = c(a, sa)
-        x2, y2 = c(b, sb)
-        if a == "B3" and b == "B4":
-            d.add(Line(x1, y1, x1, y2, strokeColor=LINE, strokeWidth=0.9))
-            arrow(d, x1, y2, x2, y2)
-            label(d, x1 - 4, (y1 + y2) / 2 + 6, txt, 6.2, GREY, "end")
-            continue
-        if a == "B5" and b == "B6":
-            d.add(Line(x1, y1, x1, y2, strokeColor=LINE, strokeWidth=0.9))
-            arrow(d, x1, y2, x2, y2)
-            label(d, x1 + 4, y2 + 4, txt, 6.2, GREY, "start")
-            continue
-        arrow(d, x1, y1, x2, y2)
-        if not txt:
-            continue
-        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-        if a == "B1" and b == "B2":
-            label(d, mx, my + 13, "Property,", 6.0)
-            label(d, mx, my + 5, "weather", 6.0)
-        elif a == "B6" and b == "B7":
-            label(d, mx - 6, my - 2, txt, 6.2, GREY, "end")
-        elif a == "B6" and b == "B8":
-            label(d, mx + 6, my - 2, txt, 6.2, GREY, "start")
-        elif y1 == y2:
-            label(d, mx, my + 4, txt, 6.2)
-        else:
-            label(d, mx + 4, my, txt, 6.2, GREY, "start")
-    # B2 -> B5: estimated rating feeds the value model's "after" input
-    x1, y1 = pos["B2"][0] + 20, pos["B2"][1]
-    x2, y2 = pos["B5"][0] + bw, pos["B5"][1] + bh - 8
-    arrow(d, x1, y1, x2, y2)
-    label(d, (x1 + x2) / 2 + 4, (y1 + y2) / 2 + 6, "RatingEstimate", 6.0, GREY, "start")
-    label(d, W, H - 6, "Arrows = contracts passed between blocks; every block can start on mocks.", 6.6, GREY, "end")
+    rh, gap = 46, 18
+    full = W - 26
+    ys = [H - 16 - rh - (rh + gap) * i for i in range(9)]
+    n, g = 5, 6
+    w = (full - (n - 1) * g) / n
+    inputs = [("Property & energy", ["EPC records, NEED", "DESNZ LSOA, meters"]),
+              ("EPC live tables", ["MHCLG D1/D3/EB4", "LA × quarter"]),
+              ("Sales & market", ["UCL Price Paid–EPC", "UK HPI"]),
+              ("Weather & geo", ["Open-Meteo, PVGIS", "ONSPD, IMD, planning"]),
+              ("Customer input", ["EPC lookup, memory", "photos → Haiku vision"])]
+    for i, (t, ls) in enumerate(inputs):
+        box(d, i * (w + g), ys[0], w, rh, t, ls, tsize=7.4, lsize=6.1)
+    label(d, -2, ys[0] + rh + 4, "INPUTS (PS §9: public + synthetic only)", 6.6, GREEN, "start", True)
+    box(d, 0, ys[1], full, rh, "Part 0 · Data layer",
+        ["download → map to contracts → property/customer splits (once) → leakage audit → DuckDB + Parquet + meta.json",
+         "synthetic generator: real EPC homes → twin + behaviour noise → monthly usage + labels (validated vs NEED, D3)"],
+        kind="green")
+    w3 = (full - 16) / 3
+    box(d, 0, ys[2], w3, rh, "Part 1 · Physics twin (JAX)", ["heat loss × degree days → kWh/fuel", "vmap over samples"], kind="core")
+    box(d, w3 + 8, ys[2], w3, rh, "Part 1 · Bayesian calibration", ["NumPyro · home→LSOA→region", "posterior samples"], kind="core")
+    box(d, 2 * (w3 + 8), ys[2], w3, rh, "Part 1 · 3D scene + capture", ["TwinScene, estimated heat loss", "Haiku vision → agent confirms"], kind="core")
+    box(d, 0, ys[3], w3, rh, "Part 5 · Feasibility", ["rule vetoes → Jev", "FeasibilityReport"], kind="panel")
+    box(d, w3 + 8, ys[3], full - w3 - 8, rh, "Part 2 · Energy & retrofit engine",
+        ["EBM prior · baseline per fuel · ladder (marginal steps) · savings, carbon, bills",
+         "improvement potential · rating after (SAP estimator) · Pareto + P(on front)"], kind="core")
+    w2 = (full - 8) / 2
+    box(d, 0, ys[4], w2, rh, "Part 3 · Green Home Score", ["score Distribution · P(band) · waterfall", "key issues · peer context (D1)"])
+    box(d, w2 + 8, ys[4], w2, rh, "Part 4 · Property value", ["Bayesian hierarchical hedonic", "before vs after · indicative range"])
+    box(d, 0, ys[5], full, rh, "Orchestrator · run_scenario(ScenarioSpec) → ScenarioResult",
+        ["reruns Parts 1–4 for every what-if · every number a Distribution + provenance",
+         "cached by hash(spec + model versions) · FastAPI · dashboard aggregation"], kind="green")
+    box(d, 0, ys[6], w2, rh, "Part 5 · Knowledge base", ["SQL (numbers) · vector (docs)", "graph (rules, grants)"], kind="panel")
+    box(d, w2 + 8, ys[6], w2, rh, "Part 5 · LLM chat + Jev router", ["tool-only · numeric validator", "template fallback"], kind="panel")
+    for i, (t, ls) in enumerate([("3D twin viewer", ["react-three-fiber"]), ("Customer app + chat", ["ladder · loan · memory"]),
+                                 ("Lloyds dashboard", ["LSOA heat map · GNN"])]):
+        box(d, i * (w3 + 8), ys[7], w3, rh, t, ls, kind="amber")
+    label(d, 0, ys[8] + rh - 8, "Every arrow is a contract in contracts/models.py; the experience layer never computes, "
+                                "it renders ScenarioResult / TwinScene.", 6.5, GREY, "start")
+    c3 = [w3 / 2, w3 + 8 + w3 / 2, 2 * (w3 + 8) + w3 / 2]
+    mid = full / 2
+    arrow(d, mid, ys[0], mid, ys[1] + rh)
+    for c in c3:
+        arrow(d, c, ys[1], c, ys[2] + rh)
+    arrow(d, w3 + 8 + w3 / 2, ys[2], w3 + 8 + w3 / 2, ys[3] + rh)
+    arrow(d, w3, ys[3] + rh / 2, w3 + 8, ys[3] + rh / 2)
+    for c in (w2 / 2, w2 + 8 + w2 / 2):
+        arrow(d, c, ys[3], c, ys[4] + rh)
+        arrow(d, c, ys[4], c, ys[5] + rh)
+        arrow(d, c, ys[5], c, ys[6] + rh)
+    for c in c3:
+        arrow(d, c, ys[6], c, ys[7] + rh)
+    gx = W - 10
+    d.add(Line(full, ys[7] + rh / 2, gx, ys[7] + rh / 2, strokeColor=BLUE, strokeWidth=1.1))
+    d.add(Line(gx, ys[7] + rh / 2, gx, ys[5] + rh / 2, strokeColor=BLUE, strokeWidth=1.1))
+    arrow(d, gx, ys[5] + rh / 2, full, ys[5] + rh / 2, color=BLUE, width=1.1)
+    for k, t in enumerate(["what-if", "reruns", "models"]):
+        label(d, gx + 1, ys[6] + rh / 2 + 8 - k * 8, t, 6.0, BLUE, "middle", True)
     return d
 
 
@@ -353,17 +298,11 @@ def block_graph():
 def whatif_flow():
     W, H = 482, 92
     d = Drawing(W, H)
-    steps = [
-        ("User", ["3D toggle or", "chat question"]),
-        ("Router", ["Jev / Claude", "→ ScenarioSpec"]),
-        ("Feasibility", ["rules veto", "→ Jev"]),
-        ("run_scenario", ["twin on every", "posterior sample"]),
-        ("ScenarioResult", ["Distributions", "+ provenance"]),
-        ("LLM + validator", ["quotes tool", "numbers only"]),
-        ("UI", ["numbers, 3D,", "explanation"]),
-    ]
-    n = len(steps)
-    g = 8
+    steps = [("User", ["3D toggle or", "chat question"]), ("Router", ["Jev / Claude", "→ ScenarioSpec"]),
+             ("Feasibility", ["rules veto", "→ Jev"]), ("run_scenario", ["twin on every", "posterior sample"]),
+             ("ScenarioResult", ["Distributions", "+ provenance"]), ("LLM + validator", ["quotes tool", "numbers only"]),
+             ("UI", ["numbers, 3D,", "explanation"])]
+    n, g = len(steps), 8
     w = (W - (n - 1) * g) / n
     for i, (t, ls) in enumerate(steps):
         kind = "core" if t == "run_scenario" else ("green" if t == "ScenarioResult" else "plain")
@@ -371,538 +310,433 @@ def whatif_flow():
         if i < n - 1:
             arrow(d, i * (w + g) + w, 48, (i + 1) * (w + g), 48)
     label(d, 0, 6, "Low router confidence → clarifying question. Validator failure → regenerate once → template "
-              "explainer. Missing data → \"unavailable\" + reason.", 6.6, GREY, "start")
+                   "explainer. Missing data → \"unavailable\" + reason.", 6.6, GREY, "start")
     return d
 
 
 # ----------------------------------------------------------------------------- content
+def part_block(title, tag, purpose, inside, models_, contracts_in, contracts_out, done):
+    block = [Paragraph(title, S["h2"]), Paragraph("<font color='#5b5b5b'>%s</font>" % tag, S["small"]),
+             Paragraph("<b>Purpose.</b> " + purpose, S["body"])]
+    block += [Paragraph(s, S["bullet"], bulletText="•") for s in inside]
+    rows = [["Models (primary · baseline)", models_], ["Consumes", contracts_in], ["Produces", contracts_out],
+            ["Done when", done]]
+    data = [[Paragraph("<b>%s</b>" % a, S["cell"]), Paragraph(b, S["cell"])] for a, b in rows]
+    t = Table(data, colWidths=[38 * mm, 132 * mm])
+    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.4, GRID), ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                           ("BACKGROUND", (0, 0), (0, -1), GREEN_L), ("TOPPADDING", (0, 0), (-1, -1), 3),
+                           ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
+    block += [t, Spacer(1, 8)]
+    story.append(CondPageBreak(70 * mm))
+    story.append(KeepTogether(block))
+
+
 def build():
+    from datasets import DATASETS, DAY1, EPC_LIVE_USES  # noqa: E402
+
     # ---------------------------------------------------------------- cover
-    story.append(Spacer(1, 40 * mm))
+    story.append(Spacer(1, 34 * mm))
     P("GreenTwin", "title")
-    P("System design and decoupled build blocks", "subtitle")
+    P("System design: five parts, their contracts, data and build plan", "subtitle")
     story.append(Spacer(1, 4 * mm))
     P("Megathon X: Singularity · Lloyds Problem Statement 2: Green Home Score and Retrofit Recommendation "
-      "Engine · Team MegaMind", "meta")
-    story.append(Spacer(1, 10 * mm))
+      "Engine · Team MegaMind · contracts schema 0.4.0", "meta")
+    story.append(Spacer(1, 8 * mm))
     callout("<b>In one line.</b> A Bayesian-calibrated physics twin of every home, which you can see in 3D, "
             "explain in plain language and act on, where every number is backed by physics and the range it "
             "comes with.")
-    story.append(Spacer(1, 6 * mm))
-    P("<b>Audience:</b> the build team. This document fixes the architecture, the contracts between parts, "
-      "and eight build blocks that can each be built, tested and documented independently. Design detail for "
-      "individual techniques lives in <font face='%s'>docs/STRATEGY_REPORT.md</font>; binding rules live in "
-      "<font face='%s'>AGENTS.md</font> and <font face='%s'>contracts/</font>, which win over this document if "
-      "they ever disagree." % (F, F, F))
-    story.append(Spacer(1, 6 * mm))
+    story.append(Spacer(1, 4 * mm))
+    P("<b>Audience:</b> the build team. This document is the high-level design: the five parts, how they connect, "
+      "the data that feeds them and the build plan. The companion <b>LLD.pdf</b> holds every contract field, "
+      "interface signature, algorithm, table schema and download step. Binding rules: <font face='%s'>AGENTS.md</font> "
+      "and <font face='%s'>contracts/</font>." % (F, F))
+    story.append(Spacer(1, 4 * mm))
     table([
         ["Section", "What it covers"],
-        ["1. Philosophies", "The six principles every block follows"],
-        ["2. Architecture", "End-to-end system diagram, layers and the what-if loop"],
-        ["3. Uncertainty", "How every number becomes a full distribution"],
-        ["4. Build blocks", "Eight decoupled blocks, their interfaces and dependency graph"],
-        ["5. Block specs", "Goal, build steps, models, outputs and done-when for each block"],
-        ["6. Key mechanisms", "Retrofit engine + improvement ladder, energy prediction, property value"],
-        ["7. Evaluation & submission", "Metrics vs baselines, PS mapping, submission items A–I"],
-        ["8. Working rules", "Hackathon coding and UI guidelines, open decisions"],
-    ], [45 * mm, 125 * mm], zebra=False)
+        ["1. Philosophies", "The six principles every part follows; how the brief's core rule is enforced"],
+        ["2. The five parts", "What each part answers, what is inside it, coupled core vs independent parts"],
+        ["3. Architecture", "End-to-end flow, the what-if loop, technology choices"],
+        ["4. Part designs", "Purpose, components, models, contracts in/out and done-when for each part"],
+        ["5. Contracts and interfaces", "The contract and Protocol each part owns (full detail in LLD.pdf)"],
+        ["6. Data", "Datasets and how to get them, the EPC live tables, joins, synthetic data, day-1 plan"],
+        ["7. Uncertainty", "Every number as a full distribution"],
+        ["8. Key mechanisms", "Improvement ladder, improvement potential"],
+        ["9. Evaluation and submission", "Metrics vs baselines, PS coverage, submission items"],
+        ["10. Build plan", "Work breakdown, checkpoints, coding guidelines, open decisions"],
+    ], [48 * mm, 122 * mm], zebra=False)
     story.append(PageBreak())
 
     # ---------------------------------------------------------------- 1 philosophies
     H1("1. Core philosophies")
     table([
         ["#", "Philosophy", "What it means in the system"],
-        ["1", "<b>Physics is the source of truth</b>",
-         "Every energy, savings, carbon and rating number comes from the Level-1 digital twin. ML sets priors "
-         "(EBM), estimates value and checks results; it never produces a customer's savings, so the system "
-         "handles retrofit combinations no dataset has seen."],
-        ["2", "<b>Bayesian in thought</b>",
-         "Each home is calibrated against its own meter readings. Every output is a full distribution (mean, "
-         "median, mode, std, P1–P99, 90% interval, tail probabilities) plus P(Poor), P(suitable), P(on front). "
-         "Missing data never becomes zero; it widens the range."],
-        ["3", "<b>Rerun, never add up</b>",
-         "A retrofit is a change to the twin's parameters; every what-if and every package reruns the model. "
-         "Interactions (insulation before a heat pump, electricity rising as gas falls) come from the physics. "
-         "Savings are always per fuel."],
-        ["4", "<b>Grounded explanation</b>",
-         "The LLM can only call tools and quote what they return; a validator rejects any other number. Jev "
-         "only routes questions and screens feasibility. No backing → \"unavailable\", never a guess."],
-        ["5", "<b>Explainability first</b>",
-         "Score waterfall, heat loss per building element, EBM contributions, value-model coefficients, and a "
-         "reason on every recommendation or veto."],
-        ["6", "<b>See it to believe it</b>",
-         "A living 3D twin explored inside and out: heat loss glows, retrofits appear as they are added, and "
-         "score, savings and bills update live, all from the same calibrated model."],
-    ], [8 * mm, 42 * mm, 120 * mm])
-    H2("The core rule from the brief, and how the design enforces it")
-    P("<i>\"The score, savings, carbon and value figures come from documented models and calculations. The LLM "
-      "only explains them... For a what-if request, the relevant models must first be rerun.\"</i> (PS §1)")
+        ["1", "<b>Physics is the source of truth</b>", "Every energy, savings, carbon and rating number comes from the "
+         "Level-1 digital twin (Part 1). ML sets priors (EBM), estimates value and checks results; it never produces "
+         "a customer's savings, so the system handles retrofit combinations no dataset has seen."],
+        ["2", "<b>Bayesian in thought</b>", "Each home is calibrated on its own meter readings. Every output is a full "
+         "distribution (mean, median, mode, std, percentiles, 90% interval, tail probabilities) plus P(Poor), "
+         "P(suitable), P(on front). Missing data never becomes zero; it widens the range."],
+        ["3", "<b>Rerun, never add up</b>", "A retrofit is a change to the twin's parameters; every what-if and package "
+         "reruns the model. Interactions come from the physics. Savings are always per fuel."],
+        ["4", "<b>Grounded explanation</b>", "The LLM only quotes tool outputs; a validator rejects any other number; Jev "
+         "only routes questions and screens feasibility. No backing → \"unavailable\"."],
+        ["5", "<b>Explainability first</b>", "Score waterfall, heat loss per element, EBM contributions, value "
+         "coefficients, a reason on every recommendation or veto."],
+        ["6", "<b>See it to believe it</b>", "A living 3D twin: heat loss glows, retrofits appear, numbers update live, "
+         "all driven by the same calibrated model."],
+    ], [8 * mm, 40 * mm, 122 * mm])
+    H2("The brief's core rule, enforced by design")
+    P("<i>\"The score, savings, carbon and value figures come from documented models and calculations. The LLM only "
+      "explains them... For a what-if request, the relevant models must first be rerun.\"</i> (PS §1)")
     bullets([
-        "Only <b>B2/B3</b> (physics + Bayesian), <b>B4</b> (score formula, rules) and <b>B5</b> (value model) "
-        "produce numbers. Each number carries <font face='%s'>provenance</font> naming its model." % F,
-        "Every what-if goes through <b>run_scenario</b> (B6) before the LLM sees anything.",
-        "The LLM's answer passes a <b>numeric validator</b>: any number not in that turn's tool output is "
-        "rejected → regenerate once → template explainer.",
+        "Only Parts 1–4 produce numbers, each with <font face='%s'>provenance</font> naming its model." % F,
+        "Every what-if goes through <b>run_scenario</b> before the LLM sees anything.",
+        "The LLM's answer passes a numeric validator → regenerate once → template explainer.",
     ])
     story.append(PageBreak())
 
-    # ---------------------------------------------------------------- 2 architecture
-    H1("2. System architecture (end to end)")
-    P("Data flows top to bottom through one physics twin. Everything below the twin consumes its posterior "
-      "samples; the experience layer never computes, it renders <font face='%s'>ScenarioResult</font>. "
-      "A what-if from the 3D twin or the chat loops back into the scenario engine (blue)." % F)
-    story.append(architecture())
-    story.append(Spacer(1, 4))
-    P("Colour key: blue = physics/Bayesian core (the only source of energy numbers); green = data and "
-      "orchestration; grey panels = LLM side (reads only through tools); amber = what users see.", "small")
+    # ---------------------------------------------------------------- 2 the five parts
+    H1("2. The five parts")
+    P("GreenTwin is five parts on top of a shared data layer and a thin orchestrator. Parts 1 and 2 form the "
+      "<b>coupled core</b>: every energy number runs through the twin, so they are built by one team in sequence. "
+      "Parts 3, 4 and 5 (and the data layer and UI) are <b>independent</b>: each codes against its interface and a "
+      "stub, and connects to the core at a few fixed points.")
+    story.append(parts_overview())
+    story.append(Spacer(1, 6))
+    table([
+        ["Part", "Answers (PS)", "Inside", "Coupling"],
+        ["<b>1 · Digital twin</b>", "the physics behind §3, §5, §6", "JAX physics twin · NumPyro Bayesian calibration · "
+         "3D scene · photo-to-twin capture · electricity layer", "Core"],
+        ["<b>2 · Energy & retrofit</b>", "§3 potential, §4 retrofits, §5 savings, §6 carbon", "EBM energy prior · baseline · "
+         "improvement ladder · savings, carbon, bills · improvement potential · rating after · Pareto", "Core"],
+        ["<b>3 · Green Home Score</b>", "§2 score, §3 poor homes", "fixed-weight score · sub-scores · waterfall · key "
+         "issues · projected score · peer context", "Independent"],
+        ["<b>4 · Property value</b>", "§7 value", "Bayesian hierarchical hedonic model · before vs after · green twins",
+         "Independent"],
+        ["<b>5 · Feasibility & LLM</b>", "§1 core rule, §4 feasibility, §8 what-if, §10 memory", "rules → Jev feasibility "
+         "· what-if router · tool-only chat + validator · knowledge base · memory", "Independent"],
+    ], [32 * mm, 36 * mm, 78 * mm, 24 * mm])
+    H2("The four connection points")
+    table([
+        ["From → to", "Contract", "Until it exists, use"],
+        ["Part 2 EBM → Part 1 calibration", "EnergyPrior (prior mean per fuel)", "RdSAP defaults"],
+        ["Part 5 feasibility → Part 2 ladder", "FeasibilityReport", "rules only"],
+        ["Part 2 rating → Parts 3, 4", "RatingEstimate (estimated SAP after)", "stub: band + 1"],
+        ["Orchestrator → Part 5 LLM, UI", "ScenarioResult, TwinScene", "contracts/examples/*_MOCK.json"],
+    ], [52 * mm, 70 * mm, 48 * mm])
     story.append(PageBreak())
 
-    H2("Layers and their contracts")
-    table([
-        ["Layer", "Blocks", "Consumes", "Produces (contracts/)"],
-        ["Inputs + data", "B1", "public datasets, customer input", "Property, EnergyUsageMonth, SaleRecord, "
-         "WeatherMonth, factor tables, retrofit catalogue"],
-        ["Physics", "B2", "Property, WeatherMonth, catalogue", "TwinParams, TwinOutput (per-fuel kWh, "
-         "ElementHeatLoss), RatingEstimate, synthetic data + labels"],
-        ["Bayesian + prediction", "B3", "TwinParams, usage, weather", "posterior samples; EnergyBreakdown "
-         "(Distributions)"],
-        ["Decisions + value", "B4, B5", "posterior samples, Property, sales", "ScoreResult, Feasibility, "
-         "RetrofitEffect, ParetoPoint, ValueImpact"],
-        ["Orchestration", "B6", "all of the above", "ScenarioResult (one per what-if), API, chat answers, "
-         "WhatIfRoute, ExplanationCheck, CustomerMemory"],
-        ["Experience", "B7, B8", "API + contracts/types.ts", "customer app, 3D twin, Lloyds dashboard"],
-    ], [30 * mm, 16 * mm, 50 * mm, 74 * mm])
+    # ---------------------------------------------------------------- 3 architecture
+    H1("3. Architecture (end to end)")
+    story.append(architecture())
+    story.append(PageBreak())
     H2("The what-if loop")
     story.append(whatif_flow())
     story.append(Spacer(1, 6))
     H2("Technology choices")
     table([
         ["Concern", "Choice"],
-        ["Data + storage", "Python 3.12, pandas/Polars, DuckDB + Parquet (with meta.json per file)"],
-        ["Physics twin", "<b>JAX</b> (jax.numpy): the twin runs inside the NumPyro model, so NUTS/SVI get exact "
-         "gradients, and jax.vmap runs it over all posterior samples at once. Monthly steady-state RC model "
-         "first; differentiable RC graph (diffrax ODE) later behind the same simulate()"],
-        ["Electricity layer", "Half-hourly profile per home: London smart-meter load-shape archetypes scaled to "
-         "annual kWh + heat pump (degree-hours) + PVGIS hourly PV − battery dispatch → self-consumption, "
-         "time-of-use bills"],
-        ["Bayesian", "NumPyro: NUTS offline for hierarchy, SVI per home (&lt; 1 s); ArviZ diagnostics"],
-        ["Learned models", "EBM (InterpretML) primary; XGBoost baseline; GraphSAGE GNN (PyTorch Geometric) on "
-         "the LSOA graph"],
-        ["Photo-to-twin", "Claude Haiku 5.5 (claude-haiku-5-5) vision with structured outputs: floor plan → rooms, "
-         "room photos → element tags with confidence; react-konva floor-plan editor for agent correction"],
-        ["Value", "NumPyro hierarchical hedonic regression; OLS baseline"],
-        ["API", "FastAPI; run_scenario cached by hash(spec + model versions)"],
-        ["LLM", "Claude tool use + numeric validator + template fallback; Jev (System 1) if a key exists, "
-         "else Claude structured output"],
-        ["Front end", "React + Vite + TypeScript, react-three-fiber + drei (3D), Recharts, MapLibre + deck.gl, "
-         "Zustand"],
+        ["Data + storage", "Python 3.12, pandas/Polars, DuckDB + Parquet with a meta.json per file"],
+        ["Physics twin", "<b>JAX</b> (jax.numpy): runs inside the NumPyro model so NUTS/SVI get exact gradients; "
+         "jax.vmap over posterior samples. Monthly steady-state RC model; differentiable RC graph (diffrax) later"],
+        ["Bayesian", "NumPyro: NUTS offline for the hierarchy, SVI per home (&lt; 1 s); ArviZ diagnostics"],
+        ["Electricity layer", "Half-hourly: smart-meter load-shape archetypes + heat pump + PVGIS PV − battery"],
+        ["Learned models", "EBM (InterpretML) energy prior, XGBoost baseline; GraphSAGE GNN (PyTorch Geometric) on the "
+         "LSOA graph; Bayesian hedonic value model (NumPyro)"],
+        ["Photo-to-twin", "Claude Haiku 5.5 (claude-haiku-5-5) vision + structured outputs; react-konva editor"],
+        ["LLM + router", "Claude tool use (LLM_MODEL, team default claude-sonnet-5-5) + numeric validator + template "
+         "fallback; Jev System 1 if a key exists, else Claude structured output"],
+        ["API + front end", "FastAPI; React + Vite + TypeScript, react-three-fiber + drei, Recharts, MapLibre + "
+         "deck.gl, Zustand; types generated from the contracts"],
     ], [32 * mm, 138 * mm])
     story.append(PageBreak())
 
-    # ---------------------------------------------------------------- 3 uncertainty
-    H1("3. Uncertainty: every number is a distribution")
-    P("We never know a home's exact physics, so we keep many plausible versions of it (posterior samples) and "
-      "run everything on all of them. Each output is computed <b>once per sample</b>, then summarised. "
-      "Intervals are never added or multiplied together: the samples carry the correlations (a leaky home "
-      "saves more from every retrofit).")
-    H2("The Distribution contract (contracts/models.py, built by contracts/summarise.py)")
+    # ---------------------------------------------------------------- 4 part designs
+    H1("4. Part designs")
+    part_block(
+        "Part 0 · Data layer", "PS §9 · feeds every part",
+        "Clean, licensed, split, joinable real data and every external factor traceable to a cited source.",
+        ["Download scripts write raw files untouched, then Parquet + meta.json (DatasetMeta) per source.",
+         "EPC record → Property mapper: regex rules turn EPC text (walls, roof, glazing, heating, controls) into "
+         "contract enums; ≥ 95% mapped per field; unmapped values logged.",
+         "EPC live tables (MHCLG D1/D3/EB4) → AreaEPCStats per local authority × quarter: calibration targets, "
+         "validation checks, peer context and dashboard layers (section 6).",
+         "Splits: 70/15/15 by customer, else property, seed 42, assigned once; spatial-block splits for area models; "
+         "leakage audit (epc.potential_* are labels only).",
+         "Synthetic generator (uses the Part 1 twin): real EPC homes + NEED-calibrated behaviour → monthly usage with "
+         "gaps and conflicts + reference labels; reweighted to EPC live-table band and type mixes; validated vs NEED."],
+        "— (data engineering); EPC mapper, k-means load profiles",
+        "public datasets, customer input", "Property, EnergyUsageMonth, SaleRecord, WeatherMonth, AreaEPCStats, "
+        "LSOAConsumption, LoadProfileArchetype, EPCRecommendation, ReferenceLabel, DatasetMeta",
+        "No id spans two splits; mapper coverage ≥ 95%; our EPC counts reconcile with live table D1; every table has "
+        "meta.json; DATA section of the LLD complete.")
+    part_block(
+        "Part 1 · Digital twin (physics, Bayesian, 3D)", "PS §3, §5, §6 physics · coupled core",
+        "A documented physics model of each home, calibrated on its own bills, that every energy number runs through, "
+        "and that the customer can see in 3D.",
+        ["Physics (JAX): heat loss Σ U·A + ventilation × degree days → space heat; hot water; baseload; fuel via "
+         "boiler efficiency or heat-pump SCOP; PV cuts imports. Calibrated and standard (SAP occupancy) modes.",
+         "Bayesian calibration (NumPyro): heat-loss multiplier, setpoint, baseload, efficiency; hierarchy home → LSOA → "
+         "region; Student-t likelihood on monthly meters; missing months latent; SVI per home, NUTS offline.",
+         "3D scene: parametric house (or captured rooms) with surfaces coloured by estimated heat-loss share and "
+         "retrofit slots; never calculates.",
+         "Photo-to-twin: Haiku vision drafts rooms + element tags with confidence; agent confirms in a react-konva "
+         "editor; room geometry improves areas and the 3D house.",
+         "Electricity layer: half-hourly profile for PV self-consumption, battery and time-of-use bills."],
+        "Level-1 RC twin (physics) · Bayesian calibration (vs degree-day OLS, LightGBM quantile)",
+        "Property, EnergyUsageMonth, WeatherMonth, EnergyPrior, LoadProfileArchetype",
+        "TwinParams, CalibrationResult, PosteriorSamples (in-process), ElementHeatLoss, TwinScene, CaptureResult, "
+        "ElectricityProfileSummary",
+        "SH1–SH3 within ±15% of metered totals; monotone sweep passes; 90% coverage ≈ 90% on held-out homes; "
+        "standard-mode kWh/m² tracks EPC live table D3 by local authority.")
+    part_block(
+        "Part 2 · Energy calculation & retrofit efficiency", "PS §3, §4, §5, §6 · coupled core",
+        "Turn the calibrated twin into the numbers the brief asks for: baseline energy per fuel, what each retrofit "
+        "adds, savings, carbon, bills, improvement potential, the estimated rating after, and the best packages.",
+        ["Energy prior: EBM on NEED predicts kWh/m² per fuel (prior for homes without meters) with feature "
+         "contributions.",
+         "Baseline: per-fuel Distributions; intensity = annualised metered energy per m² (the brief's definition).",
+         "Improvement ladder: feasible retrofits in fabric-first order; each step's marginal effect on every posterior "
+         "sample; P(suitable) = P(feasible) × P(net benefit); probabilistic verdicts.",
+         "Improvement potential: all feasible retrofits in one run; null + reason if the baseline is 0.",
+         "Rating after: SAP 2012 formula on the twin's standard mode, anchored to the recorded SAP.",
+         "Pareto: enumerate feasible packages; P(on front) across samples; knee."],
+        "EBM energy prior (vs NEED median, XGBoost) · SAP estimator (vs median band shift) · Pareto (vs greedy kWh/£)",
+        "PosteriorSamples, FeasibilityReport, catalogue, emission factors, tariffs",
+        "EnergyPrior, EnergyBreakdown, RetrofitEffect, ImprovementPotential, RatingEstimate, ParetoPoint",
+        "SH2 shows electricity rising after a heat pump; package = one run; potential null at baseline 0; rating "
+        "change validated on EPC before/after pairs; precision@k vs EPC assessor recommendations.")
+    part_block(
+        "Part 3 · Green Home Score", "PS §2, §3 · independent",
+        "Answer \"how green is my home\" with the brief's fixed weights, a transparent waterfall and the issues that "
+        "matter.",
+        ["S = Σ w·s from contracts/score_mapping.json; seven monotonic, documented sub-scores; rounded; five bands.",
+         "Energy efficiency from the recorded SAP (or the estimated rating for a projected score); intensity from "
+         "annualised metered kWh/m².",
+         "Score Distribution and P(each band) from posterior samples; key issues with evidence; peer context from "
+         "the EPC live tables (local-authority band shares, D1)."],
+        "Deterministic scoring (no training)", "Property, EnergyBreakdown, RatingEstimate, AreaEPCStats",
+        "ScoreResult (components, KeyIssue list, band probabilities)",
+        "Weights sum to 1; monotonicity sweep; every heating type mapped; projected ≥ current for improvement-only "
+        "packages.")
+    part_block(
+        "Part 4 · Property value", "PS §7 · independent",
+        "An indicative value range, before vs after, accounting for location, size, type and market.",
+        ["Bayesian hierarchical hedonic regression on real UK sales: log(price ÷ HPI) = pooled location effects "
+         "(LSOA within LA within region) + size + type + age + tenure + β(region × type) × SAP.",
+         "Same home at its recorded vs estimated-after rating, applied to the current value estimate; full "
+         "distribution; wording always \"indicative\"; range including 0 → no clear effect.",
+         "Green twins: matched greener comparable homes shown as ranges."],
+        "Bayesian hedonic (vs OLS without the rating)", "Property, SaleRecord (training), RatingEstimate",
+        "ValueImpact, GreenTwin", "Held-out coverage and pinball loss beat the baseline; β compared with Nationwide / "
+        "DECC 2013; planted-premium recovery reported as a method check only.")
+    part_block(
+        "Part 5 · Feasibility rules engine, Jev, LLM explanation and chat", "PS §1, §4, §8, §10 · independent",
+        "Decide what is possible for a home, route what-if questions, and explain computed numbers without ever "
+        "inventing one.",
+        ["Feasibility: rule vetoes from contracts/feasibility_rules.json always win; Jev classifies survivors with "
+         "recalibrated confidence; low confidence → needs survey; Claude structured output without a Jev key.",
+         "Router: Jev intent + ScenarioSpec slots; below the threshold → clarifying question.",
+         "Chat: tool-only Claude (get_home_facts, get_results, run_scenario, search_docs, query_graph), numeric "
+         "validator, regenerate once, template fallback; knowledge base (SQL, vector, graph); customer memory."],
+        "Jev threshold calibration (isotonic) · LLM evaluated on ≥ 30 adversarial scenarios",
+        "Property, catalogue, CustomerMemory, ScenarioResult (via tools)",
+        "FeasibilityReport, WhatIfRoute, ChatResponse, ExplanationCheck, CustomerMemory",
+        "Rule veto beats Jev; 0 unvalidated numbers; groundedness and accuracy ≥ 90%, unsupported claims &lt; 5%; "
+        "works with no keys.")
+    story.append(PageBreak())
+
+    # ---------------------------------------------------------------- 5 contracts and interfaces
+    H1("5. Contracts and interfaces")
+    P("Parts exchange data only through Pydantic contracts (<font face='%s'>contracts/models.py</font>, schema 0.4.0; "
+      "TypeScript mirror generated into <font face='%s'>contracts/types.ts</font>) and call each other only through "
+      "the Protocols in <font face='%s'>greentwin/interfaces.py</font>. Every field and signature is listed in "
+      "LLD.pdf, generated from the code." % (F, F, F))
+    table([
+        ["Part", "Interface (Protocol)", "Key methods", "Owns these contracts"],
+        ["0 Data", "DataLayer", "load_property, load_usage, load_weather, load_sales, load_area_epc_stats, "
+         "load_lsoa_consumption, load_load_profiles, catalogue", "Property, EnergyUsageMonth, SaleRecord, WeatherMonth, "
+         "AreaEPCStats, LSOAConsumption, LoadProfileArchetype, EPCRecommendation, ReferenceLabel, DatasetMeta"],
+        ["1 Twin", "DigitalTwin", "params_from_property, apply_retrofits, simulate, calibrate, element_heat_loss, "
+         "electricity_profile, scene, capture", "TwinParams, CalibrationResult, ElementHeatLoss, TwinScene, "
+         "SceneSurface, RetrofitSlot, FloorPlan, Room, ElementTag, CaptureResult"],
+        ["2 Energy", "EnergyRetrofitEngine", "energy_prior, baseline, ladder, package, improvement_potential, "
+         "estimate_rating, pareto", "EnergyPrior, EnergyBreakdown, MonthlyEnergy, ElectricityProfileSummary, "
+         "RetrofitEffect, ImprovementPotential, RatingEstimate, ParetoPoint"],
+        ["3 Score", "GreenHomeScorer", "score", "ScoreResult, ScoreComponent, KeyIssue"],
+        ["4 Value", "ValueModel", "value_impact, green_twins", "ValueImpact, GreenTwin"],
+        ["5 Feasibility & LLM", "FeasibilityEngine, Router, Explainer", "assess, route, chat", "Feasibility, "
+         "FeasibilityReport, WhatIfRoute, ChatRequest, ChatResponse, ExplanationCheck, Citation, CustomerMemory"],
+        ["Orchestrator", "Orchestrator", "run_scenario, dashboard_areas", "ScenarioSpec, ScenarioResult, "
+         "DashboardArea"],
+        ["Shared", "contracts.summarise", "summarise, exact, category_probabilities", "Distribution, Provenance, "
+         "FeatureContribution"],
+    ], [24 * mm, 32 * mm, 56 * mm, 58 * mm])
+    callout("<b>Rule for every part:</b> uncertain numbers are Distributions built with contracts.summarise; every "
+            "result carries Provenance; missing data is None (never 0); savings are per fuel; packages are re-run, "
+            "never summed. A test fails if types.ts drifts from models.py.")
+    story.append(PageBreak())
+
+    # ---------------------------------------------------------------- 6 data
+    H1("6. Data")
+    P("No public dataset links property features, monthly meter readings and sale prices for the same homes. So: "
+      "<b>real data for every part that exists publicly</b>, joined at the level each dataset allows, plus "
+      "<b>physics-generated synthetic data only for the missing piece</b> (monthly readings per home and the "
+      "labels), calibrated and validated against real aggregates.")
+    H2("Datasets and how to get them")
+    table([["Dataset", "Used by", "Access", "Licence"]] +
+          [[f"<b>{x['name']}</b>", x["use"], x["access"], x["licence"]] for x in DATASETS],
+          [52 * mm, 38 * mm, 54 * mm, 26 * mm])
+    story.append(CondPageBreak(55 * mm))
+    H2("Start here (day 1, in this order)")
+    for i, s in enumerate(DAY1, 1):
+        story.append(Paragraph(f"{i}. {s}", S["bullet"]))
+    story.append(Spacer(1, 4))
+    story.append(CondPageBreak(55 * mm))
+    H2("The EPC live tables (MHCLG): how they are used")
+    P("The GOV.UK <i>Live tables on Energy Performance of Buildings Certificates</i> are quarterly ODS tables of EPC "
+      "<b>lodgements</b> for England and Wales by local authority × quarter (D1: rating band counts; D3: floor area, "
+      "modelled energy kWh/m², CO2, fuel cost; EB4: property type; EB-tables for existing dwellings only). They are "
+      "aggregates, not homes, so they are used to anchor and check the per-home data, not to train per-home models:")
+    table([["Use", "Table", "How"]] + [[u, t, h] for u, t, h in EPC_LIVE_USES], [44 * mm, 18 * mm, 108 * mm])
+    P("Caveats handled: counts are lodgements in a period (repeat certificates, opt-outs), not the dwelling stock; "
+      "a Q1 2026 local-authority allocation error was revised in May 2026; D3 averages were corrected in December "
+      "2023 (recompute averages from totals as the table notes explain).", "small")
+    story.append(CondPageBreak(55 * mm))
+    H2("How the data joins")
+    table([
+        ["Level", "Join", "Datasets"],
+        ["Postcode / LSOA", "ONS postcode directory → LSOA 2021, LA code, region", "EPC records, UCL sales, weather "
+         "(by district), planning, off-gas, IMD, DESNZ LSOA"],
+        ["Local authority × quarter", "LA code", "EPC live tables ↔ our EPC sample, synthetic population, twin "
+         "standard-mode output, dashboard"],
+        ["Archetype", "type × age band × floor-area band × region", "NEED (no postcode) ↔ EPC homes, EBM training, "
+         "synthetic validation"],
+        ["Per home (synthetic)", "real EPC home + real weather → twin + behaviour noise", "monthly usage + labels"],
+    ], [34 * mm, 60 * mm, 76 * mm])
+    story.append(PageBreak())
+
+    # ---------------------------------------------------------------- 7 uncertainty
+    H1("7. Uncertainty: every number is a distribution")
+    P("Bayesian inference happens in two places: calibrating each home's physics on its bills (Part 1) and the value "
+      "model on real sales (Part 4). Everything downstream <b>propagates</b> those posteriors: each output is "
+      "computed once per posterior sample, then summarised with contracts.summarise. Intervals are never added "
+      "together; the samples carry the correlations.")
     table([
         ["Part", "Fields", "Why"],
-        ["Centre", "mean · median · mode (peak of the sample density)", "They differ when the result is "
-         "lopsided; showing all three stops the mean hiding it"],
-        ["Spread", "standard deviation · IQR", "How uncertain the number is"],
-        ["Percentiles", "P1, P5, P10, P25, P50, P75, P90, P95, P99", "The full shape, tails included"],
-        ["Credible intervals", "50% (P25–P75) and 90% (P5–P95)", "The 90% interval is the headline range"],
-        ["Tails", "labelled tail probabilities (e.g. P(bill rises &gt; £100/yr)) · mean of the worst 5% · "
-         "skewness", "What could go wrong, and how badly"],
-        ["Shape + meta", "histogram · unit · n_samples · headline (mean or median if skewed)",
-         "Density plot in the UI; traceability"],
-    ], [26 * mm, 74 * mm, 70 * mm])
-    P("Categories (score band, EPC band, verdict) report the probability of every category plus the mode. "
-      "Probabilities (P(suitable), P(on front)) are reported as they are. Only documented constants (PS "
-      "weights, emission factors, tariffs, grants, rule vetoes) are bare numbers.", "small")
-    H2("Where the uncertainty comes from")
+        ["Centre", "mean · median · mode", "They differ when the result is lopsided"],
+        ["Spread", "standard deviation · IQR", "How uncertain"],
+        ["Percentiles + intervals", "P1–P99 · 50% and 90% credible intervals", "Full shape; the 90% interval is the headline"],
+        ["Tails", "labelled tail probabilities · mean of the worst 5% · skewness", "What could go wrong, and how badly"],
+        ["Shape + meta", "histogram · unit · n_samples · headline (mean or median)", "Density plot; traceability"],
+    ], [34 * mm, 74 * mm, 62 * mm])
     table([
-        ["Source", "How it is modelled"],
-        ["The home's physics (heat loss, setpoint, baseload, COP)", "Posterior from calibration on its meter "
-         "readings; prior only (wider) without meter data"],
-        ["Missing months, estimated reads, imputed fields", "Latent variables / wider noise, never 0"],
-        ["Weather", "Typical, cold and warm years sampled"],
-        ["Rebound after retrofit", "Prior on setpoint rising after fabric retrofits"],
-        ["Retrofit costs", "Distribution over the sourced low–high range (BEIS 2017 × CPI)"],
-        ["Rating after retrofit", "Twin samples through the SAP estimator → SAP distribution + band "
-         "probabilities"],
-        ["Property value", "Posterior of the hedonic model (location effects, rating effect)"],
-        ["Feasibility", "Jev confidence recalibrated (isotonic) into P(feasible); rule veto = 0"],
-    ], [62 * mm, 108 * mm])
-    H2("Example: heat-pump bill change on SH2 (illustrative)")
+        ["Mean", "Median", "Mode", "Std", "P5", "P95", "P(saving &gt; 0)", "P(rise &gt; £100)"],
+        ["−£35", "−£42", "−£55", "£88", "−£180", "+£110", "0.38", "0.23"],
+    ], [18 * mm, 18 * mm, 18 * mm, 18 * mm, 20 * mm, 20 * mm, 29 * mm, 29 * mm], zebra=False)
+    P("Example (illustrative): heat-pump bill change on SH2. The mean hides that about 1 in 4 homes like this could "
+      "see the bill rise by over £100/yr while carbon falls with near certainty.", "small")
+
+    # ---------------------------------------------------------------- 8 mechanisms
+    H1("8. Key mechanisms")
+    story.append(CondPageBreak(55 * mm))
+    H2("Improvement ladder: what each retrofit adds")
+    P("Rules + Jev decide what is possible; the twin decides what it is worth. Step k's effect = twin(steps 1..k) − "
+      "twin(steps 1..k−1) on every sample, fabric first. The steps add up exactly to the package (one run). Verdicts "
+      "are probabilistic: Recommended if P(suitable) ≥ 0.8 and P(step adds ≥ 3% of purchased energy or ≥ 2 points) "
+      "≥ 0.8. Thresholds to be agreed.")
     table([
-        ["Mean", "Median", "Mode", "Std", "P5", "P25", "P75", "P95", "P(saving &gt; 0)", "P(rise &gt; £100)"],
-        ["−£35", "−£42", "−£55", "£88", "−£180", "−£95", "+£20", "+£110", "0.38", "0.23"],
-    ], [15 * mm, 15 * mm, 15 * mm, 14 * mm, 16 * mm, 16 * mm, 16 * mm, 16 * mm, 23 * mm, 24 * mm], zebra=False)
-    P("The mean alone hides that about 1 in 4 homes like this could see the bill rise by over £100/yr, while "
-      "carbon falls with near certainty. That is the brief's \"electricity rises after a heating change\" "
-      "scenario, stated honestly.", "small")
+        ["#", "Add (SH2, illustrative)", "Gas kWh/yr", "Elec kWh/yr", "Potential", "Score", "CO2 t", "Bill £", "Verdict"],
+        ["1", "Cavity wall insulation", "2,600", "0", "17%", "66", "0.48", "+207", "Recommended"],
+        ["2", "Loft top-up to 270 mm", "900", "0", "23%", "68", "0.16", "+72", "Recommended"],
+        ["3", "Draught proofing", "400", "0", "26%", "69", "0.07", "+32", "Optional"],
+        ["4", "Smart thermostat + TRVs", "500", "0", "29%", "71", "0.09", "+40", "Recommended"],
+        ["5", "Replace old double glazing", "450", "0", "32%", "72", "0.08", "+36", "Not worth adding"],
+        ["6", "Air-source heat pump", "7,150", "−2,300", "64%", "80", "0.86", "−35", "Depends on goal"],
+        ["7", "Solar PV 3 kWp", "0", "1,100", "71%", "86", "0.22", "+290", "Recommended"],
+        ["", "<b>Package (one run)</b>", "<b>12,000</b>", "<b>−1,200</b>", "<b>71%</b>", "<b>86</b>", "<b>1.96</b>",
+         "<b>+641</b>", ""],
+    ], [7 * mm, 38 * mm, 18 * mm, 18 * mm, 16 * mm, 12 * mm, 12 * mm, 14 * mm, 35 * mm])
+    story.append(CondPageBreak(55 * mm))
+    H2("Improvement potential (PS §3)")
+    bullets(["100 × (E_baseline − E_after) / E_baseline on purchased energy (grid import + gas), E_after from all "
+             "feasible retrofits run together; a distribution with the per-fuel split.",
+             "Needs-survey items reported separately; baseline 0 or missing → unavailable + reason; homes ranked by "
+             "posterior mean with P(top 10%)."])
     story.append(PageBreak())
 
-    # ---------------------------------------------------------------- 4 blocks overview
-    H1("4. Build blocks (decoupled parts of the system)")
-    P("Eight blocks, each a complete piece one person can build, test and document end to end. Blocks talk "
-      "<b>only</b> through <font face='%s'>contracts/</font> (Pydantic models + the TypeScript mirror), so "
-      "every block starts on day one against <font face='%s'>contracts/examples/</font> and stubs." % (F, F))
-    story.append(block_graph())
-    story.append(Spacer(1, 6))
-    H2("Interfaces: what each block exposes")
+    # ---------------------------------------------------------------- 9 evaluation
+    H1("9. Evaluation and submission")
     table([
-        ["Block", "Package", "Public interface (stub it first)", "Start on"],
-        ["B1 Data", "greentwin/data, geo", "load_property(id), load_usage(id), load_weather(area), load_sales(), "
-         "emission_factors(), tariffs(), catalogue()", "examples + small CSV samples"],
-        ["B2 Twin", "greentwin/twin", "params_from_property(p), simulate(params, weather, mode), "
-         "apply_retrofits(params, actions), estimate_rating(...), electricity_profile(p, params) (half-hourly), "
-         "generate_synthetic(n, seed)", "RdSAP defaults"],
-        ["B3 Bayesian", "greentwin/bayes, models", "intensity_prior(p) → Distribution, calibrate(p, usage, weather) → "
-         "Posterior, predict(posterior, spec) → samples", "synthetic data from B2"],
-        ["B4 Score + retrofits", "greentwin/score, retrofit, optimise", "score(p, energy) → ScoreResult, "
-         "feasibility(p) → [Feasibility], ladder(p, posterior, goal) → [RetrofitEffect], pareto(...) → "
-         "[ParetoPoint]", "recorded inputs; fake samples"],
-        ["B5 Value", "greentwin/value", "value_impact(p, rating_after) → ValueImpact, green_twins(p)",
-         "UCL sales sample"],
-        ["B6 Orchestration", "greentwin/api, llm, jev, kb", "run_scenario(spec) → ScenarioResult; REST API; "
-         "chat(...), route(...) → WhatIfRoute; extract_floorplan(image), tag_photo(image) → draft Property "
-         "fields + confidence", "MOCK ScenarioResult"],
-        ["B7 Customer app", "web/", "screens over the API using contracts/types.ts; react-konva floor-plan "
-         "editor", "mock server"],
-        ["B8 Dashboard", "greentwin/geo + web/", "area_layers(layer, region), segments(), "
-         "green_profits(assumptions), lsoa_gnn() → expected kWh per LSOA (Distribution)", "B1 data + batch outputs"],
-    ], [24 * mm, 30 * mm, 86 * mm, 30 * mm])
+        ["Output", "Metric (held-out, property splits)", "Baseline", "Part"],
+        ["Energy prior", "MAE/MAPE per fuel, 90% coverage", "NEED median, XGBoost", "2"],
+        ["Calibration", "coverage ≈ 90%, CRPS, R-hat; standard mode vs EPC D3 by LA", "degree-day OLS", "1"],
+        ["Rating after", "MAE of SAP change on EPC before/after pairs", "median band shift", "2"],
+        ["Recommendations", "precision@k vs EPC assessor lists; 0 infeasible", "recommend all feasible", "2, 5"],
+        ["Improvement ranking", "Spearman / NDCG vs labels", "rank by total kWh", "2"],
+        ["Score", "0 monotonicity violations; band-probability calibration", "—", "3"],
+        ["Value", "coverage, pinball loss; β vs published", "OLS without rating", "4"],
+        ["GNN area model", "MAE on held-out LSOAs (spatial blocks)", "EBM without graph", "0/dashboard"],
+        ["Photo capture", "room-area error, tag accuracy, % fields corrected", "manual tagging", "1"],
+        ["LLM", "groundedness ≥ 90%, accuracy ≥ 90%, unsupported &lt; 5%", "no validator", "5"],
+        ["Synthetic data", "KS vs NEED; band/type mix vs EPC live tables", "—", "0"],
+    ], [30 * mm, 70 * mm, 40 * mm, 30 * mm])
+    table([
+        ["PS", "Requirement", "Part"],
+        ["§1", "Core rule; what-if reruns models first", "5 + orchestrator"],
+        ["§2", "Score with fixed weights, documented monotonic sub-scores, contributions", "3"],
+        ["§3", "Poor homes, key issues, improvement potential per fuel", "3 + 2"],
+        ["§4", "Feasible, prioritised retrofits with suitability, saving, reason", "5 + 2"],
+        ["§5 · §6", "Per-fuel savings with interactions; carbon from documented factors", "1 + 2"],
+        ["§7", "Indicative value range, before vs after", "4 (+ 2 rating)"],
+        ["§9", "Data, splits, leakage, documented synthetic labels", "0"],
+        ["§10", "Customer memory changes recommendations", "5"],
+        ["§13", "A prototype · B code · C models · D score doc · E LLM doc · F this document · G eval · H RAI · I "
+         "test predictions", "all"],
+    ], [18 * mm, 122 * mm, 30 * mm])
     story.append(PageBreak())
 
-    # ---------------------------------------------------------------- 5 block specs
-    H1("5. Block specifications")
-    specs = [
-        ("B1 · Data foundation", "PS §9 · feeds B2, B3, B4, B5, B8",
-         "Clean, licensed, split, joinable real data with every external factor traceable to a cited source.",
-         ["uv + Python 3.12 environment; CI runs pytest.",
-          "Download scripts → Parquet + meta.json: EPC certificates + recommendations + certificate history "
-          "(North West, South West, London), NEED 50k, UCL Price Paid–EPC linked sales + UK HPI, weather degree "
-          "days (HadUK-Grid / Open-Meteo), ONS postcode → LSOA, IMD, off-gas, planning constraints, OSM roofs, "
-          "<b>London smart meters</b> (half-hourly, 5,567 homes; load shapes) and <b>DESNZ sub-national LSOA "
-          "electricity + gas consumption</b> (real area-level labels).",
-          "Sourced factors in contracts/: DESNZ 2025 emissions, Ofgem tariffs, BEIS 2017 × CPI costs; unsourced "
-          "items return null + reason.",
-          "Mappers to Property / SaleRecord; splits.py (70/15/15 by customer, else property, seed 42, assigned "
-          "once); leakage audit (epc.potential_* are labels only); load into DuckDB."],
-         "Real data tables, factor tables, load_* helpers, docs/DATA.md",
-         "No id spans two splits; no leakage fields in feature lists; every table has meta.json; DATA.md done."),
-        ("B2 · Physics twin + rating estimator + synthetic data", "PS §5, §7, §9 · feeds B3, B4, B5, B7",
-         "A documented physics model that turns any home and retrofit package into per-fuel energy and an "
-         "estimated rating, and a generator that uses it to create realistic training data and labels.",
-         ["Level-1 twin <b>in JAX</b>: element U·A from RdSAP defaults (room geometry when photo-to-twin "
-          "provides it), ventilation, degree days, hot water, appliances; boiler efficiency / heat-pump COP → "
-          "electricity + gas; PV cuts imports. Modes: calibrated and standard (SAP occupancy).",
-          "Electricity layer: half-hourly profile from smart-meter load-shape archetypes + heat pump + PVGIS PV "
-          "− battery dispatch, giving self-consumption and time-of-use bills; lighting share for LED retrofits.",
-          "apply_retrofits: each catalogue item is a parameter edit; packages are always re-simulated.",
-          "Rating estimator (contracts/sap_estimator.json): SAP 2012 formula on the twin in standard mode, "
-          "anchored to the recorded SAP; labelled \"estimated rating, not an EPC\".",
-          "Synthetic generator: real EPC homes + NEED-calibrated behaviour noise → monthly usage with gaps and "
-          "conflicts, plus reference labels (per-fuel savings, improvement potential, feasibility); planted "
-          "value premium for method checks only."],
-         "TwinParams, TwinOutput, ElementHeatLoss (estimated=true), RatingEstimate, synthetic datasets",
-         "SH1–SH3 within ±15% of metered totals; monotonicity sweeps pass; synthetic vs NEED report; "
-         "rating validated on EPC before/after pairs."),
-        ("B3 · Bayesian calibration + energy prediction", "PS §3, §5, §6 · feeds B4, B6",
-         "Fit each home's unknown physics to its own meter data and predict per-fuel energy with full "
-         "distributions.",
-         ["EBM energy-intensity prior trained on NEED (baselines: NEED median, XGBoost).",
-          "NumPyro hierarchical calibration (home → LSOA → region, by type) of heat loss, setpoint, baseload, "
-          "COP; missing months latent; NUTS offline, SVI per home.",
-          "predict(): every posterior sample through apply_retrofits + simulate for baseline, package and each "
-          "step in sequence; weather years sampled; rebound prior.",
-          "Annualised metered intensity for the score (not weather-normalised); weather-normalised figure as a "
-          "sensitivity only."],
-         "Posterior samples, EnergyBreakdown of Distributions, data-confidence score",
-         "Held-out 90% coverage ≈ 90%, CRPS, R-hat &lt; 1.01; beats degree-day OLS / LightGBM quantile; "
-         "masked-month imputation error reported."),
-        ("B4 · Green Home Score + retrofit engine", "PS §2, §3, §4 · feeds B6, B7, B8",
-         "Answer \"how green is my home\" and \"what should I improve\" with feasible, ordered, explained "
-         "recommendations.",
-         ["Score from contracts/score_mapping.json: fixed weights, monotonic sub-scores, rounded, waterfall; "
-          "score distribution and P(each band) from posterior samples; overlaps justified.",
-          "Poor-home detector: P(Poor/Very poor), key issues per m² with peer context.",
-          "Feasibility: rule vetoes → Jev (or Claude fallback) on survivors → calibrated P(feasible).",
-          "Improvement ladder: twin reruns in fabric-first order; per-step distributions; P(suitable) = "
-          "P(feasible) × P(net benefit) → High/Medium/Low; probabilistic verdicts.",
-          "Electricity retrofits: battery (self-consumption, time-of-use shifting), LED lighting, time-of-use "
-          "tariff (changes bills, not kWh; reported as such).",
-          "Pareto front over feasible packages with P(on front), knee and budget filter."],
-         "ScoreResult, Feasibility, RetrofitEffect, ParetoPoint, docs/SCORE.md",
-         "SH1 blocks EWI; SH2 shows electricity rising; SH3 blocks loft/PV and marks the heat pump "
-         "needs_survey; ranking vs reference labels and vs real EPC recommendations reported."),
-        ("B5 · Property value", "PS §7 · feeds B6, B7",
-         "An indicative value range, before vs after, accounting for location, size, type and market.",
-         ["Bayesian hierarchical hedonic model on real sales: log(price ÷ HPI) = location (LSOA within LA "
-          "within region) + size + type + form + age + tenure + β(region × type) × rating.",
-          "Same home at recorded vs estimated-after rating, applied to the current value estimate (never a "
-          "past sale price); full distribution; wording always \"indicative\".",
-          "Stretch checks: repeat sales, matched comparable homes (\"green twins of your home\")."],
-         "ValueImpact (Distribution + wording), docs/VALUE.md",
-         "Held-out coverage and error vs OLS without the rating; β vs Nationwide / DECC 2013; planted-premium "
-         "recovery reported as a method check only."),
-        ("B6 · Scenario engine + API + knowledge base + grounded LLM + memory", "PS §1, §8, §10 · feeds B7, B8",
-         "One run_scenario that reruns every model, an API over it, and an LLM that only explains returned "
-         "numbers.",
-         ["run_scenario assembles ScenarioResult from B2–B5 with provenance; caching; mock mode for the UI.",
-          "FastAPI endpoints: homes, scenario, feasibility, pareto, green-twins, chat, route, dashboard, memory.",
-          "Knowledge base: SQL (numbers), vector store (docs, grants), embedded graph (rules, constraints).",
-          "LLM: tools only, system-prompt rules, numeric validator, template fallback, cached calls; Jev router "
-          "with isotonic calibration, Claude fallback.",
-          "Customer memory updates constraints and posteriors; ≥ 30 adversarial LLM scenarios."],
-         "ScenarioResult, REST API, chat answers with ExplanationCheck, docs/LLM.md",
-         "Real results for SH1–SH3 validate; 0 unvalidated numbers; groundedness and accuracy ≥ 90%, "
-         "unsupported claims &lt; 5%; works with no keys."),
-        ("B7 · Customer app + 3D twin", "PS §2–§7, §10 · the demo",
-         "The customer journey from \"how green is my home\" to a green-loan conversation.",
-         ["Shared theme + components (NumberWithRange, DistributionCard, ScoreWaterfall, ProvenanceTag).",
-          "Screens: score + waterfall, improvement ladder, what-if chat, 3D twin, Pareto + green loan, memory, "
-          "agent capture.",
-          "Photo-to-twin: upload floor plan + room photos → Haiku vision drafts rooms and element tags with "
-          "confidence → agent corrects in a react-konva editor → confirmed fields fill Property and room-level "
-          "geometry drives the 3D house. v1 fallback: photos + manual tags.",
-          "3D: parametric house from EPC fields; outside, cutaway and thermal views; retrofits appear; numbers "
-          "update via run_scenario; precomputed packages for showcase homes."],
-         "web/ app",
-         "Full journey runs live on SH1–SH3 and offline from cache; demo script runs without errors."),
-        ("B8 · Lloyds dashboard + geography", "PS §12 business relevance · the business story",
-         "Turn home-level results into green-lending demand; every number computed or a labelled assumption.",
-         ["Batch scoring over EPC regions → LSOA / district aggregates (Distributions summed over samples).",
-          "Heat map layers: green share, Poor share, finance demand, carbon potential, grant eligibility, "
-          "hotspots, degree-day trends.",
-          "Segments; Green Profits scenario from contracts/green_profits_assumptions.json (assumption sliders, "
-          "Monte Carlo); funnel. Synthetic customer base labelled as such.",
-          "GNN area model: GraphSAGE on the LSOA adjacency graph (features: EPC stock mix, IMD, weather, off-gas "
-          "share) predicting DESNZ mean domestic electricity and gas per meter; uses: area priors for the "
-          "Bayesian hierarchy, an \"uses more than expected\" map layer, filling suppressed LSOAs."],
-         "/dashboard/* API + dashboard screens",
-         "Runs on three regions; every assumption visibly labelled."),
-    ]
-    for title, tag, goal, steps, outputs, done in specs:
-        block = [
-            Paragraph(title, S["h2"]),
-            Paragraph("<font color='#5b5b5b'>%s</font>" % tag, S["small"]),
-            Paragraph("<b>Goal.</b> " + goal, S["body"]),
-        ]
-        block += [Paragraph(s, S["bullet"], bulletText="\u2022") for s in steps]
-        block.append(Paragraph("<b>Outputs.</b> " + outputs, S["body"]))
-        block.append(Paragraph("<b>Done when.</b> " + done, S["body"]))
-        story.append(CondPageBreak(60 * mm))
-        story.append(KeepTogether(block))
-    story.append(PageBreak())
-
-    # ---------------------------------------------------------------- 6 mechanisms
-    H1("6. Key mechanisms")
-    H2("6.1 Retrofit engine: rules + Jev decide what is possible; the twin decides what it is worth")
-    bullets([
-        "<b>Feasibility:</b> hard rule vetoes first (conservation area → no external wall insulation, no roof "
-        "access → no PV/loft, ...), then Jev on the survivors: feasible / with conditions / needs survey / "
-        "infeasible with a calibrated confidence. Jev never produces a number.",
-        "<b>Simulation:</b> step k's marginal effect = twin(steps 1..k) − twin(steps 1..k−1) on every posterior "
-        "sample, in the order fabric → glazing → controls → heating → generation. The marginals add up exactly "
-        "to the package, and the package is one twin run.",
-        "<b>Verdicts (probabilistic):</b> Recommended if P(suitable) ≥ 0.8 and P(step adds ≥ 3% of purchased "
-        "energy or ≥ 2 score points) ≥ 0.8; Optional / Not worth adding / Needs survey / Not feasible otherwise. "
-        "Thresholds to be agreed; \"net benefit\" follows the customer's goal (bills or carbon).",
-    ])
-    P("<b>Improvement ladder, SH2 (illustrative; mean with 90% interval).</b> Baseline 15,200 kWh/yr purchased, "
-      "score 60.", "body")
+    # ---------------------------------------------------------------- 10 build plan
+    H1("10. Build plan")
+    H2("Work breakdown")
     table([
-        ["#", "Add", "Gas saving kWh/yr", "Elec. saving kWh/yr", "Potential so far", "Score after",
-         "CO2 t/yr", "Bill £/yr", "Verdict"],
-        ["1", "Cavity wall insulation", "2,600 (2,100–3,100)", "0", "17%", "66", "0.48", "+207", "Recommended"],
-        ["2", "Loft top-up to 270 mm", "900 (650–1,150)", "0", "23%", "68", "0.16", "+72", "Recommended"],
-        ["3", "Draught proofing", "400 (200–600)", "0", "26%", "69", "0.07", "+32", "Optional"],
-        ["4", "Smart thermostat + TRVs", "500 (300–750)", "0", "29%", "71", "0.09", "+40", "Recommended"],
-        ["5", "Replace old double glazing", "450 (250–650)", "0", "32%", "72", "0.08", "+36", "Not worth adding"],
-        ["6", "Air-source heat pump", "7,150 (6,500–7,800)", "−2,300 (rises)", "64%", "80", "0.86", "−35",
-         "Depends on goal"],
-        ["7", "Solar PV 3 kWp", "0", "1,100 (import cut)", "71%", "86", "0.22", "+290", "Recommended"],
-        ["", "<b>Package (one run)</b>", "<b>12,000</b>", "<b>−1,200</b>", "<b>71%</b>", "<b>86</b>",
-         "<b>1.96</b>", "<b>+641</b>", ""],
-    ], [7 * mm, 31 * mm, 24 * mm, 21 * mm, 16 * mm, 13 * mm, 12 * mm, 13 * mm, 33 * mm])
-    P("Carbon: DESNZ 2025 (gas 0.18296, electricity 0.19553 kgCO2e/kWh). Bills: Ofgem Q4 2026 (gas 7.97p, "
-      "electricity 26.32p). The heat pump raises electricity and leaves the bill centred near zero at current "
-      "prices; removing the gas supply also saves the ~£108/yr standing charge, reported separately.", "small")
-    H2("6.2 Improvement potential (PS §3)")
-    bullets([
-        "100 × (E_baseline − E_after) / E_baseline on purchased energy (grid import + gas), E_after from "
-        "<b>all feasible retrofits</b> run together; reported as a distribution with the per-fuel split.",
-        "Needs-survey items are reported separately; potential (technical maximum) is not the customer's plan.",
-        "Baseline 0 or missing → unavailable + reason. Homes are ranked by the posterior mean with "
-        "P(top 10%).",
-    ])
-    H2("6.3 Energy prediction (B2 + B3)")
-    bullets([
-        "Physics computes heat loss × degree days → fuel via efficiency / COP; solar cuts imports.",
-        "Homes without meter data: EBM prior (trained on NEED) sets the expected kWh/m², wider distribution.",
-        "Homes with meter data: Bayesian calibration fits the twin to the home's own bills.",
-        "Output: electricity and gas kWh/yr as full Distributions; checked on held-out homes against the NEED "
-        "median and XGBoost.",
-    ])
-    story.append(CondPageBreak(45 * mm))
-    H2("6.4 Property value (B5)")
-    bullets([
-        "log(price ÷ local HPI) = location (LSOA within LA within region, pooled) + floor area + type + form + "
-        "age + tenure + β(region × type) × rating.",
-        "Value impact per posterior sample = V × (exp(β × ΔSAP) − 1), with ΔSAP from the rating estimator → full "
-        "distribution; if the range includes 0, say the data shows no clear effect.",
-        "Always \"Indicative range based on historical associations in sales data; not a promised or proven "
-        "increase.\" Never a reason to borrow.",
-    ])
-    story.append(CondPageBreak(60 * mm))
-    H2("6.5 Photo-to-twin (agent capture, B6 + B7)")
-    bullets([
-        "<b>Flow:</b> agent or customer uploads a floor-plan photo and room photos → <b>Claude Haiku 5.5</b> "
-        "(claude-haiku-5-5) vision with structured outputs returns rooms (label, polygon, estimated dimensions) "
-        "and element tags (glazing type, boiler/heat pump, radiators, visible loft depth, ...) each with a "
-        "confidence → the agent corrects polygons and tags in a <b>react-konva</b> editor → confirmed fields "
-        "fill <font face='%s'>Property</font>." % F,
-        "<b>What room geometry is for:</b> floor area cross-checked against the EPC, wall lengths and window "
-        "areas for the twin's U·A areas, and real rooms in the 3D house. The physics stays home-level: monthly "
-        "bills cannot identify per-room parameters.",
-        "<b>Guardrails:</b> vision outputs are tags with confidence, never energy numbers; low confidence goes back "
-        "to the agent; every field needs agent confirmation. Consent, faces and personal items blurred, stated "
-        "retention. v1 fallback: photos + manual tags.",
-        "<b>Evaluation:</b> room-area error and tag accuracy on a labelled set (CubiCasa5k floor plans + our "
-        "photos), confidence calibration, share of fields the agent had to correct.",
-    ])
-    story.append(CondPageBreak(60 * mm))
-    H2("6.6 Electricity depth (B1 + B2 + B4 + B8)")
-    bullets([
-        "<b>Data:</b> London smart meters (half-hourly, 5,567 homes, 2011–14) → load-shape archetypes "
-        "(clustered daily profiles by season and day type); DESNZ sub-national LSOA consumption → real "
-        "area-level electricity and gas per meter.",
-        "<b>Twin electricity layer:</b> each home's electricity = archetype profile scaled to its calibrated "
-        "baseload + heat-pump demand from degree-hours + PVGIS hourly PV − battery dispatch. Gives PV "
-        "self-consumption, export, and time-of-use bills; monthly totals stay consistent with the monthly twin.",
-        "<b>Electricity retrofits:</b> battery (shifts PV and cheap-rate electricity), LED lighting (cuts the "
-        "lighting share of baseload), time-of-use tariff (changes bills, not kWh, and is labelled that way). "
-        "Time-of-use rates need a cited supplier source before any bill figure is shown.",
-        "<b>GNN on LSOAs:</b> GraphSAGE over the LSOA adjacency graph predicts DESNZ mean consumption from stock "
-        "mix, IMD, weather and off-gas share. Baselines: EBM/LightGBM without the graph; spatial-block CV to "
-        "avoid leakage. Uses: priors for the Bayesian hierarchy, an \"uses more than expected\" dashboard "
-        "layer, filling suppressed areas.",
-    ])
-    story.append(PageBreak())
-
-    # ---------------------------------------------------------------- 7 evaluation + PS mapping
-    H1("7. Evaluation and submission")
-    H2("Evaluation (held-out, property-level splits, simple baselines)")
+        ["Track", "Sequence", "Starts on"],
+        ["<b>Coupled core</b> (Parts 1 + 2, one team)", "physics twin (JAX) → rating estimator → synthetic generator → "
+         "Bayesian calibration → ladder, potential, Pareto → electricity layer", "RdSAP defaults, SH1–SH3 examples"],
+        ["Part 0 Data", "EPC access + downloads → mapper → splits → DuckDB → live tables + DESNZ + smart meters", "day 1"],
+        ["Part 3 Score", "score + monotonic tests → key issues → peer context → projected score", "recorded inputs"],
+        ["Part 4 Value", "UCL sales prep → Bayesian hedonic → before/after → green twins", "UCL sample; stub rating"],
+        ["Part 5 Feasibility & LLM", "rules engine → mock server → chat + validator → eval set → Jev → memory", "mocks"],
+        ["Experience", "app shell on mocks → 3D twin v1 → capture editor → dashboard", "mocks, generated types"],
+    ], [44 * mm, 90 * mm, 36 * mm])
     table([
-        ["Output", "Metric", "Baseline", "Block"],
-        ["Energy intensity / prediction", "MAE/MAPE per fuel, 90% coverage", "NEED median, XGBoost", "B3"],
-        ["Calibrated per-fuel energy", "coverage ≈ 90%, CRPS, PIT, R-hat", "degree-day OLS, LightGBM quantile",
-         "B3"],
-        ["Missing-month imputation", "MAE on masked months", "seasonal-naive ×12", "B3"],
-        ["Rating after retrofit", "MAE + coverage of SAP change on EPC before/after pairs",
-         "median band shift per measure", "B2"],
-        ["Score", "0 monotonicity violations; every heating type mapped", "—", "B4"],
-        ["Improvement-potential ranking", "Spearman / NDCG vs reference labels", "rank by total kWh", "B4"],
-        ["Recommendations", "precision@k vs real EPC assessor lists; 0 infeasible", "recommend all feasible",
-         "B4"],
-        ["Pareto", "hypervolume, % greedy picks dominated", "greedy kWh/£", "B4"],
-        ["Value", "coverage, pinball loss on held-out sales; β vs published", "OLS without rating", "B5"],
-        ["Probabilities", "calibration (a \"0.8\" happens ~80% of the time)", "—", "B3, B4, B6"],
-        ["LLM", "groundedness ≥ 90%, accuracy ≥ 90%, unsupported &lt; 5%", "no validator", "B6"],
-        ["Synthetic data", "KS / quantiles vs NEED", "—", "B2"],
-        ["GNN area model", "MAE per fuel on held-out LSOAs (spatial-block CV)", "EBM / LightGBM without graph",
-         "B8"],
-        ["Photo-to-twin", "room-area error, tag accuracy, confidence calibration, % fields corrected",
-         "manual tagging", "B6 + B7"],
-        ["Electricity layer", "half-hourly profile error vs held-out smart-meter homes; PV self-consumption",
-         "flat profile", "B2"],
-    ], [38 * mm, 62 * mm, 48 * mm, 22 * mm])
-    H2("Problem statement coverage")
-    table([
-        ["PS section", "Requirement", "Block"],
-        ["§1", "Core rule; what-if reruns the models first", "B6"],
-        ["§2", "Score: fixed weights, monotonic documented sub-scores, contributions, justified overlaps", "B4"],
-        ["§3", "Poor homes, key issues, improvement potential (per fuel)", "B3 + B4"],
-        ["§4", "Feasible, prioritised retrofits with suitability, saving, reason; catalogue documented",
-         "B1 + B4"],
-        ["§5", "Per-retrofit and package savings per fuel, interactions, consistent baseline", "B2 + B3 + B4"],
-        ["§6", "Carbon from documented per-fuel factors", "B1 + B3"],
-        ["§7", "Indicative value range, before vs after, location/size/type/market", "B2 + B5"],
-        ["§8", "Expected outputs, pipeline, what-if flow", "B6 + B7"],
-        ["§9", "Data, schema, splits, leakage, documented synthetic labels", "B1 + B2"],
-        ["§10", "Customer memory changes recommendations", "B6 + B7"],
-        ["§11", "Evaluation vs baselines, scenario tests, performance", "all"],
-    ], [18 * mm, 128 * mm, 24 * mm])
-    H2("Submission items (PS §13)")
-    table([
-        ["Item", "Content", "Block"],
-        ["A", "Working prototype", "B7 + B6"],
-        ["B", "Source, data scripts, run instructions", "all"],
-        ["C", "Trained models + inference code (artifacts/)", "B2, B3, B4, B5"],
-        ["D", "Sub-score mappings (docs/SCORE.md)", "B4"],
-        ["E", "LLM prompts, model/API, evaluation (docs/LLM.md)", "B6"],
-        ["F", "Architecture diagram (this document)", "B6 + B7"],
-        ["G", "Evaluation report on the validation set", "all"],
-        ["H", "Responsible AI note", "B6 + B1"],
-        ["I", "Held-out test predictions + schema/label docs", "B1 + B3/B4/B5"],
-    ], [14 * mm, 132 * mm, 24 * mm])
-    story.append(PageBreak())
-
-    # ---------------------------------------------------------------- 8 working rules
-    H1("8. Working rules")
-    H2("Coding guidelines: speed first")
-    callout("<b>This is a hackathon.</b> Speed is the goal, not bug-free code. A working, good-looking demo beats "
-            "a perfect module nobody sees.")
+        ["Checkpoint", "Done when"],
+        ["1. End-to-end skeleton", "SH1–SH3 flow through the real twin → score → retrofits → API → UI"],
+        ["2. Complete submission", "Bayesian distributions, rating estimator, value, grounded LLM, evaluation, docs"],
+        ["3. Demo build (freeze)", "3D twin + capture, Pareto + loan, Lloyds dashboard, memory"],
+    ], [42 * mm, 128 * mm])
+    story.append(CondPageBreak(55 * mm))
+    H2("Working rules (hackathon: speed first)")
     bullets([
-        "Build the thinnest end-to-end path first (SH1–SH3 through twin → score → retrofits → API → UI), then "
-        "deepen. Never polish one block in isolation.",
-        "Work against contracts/examples and mocks from day one; never wait for another block.",
-        "Reuse libraries and code; copy-paste is fine; no premature abstractions. Hardcode and precompute where it "
-        "helps the demo; cache every slow or paid call.",
-        "Stuck for ~45 minutes → cut scope, use the fallback or ask. Commit small and often; keep the demo path "
-        "working.",
-        "Tests only where judges look: contracts validate, monotonic sub-scores, per-fuel signs, null improvement "
-        "potential at baseline 0, the LLM validator, no mock in the demo.",
+        "Speed beats polish: thinnest end-to-end path first, mocks from day one, reuse and hardcode for the demo, "
+        "timebox at ~45 minutes, commit small and often.",
+        "Tests only where judges look: contracts, monotonicity, per-fuel signs, null potential at baseline 0, the "
+        "LLM validator, no mock in the demo, types.ts in sync.",
+        "Non-negotiables: contracts in and out; provenance; Distributions via summarise; missing ≠ 0; rerun never "
+        "sum; the LLM never makes a number; value always indicative; no keys in git.",
+        "One UI look: shared theme and components (NumberWithRange, DistributionCard, ScoreWaterfall), brand green "
+        "#0b6e4f / blue #2a6fdb, colour-blind-safe scales, every number with unit + range.",
     ])
-    H2("Non-negotiables, even when rushing")
-    bullets([
-        "Contracts in and out; provenance on every result; uncertain numbers are Distributions built with "
-        "contracts.summarise.",
-        "Missing ≠ 0; savings per fuel; packages rerun, never summed; the LLM never produces a number; value "
-        "always \"indicative\"; no keys in git.",
-    ])
-    H2("UI guidelines: one look everywhere")
-    bullets([
-        "One design system (web/src/theme) and shared components: NumberWithRange, DistributionCard, "
-        "ScoreWaterfall, ProvenanceTag, StatusBadge. Never restyle per page.",
-        "Palette: green #0b6e4f primary, blue #2a6fdb accent, neutral greys; colour-blind-safe scales "
-        "(viridis/cividis) for heat loss and maps; red only for increases and negative savings.",
-        "One font family (Inter), 8 px spacing grid, cards, one chart style; the 3D twin uses the same palette.",
-        "Every number: unit + headline + 90% range; tap → DistributionCard. Labels: estimate, projected, "
-        "indicative, estimated from home type.",
-        "Polish the demo journey first (score → ladder → 3D → loan → chat); works offline for showcase homes.",
-    ])
+    story.append(CondPageBreak(55 * mm))
     H2("Open decisions")
     table([
         ["Decision", "Options", "Recommendation"],
-        ["Twin ambition (library decided: JAX)", "A: monthly steady-state twin in JAX first · B: differentiable "
-         "RC graph in JAX (diffrax) first", "A for checkpoint 1; upgrade behind simulate() if on time"],
-        ["Verdict thresholds", "gain threshold (3% / 2 points), probability cut-offs, cost per kWh cut-off",
-         "Agree once; record in docs/SCORE.md"],
-        ["Default goal", "bills or carbon for \"net benefit\"", "Bills by default; carbon toggle"],
-    ], [32 * mm, 80 * mm, 58 * mm])
-    H2("Checkpoints")
-    table([
-        ["Checkpoint", "Done when"],
-        ["1. End-to-end skeleton", "SH1–SH3 flow through real twin → score → retrofits → API → UI"],
-        ["2. Complete submission", "Bayesian distributions, rating estimator, value, grounded LLM, evaluation "
-         "report, docs D–I"],
-        ["3. Demo build (freeze)", "3D twin, Pareto + loan, Lloyds dashboard, memory"],
-    ], [42 * mm, 128 * mm])
+        ["Twin ambition (library: JAX)", "A: monthly steady-state first · B: differentiable RC graph (diffrax) first",
+         "A for checkpoint 1; upgrade behind simulate()"],
+        ["Verdict thresholds", "gain threshold, probability cut-offs, cost per kWh", "Agree once; record in SCORE doc"],
+        ["Default goal", "bills or carbon", "Bills by default; carbon toggle"],
+        ["Time-of-use tariff source", "which published tariff to cite", "Pick one public tariff; until then null"],
+    ], [40 * mm, 76 * mm, 54 * mm])
 
 
 def footer(c, doc):
@@ -915,11 +749,11 @@ def footer(c, doc):
 
 
 def main():
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     build()
-    OUT.parent.mkdir(parents=True, exist_ok=True)
     doc = SimpleDocTemplate(str(OUT), pagesize=A4, leftMargin=20 * mm, rightMargin=20 * mm,
                             topMargin=16 * mm, bottomMargin=18 * mm,
-                            title="GreenTwin — System design and build blocks", author="Team MegaMind")
+                            title="GreenTwin — System design", author="Team MegaMind")
     doc.build(story, onFirstPage=footer, onLaterPages=footer)
     print("wrote", OUT)
 

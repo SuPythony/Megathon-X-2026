@@ -1,0 +1,139 @@
+{
+  "description": "One row of the GOV.UK 'Live tables on Energy Performance of Buildings Certificates' (MHCLG).\n\nCounts of EPCs LODGED in a period (not the dwelling stock): tables D1 (bands), D3 (floor area, modelled\nenergy, CO2, fuel cost), EB4 (property type). Used for population calibration targets, download/mapper\nvalidation, twin standard-mode validation, peer context and dashboard layers.",
+  "properties": {
+    "area_code": {
+      "description": "LA code, region name or 'E+W'",
+      "title": "Area Code",
+      "type": "string"
+    },
+    "area_type": {
+      "enum": [
+        "local_authority",
+        "region",
+        "england_wales",
+        "england",
+        "wales"
+      ],
+      "title": "Area Type",
+      "type": "string"
+    },
+    "period": {
+      "description": "'YYYY/Q' quarter or 'YYYY' year",
+      "title": "Period",
+      "type": "string"
+    },
+    "dwellings": {
+      "default": "all",
+      "enum": [
+        "all",
+        "existing",
+        "new"
+      ],
+      "title": "Dwellings",
+      "type": "string"
+    },
+    "lodgements": {
+      "title": "Lodgements",
+      "type": "integer"
+    },
+    "total_floor_area_m2": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Total Floor Area M2"
+    },
+    "band_counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "description": "A..G + 'not_recorded' (table D1/EB1)",
+      "title": "Band Counts",
+      "type": "object"
+    },
+    "mean_energy_kwh_m2": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "EPC modelled energy (table D3/EB3)",
+      "title": "Mean Energy Kwh M2"
+    },
+    "mean_energy_kwh_per_dwelling": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mean Energy Kwh Per Dwelling"
+    },
+    "mean_co2_t_per_dwelling": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mean Co2 T Per Dwelling"
+    },
+    "mean_fuel_cost_gbp": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mean Fuel Cost Gbp"
+    },
+    "property_type_counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "description": "table EB4/NB4",
+      "title": "Property Type Counts",
+      "type": "object"
+    },
+    "source_tables": {
+      "description": "e.g. ['D1', 'D3']",
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Tables",
+      "type": "array"
+    },
+    "release": {
+      "description": "e.g. 'data to June 2026 (30 July 2026)'",
+      "title": "Release",
+      "type": "string"
+    }
+  },
+  "required": [
+    "area_code",
+    "area_type",
+    "period",
+    "lodgements",
+    "release"
+  ],
+  "title": "AreaEPCStats",
+  "type": "object"
+}

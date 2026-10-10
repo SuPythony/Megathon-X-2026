@@ -1,6 +1,6 @@
 {
   "_doc": "Retrofit catalogue v0.2. twin_edits are physics parameters applied to the Level-1 twin (U-values are typical engineering assumptions; check against RdSAP 10 tables). Savings are NEVER stored here: they come from rerunning the twin. Cost rule: only items with cost_status 'sourced' or 'secondary_source' produce cost figures; 'unsourced' items return cost = null with a reason and are excluded from cost-based ranking (Pareto net cost) until sourced.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "cost_method": {
     "primary_source": {
       "title": "BEIS (2017) Domestic cost assumptions: what does it cost to retrofit homes? Table 3, Summary findings from literature review (lowest / mean / highest cost per home)",
@@ -51,7 +51,12 @@
      "cost_gbp_low": null, "cost_gbp_central": 1876, "cost_gbp_high": null, "cost_basis": "per_kwp", "cost_price_year": "2024/25", "cost_status": "secondary_source",
      "source": "Median GBP 1,876 per kW for installations up to 4 kW, DESNZ small-scale solar PV cost data 2024/25, as reported by pv magazine (https://www.pv-magazine.com/2025/06/12/uk-small-scale-solar-costs-tumble-as-competition-heats-up-for-installers/). TO CONFIRM in the DESNZ publication. Yield from PVGIS."},
     {"id": "battery", "name": "Home battery", "category": "renewables", "twin_edits": {"battery_kwh": 5}, "depends_on": ["solar_pv"], "lifetime_years": 12,
-     "cost_status": "unsourced", "source": "No cost source yet"}
+     "cost_status": "unsourced", "source": "No cost source yet"},
+    {"id": "led_lighting", "name": "LED lighting throughout", "category": "lighting", "twin_edits": {"lighting_share_of_baseload": "x0.25"}, "lifetime_years": 15,
+     "cost_status": "unsourced", "source": "No cost source yet. Impact assumption: LEDs use roughly a quarter of the electricity of the halogen/CFL lamps they replace; the twin applies it to the lighting share of baseload (RdSAP lighting calculation). TO SOURCE."},
+    {"id": "time_of_use_tariff", "name": "Switch to a time-of-use electricity tariff", "category": "tariff", "twin_edits": {"tariff": "time_of_use"}, "changes_kwh": false, "lifetime_years": 1,
+     "cost_gbp_low": 0, "cost_gbp_central": 0, "cost_gbp_high": 0, "cost_basis": "per_home", "cost_price_year": "2026", "cost_status": "sourced",
+     "source": "Tariff switch: no installation cost (needs a smart meter, installed free by suppliers). Changes bills, not kWh. Bill figures stay null until a time-of-use rate is cited in contracts/tariffs.json."}
   ],
   "grants": {
     "BUS_7500": "Boiler Upgrade Scheme: GBP 7,500 for air/ground source heat pumps, England & Wales, MCS installer. Source: Energy Saving Trust (https://www.energysavingtrust.org.uk/grants-and-schemes/boiler-upgrade-scheme/).",

@@ -1,5 +1,159 @@
 {
   "$defs": {
+    "CalibrationDiagnostics": {
+      "properties": {
+        "max_r_hat": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "NUTS only; < 1.01 required",
+          "title": "Max R Hat"
+        },
+        "min_ess": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Ess"
+        },
+        "elbo": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SVI only",
+          "title": "Elbo"
+        },
+        "divergences": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Divergences"
+        },
+        "posterior_predictive_coverage_90": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Share of observed months in 90% PI",
+          "title": "Posterior Predictive Coverage 90"
+        }
+      },
+      "title": "CalibrationDiagnostics",
+      "type": "object"
+    },
+    "CalibrationResult": {
+      "description": "Bayesian calibration of one home's twin on its meter readings (summary; samples stored separately).",
+      "properties": {
+        "property_id": {
+          "title": "Property Id",
+          "type": "string"
+        },
+        "method": {
+          "description": "prior_only when no meter data exists",
+          "enum": [
+            "nuts",
+            "svi",
+            "prior_only"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "n_samples": {
+          "title": "N Samples",
+          "type": "integer"
+        },
+        "months_used": {
+          "title": "Months Used",
+          "type": "integer"
+        },
+        "months_imputed": {
+          "description": "Missing months treated as latent",
+          "items": {
+            "type": "string"
+          },
+          "title": "Months Imputed",
+          "type": "array"
+        },
+        "parameters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Distribution"
+          },
+          "description": "Posterior of the calibrated parameters: heat_loss_multiplier, setpoint_c, baseload, efficiency",
+          "title": "Parameters",
+          "type": "object"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/CalibrationDiagnostics"
+        },
+        "data_confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Data Confidence",
+          "type": "string"
+        },
+        "posterior_ref": {
+          "description": "Where the samples live, e.g. 'duckdb:posteriors/SH2/v3'",
+          "title": "Posterior Ref",
+          "type": "string"
+        },
+        "prior_source": {
+          "default": "ebm_prior",
+          "enum": [
+            "ebm_prior",
+            "rdsap_defaults",
+            "hierarchy"
+          ],
+          "title": "Prior Source",
+          "type": "string"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        }
+      },
+      "required": [
+        "property_id",
+        "method",
+        "n_samples",
+        "months_used",
+        "parameters",
+        "data_confidence",
+        "posterior_ref",
+        "provenance"
+      ],
+      "title": "CalibrationResult",
+      "type": "object"
+    },
     "CredibleInterval": {
       "description": "Central (equal-tailed) credible interval, e.g. level 0.9 = P5..P95.",
       "properties": {
@@ -134,6 +288,77 @@
       "title": "Distribution",
       "type": "object"
     },
+    "ElectricityProfileSummary": {
+      "description": "Half-hourly electricity layer summary (smart-meter load shapes + PV + battery + tariff).",
+      "properties": {
+        "self_consumption_pct": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "export_kwh": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "peak_share_pct": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Share of import in 16:00-19:00"
+        },
+        "bill_standard_gbp": {
+          "$ref": "#/$defs/Distribution"
+        },
+        "bill_time_of_use_gbp": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Null until a ToU tariff is sourced"
+        },
+        "load_archetype_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Load Archetype Id"
+        }
+      },
+      "required": [
+        "bill_standard_gbp"
+      ],
+      "title": "ElectricityProfileSummary",
+      "type": "object"
+    },
     "ElementHeatLoss": {
       "description": "Level 1 heat loss per envelope element; drives 3D colouring.",
       "properties": {
@@ -151,8 +376,20 @@
           "type": "string"
         },
         "heat_loss_w_per_k": {
+          "description": "Posterior mean",
           "title": "Heat Loss W Per K",
           "type": "number"
+        },
+        "heat_loss_distribution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "share_pct": {
           "title": "Share Pct",
@@ -262,6 +499,14 @@
           ],
           "default": null,
           "description": "Sensitivity only; never used in the score"
+        },
+        "monthly": {
+          "description": "Optional monthly series",
+          "items": {
+            "$ref": "#/$defs/MonthlyEnergy"
+          },
+          "title": "Monthly",
+          "type": "array"
         }
       },
       "required": [
@@ -306,6 +551,14 @@
           "title": "Reason Codes",
           "type": "array"
         },
+        "reasons": {
+          "description": "Human-readable, from rules/KB (never the LLM)",
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
         "p_feasible": {
           "description": "1.0/0.0 for rules; recalibrated confidence for Jev",
           "maximum": 1,
@@ -321,6 +574,88 @@
         "p_feasible"
       ],
       "title": "Feasibility",
+      "type": "object"
+    },
+    "FeasibilityReport": {
+      "properties": {
+        "property_id": {
+          "title": "Property Id",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Feasibility"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "rules_version": {
+          "title": "Rules Version",
+          "type": "string"
+        },
+        "jev_used": {
+          "default": false,
+          "title": "Jev Used",
+          "type": "boolean"
+        },
+        "router": {
+          "default": "rules_only",
+          "enum": [
+            "jev",
+            "claude_fallback",
+            "rules_only"
+          ],
+          "title": "Router",
+          "type": "string"
+        }
+      },
+      "required": [
+        "property_id",
+        "items",
+        "rules_version"
+      ],
+      "title": "FeasibilityReport",
+      "type": "object"
+    },
+    "FeatureContribution": {
+      "description": "One additive term of a glass-box model (EBM shape function or hedonic coefficient x value).",
+      "properties": {
+        "feature": {
+          "title": "Feature",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The input value for this home",
+          "title": "Value"
+        },
+        "contribution": {
+          "description": "Additive contribution in the model's output unit",
+          "title": "Contribution",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feature",
+        "contribution",
+        "unit"
+      ],
+      "title": "FeatureContribution",
       "type": "object"
     },
     "Histogram": {
@@ -346,6 +681,187 @@
         "counts"
       ],
       "title": "Histogram",
+      "type": "object"
+    },
+    "ImprovementPotential": {
+      "description": "PS section 3: 100 x (E_base - E_after) / E_base on purchased energy, with ALL feasible retrofits run together.",
+      "properties": {
+        "pct": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Null when the baseline is 0 or unavailable"
+        },
+        "unavailable_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unavailable Reason"
+        },
+        "electricity_change_kwh": {
+          "$ref": "#/$defs/Distribution",
+          "description": "baseline - after; negative = increase"
+        },
+        "gas_change_kwh": {
+          "$ref": "#/$defs/Distribution"
+        },
+        "included_retrofits": {
+          "description": "feasible + feasible_with_conditions",
+          "items": {
+            "type": "string"
+          },
+          "title": "Included Retrofits",
+          "type": "array"
+        },
+        "excluded_needs_survey": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Needs Survey",
+          "type": "array"
+        },
+        "pct_if_surveys_pass": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "p_top_decile": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "P(home in top 10% by potential), for ranking",
+          "title": "P Top Decile"
+        }
+      },
+      "required": [
+        "electricity_change_kwh",
+        "gas_change_kwh"
+      ],
+      "title": "ImprovementPotential",
+      "type": "object"
+    },
+    "KeyIssue": {
+      "description": "PS section 3: why a home performs poorly, with the evidence behind it.",
+      "properties": {
+        "code": {
+          "enum": [
+            "high_intensity",
+            "poor_insulation",
+            "old_heating",
+            "single_glazing",
+            "no_renewables",
+            "no_controls",
+            "data_conflict",
+            "missing_data"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "label": {
+          "description": "e.g. 'High energy use per m2 for a home like this'",
+          "title": "Label",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "evidence": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "description": "e.g. {'kwh_m2': 231, 'peer_p50': 165}",
+          "title": "Evidence",
+          "type": "object"
+        },
+        "probability": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. P(intensity above peers)",
+          "title": "Probability"
+        }
+      },
+      "required": [
+        "code",
+        "label",
+        "severity"
+      ],
+      "title": "KeyIssue",
+      "type": "object"
+    },
+    "MonthlyEnergy": {
+      "properties": {
+        "month": {
+          "description": "YYYY-MM",
+          "title": "Month",
+          "type": "string"
+        },
+        "electricity_import_kwh": {
+          "$ref": "#/$defs/Distribution"
+        },
+        "gas_kwh": {
+          "$ref": "#/$defs/Distribution"
+        },
+        "imputed": {
+          "default": false,
+          "description": "True when the meter reading was missing",
+          "title": "Imputed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "month",
+        "electricity_import_kwh",
+        "gas_kwh"
+      ],
+      "title": "MonthlyEnergy",
       "type": "object"
     },
     "ParetoPoint": {
@@ -450,13 +966,20 @@
         "engine": {
           "enum": [
             "physics_l1",
+            "bayes_calibration",
             "surrogate_deeponet",
             "sap_estimator",
             "ebm",
             "xgboost",
+            "gnn",
+            "bayesian_hedonic",
             "hedonic",
             "dr_learner",
             "rules",
+            "jev",
+            "claude",
+            "haiku_vision",
+            "template",
             "mock"
           ],
           "title": "Engine",
@@ -511,6 +1034,7 @@
           "$ref": "#/$defs/Distribution"
         },
         "band": {
+          "description": "Mode of band_probabilities",
           "enum": [
             "A",
             "B",
@@ -557,6 +1081,7 @@
       "type": "object"
     },
     "RetrofitEffect": {
+      "description": "One step of the improvement ladder: the marginal effect of adding this retrofit after the earlier steps.",
       "properties": {
         "retrofit_id": {
           "title": "Retrofit Id",
@@ -866,10 +1391,47 @@
         },
         "key_issues": {
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/KeyIssue"
           },
           "title": "Key Issues",
           "type": "array"
+        },
+        "projected": {
+          "default": false,
+          "description": "True for a post-retrofit score (uses RatingEstimate)",
+          "title": "Projected",
+          "type": "boolean"
+        },
+        "rating_source": {
+          "default": "recorded_epc",
+          "enum": [
+            "recorded_epc",
+            "estimated",
+            "missing"
+          ],
+          "title": "Rating Source",
+          "type": "string"
+        },
+        "peer_context": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "description": "e.g. local-authority band shares from EPC live table D1",
+          "title": "Peer Context",
+          "type": "object"
+        },
+        "mapping_version": {
+          "default": "score_mapping.json",
+          "description": "Version of contracts/score_mapping.json used",
+          "title": "Mapping Version",
+          "type": "string"
         }
       },
       "required": [
@@ -990,6 +1552,26 @@
           ],
           "default": null
         },
+        "rating_effect_pct_per_sap_point": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Distribution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Posterior of beta for this region x type"
+        },
+        "price_drivers": {
+          "description": "Why the home is worth what it is",
+          "items": {
+            "$ref": "#/$defs/FeatureContribution"
+          },
+          "title": "Price Drivers",
+          "type": "array"
+        },
         "method": {
           "enum": [
             "bayesian_hedonic",
@@ -1036,7 +1618,7 @@
   },
   "properties": {
     "schema_version": {
-      "default": "0.3.0",
+      "default": "0.4.0",
       "title": "Schema Version",
       "type": "string"
     },
@@ -1050,6 +1632,26 @@
     },
     "provenance": {
       "$ref": "#/$defs/Provenance"
+    },
+    "goal": {
+      "default": "bills",
+      "enum": [
+        "bills",
+        "carbon"
+      ],
+      "title": "Goal",
+      "type": "string"
+    },
+    "calibration": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CalibrationResult"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "baseline": {
       "$ref": "#/$defs/EnergyBreakdown"
@@ -1067,44 +1669,8 @@
     "purchased_energy_saving_kwh": {
       "$ref": "#/$defs/Distribution"
     },
-    "improvement_potential_pct": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/Distribution"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "100*(E_base - E_after)/E_base on purchased energy; null if baseline 0/unavailable"
-    },
-    "improvement_potential_unavailable_reason": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Improvement Potential Unavailable Reason"
-    },
-    "improvement_potential_p_top_decile": {
-      "anyOf": [
-        {
-          "maximum": 1,
-          "minimum": 0,
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "P(this home is in the top 10% by improvement potential) for ranking",
-      "title": "Improvement Potential P Top Decile"
+    "improvement_potential": {
+      "$ref": "#/$defs/ImprovementPotential"
     },
     "carbon_saving_kgco2e": {
       "anyOf": [
@@ -1145,6 +1711,17 @@
     "bill_saving_gbp": {
       "$ref": "#/$defs/Distribution"
     },
+    "electricity_profile_after": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ElectricityProfileSummary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "score_before": {
       "$ref": "#/$defs/ScoreResult"
     },
@@ -1163,7 +1740,19 @@
       ],
       "default": null
     },
+    "feasibility": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FeasibilityReport"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "retrofits": {
+      "description": "The improvement ladder, in order",
       "items": {
         "$ref": "#/$defs/RetrofitEffect"
       },
@@ -1222,6 +1811,7 @@
     "electricity_saving_kwh",
     "gas_saving_kwh",
     "purchased_energy_saving_kwh",
+    "improvement_potential",
     "emission_factors",
     "emission_factor_source",
     "bill_saving_gbp",

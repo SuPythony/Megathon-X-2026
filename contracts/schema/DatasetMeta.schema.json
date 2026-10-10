@@ -1,0 +1,82 @@
+{
+  "description": "Sidecar ``<file>.meta.json`` written next to every processed Parquet file.",
+  "properties": {
+    "dataset_id": {
+      "description": "e.g. 'epc_certificates', 'need_50k', 'epc_live_d1'",
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "publisher": {
+      "title": "Publisher",
+      "type": "string"
+    },
+    "url": {
+      "title": "Url",
+      "type": "string"
+    },
+    "licence": {
+      "title": "Licence",
+      "type": "string"
+    },
+    "accessed": {
+      "description": "ISO date downloaded",
+      "title": "Accessed",
+      "type": "string"
+    },
+    "release": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Publisher's release/version, e.g. 'data to June 2026'",
+      "title": "Release"
+    },
+    "rows": {
+      "title": "Rows",
+      "type": "integer"
+    },
+    "split_counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Split Counts",
+      "type": "object"
+    },
+    "filters": {
+      "description": "e.g. ['regions: NW, SW, London']",
+      "items": {
+        "type": "string"
+      },
+      "title": "Filters",
+      "type": "array"
+    },
+    "notes": {
+      "description": "Caveats: suppression, opt-outs, revisions",
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "dataset_id",
+    "title",
+    "publisher",
+    "url",
+    "licence",
+    "accessed",
+    "rows"
+  ],
+  "title": "DatasetMeta",
+  "type": "object"
+}

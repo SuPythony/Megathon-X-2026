@@ -1,0 +1,175 @@
+{
+  "description": "Physics parameters of one home for the Level-1 twin (one value per parameter, i.e. one sample).\n\nBuilt by ``params_from_property`` from RdSAP defaults (+ room geometry when captured); retrofits are edits\nto these fields (``RetrofitItem.twin_edits``). Calibration multiplies/overrides the uncertain ones.",
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "wall_area_m2": {
+      "title": "Wall Area M2",
+      "type": "number"
+    },
+    "roof_area_m2": {
+      "title": "Roof Area M2",
+      "type": "number"
+    },
+    "floor_area_m2": {
+      "title": "Floor Area M2",
+      "type": "number"
+    },
+    "window_area_m2": {
+      "title": "Window Area M2",
+      "type": "number"
+    },
+    "door_area_m2": {
+      "default": 3.7,
+      "title": "Door Area M2",
+      "type": "number"
+    },
+    "party_wall_area_m2": {
+      "default": 0.0,
+      "title": "Party Wall Area M2",
+      "type": "number"
+    },
+    "wall_u": {
+      "title": "Wall U",
+      "type": "number"
+    },
+    "roof_u": {
+      "title": "Roof U",
+      "type": "number"
+    },
+    "floor_u": {
+      "title": "Floor U",
+      "type": "number"
+    },
+    "window_u": {
+      "title": "Window U",
+      "type": "number"
+    },
+    "door_u": {
+      "default": 3.0,
+      "title": "Door U",
+      "type": "number"
+    },
+    "thermal_bridging_y": {
+      "default": 0.15,
+      "description": "W/m2K added over exposed area",
+      "title": "Thermal Bridging Y",
+      "type": "number"
+    },
+    "air_changes_per_hour": {
+      "title": "Air Changes Per Hour",
+      "type": "number"
+    },
+    "volume_m3": {
+      "title": "Volume M3",
+      "type": "number"
+    },
+    "heat_loss_multiplier": {
+      "default": 1.0,
+      "description": "Calibrated: scales total fabric + ventilation loss",
+      "title": "Heat Loss Multiplier",
+      "type": "number"
+    },
+    "setpoint_c": {
+      "default": 19.5,
+      "title": "Setpoint C",
+      "type": "number"
+    },
+    "heating_hours_per_day": {
+      "default": 9.0,
+      "title": "Heating Hours Per Day",
+      "type": "number"
+    },
+    "heating_efficiency": {
+      "description": "Boiler seasonal efficiency or heat-pump SCOP",
+      "title": "Heating Efficiency",
+      "type": "number"
+    },
+    "heating_fuel": {
+      "enum": [
+        "mains_gas",
+        "electricity",
+        "oil",
+        "lpg",
+        "solid",
+        "district"
+      ],
+      "title": "Heating Fuel",
+      "type": "string"
+    },
+    "hot_water_kwh_per_day": {
+      "title": "Hot Water Kwh Per Day",
+      "type": "number"
+    },
+    "baseload_kwh_per_day": {
+      "description": "Appliances + lighting + cooking electricity",
+      "title": "Baseload Kwh Per Day",
+      "type": "number"
+    },
+    "lighting_share_of_baseload": {
+      "default": 0.15,
+      "title": "Lighting Share Of Baseload",
+      "type": "number"
+    },
+    "internal_gains_w": {
+      "default": 400.0,
+      "title": "Internal Gains W",
+      "type": "number"
+    },
+    "solar_gain_factor": {
+      "default": 1.0,
+      "title": "Solar Gain Factor",
+      "type": "number"
+    },
+    "pv_kwp": {
+      "default": 0.0,
+      "title": "Pv Kwp",
+      "type": "number"
+    },
+    "pv_azimuth_deg": {
+      "default": 180.0,
+      "title": "Pv Azimuth Deg",
+      "type": "number"
+    },
+    "pv_tilt_deg": {
+      "default": 35.0,
+      "title": "Pv Tilt Deg",
+      "type": "number"
+    },
+    "battery_kwh": {
+      "default": 0.0,
+      "title": "Battery Kwh",
+      "type": "number"
+    },
+    "tariff": {
+      "default": "standard",
+      "enum": [
+        "standard",
+        "time_of_use"
+      ],
+      "title": "Tariff",
+      "type": "string"
+    }
+  },
+  "required": [
+    "property_id",
+    "wall_area_m2",
+    "roof_area_m2",
+    "floor_area_m2",
+    "window_area_m2",
+    "wall_u",
+    "roof_u",
+    "floor_u",
+    "window_u",
+    "air_changes_per_hour",
+    "volume_m3",
+    "heating_efficiency",
+    "heating_fuel",
+    "hot_water_kwh_per_day",
+    "baseload_kwh_per_day"
+  ],
+  "title": "TwinParams",
+  "type": "object"
+}

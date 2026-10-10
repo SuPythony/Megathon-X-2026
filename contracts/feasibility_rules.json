@@ -1,6 +1,6 @@
 {
   "_doc": "Layer-1 hard feasibility rules v0.1. A rule veto cannot be overridden by Jev or the LLM. Rules are evaluated on contracts.models.Property; 'when' is pseudo-code to implement in greentwin/retrofit/rules.py. Codes surface to users as reasons.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "rules": [
     {"id": "R_NO_LOFT", "blocks": ["loft_insulation"], "when": "roof.type in [another_dwelling_above, flat]", "reason": "No accessible loft"},
     {"id": "R_LOFT_ALREADY_DEEP", "blocks": ["loft_insulation"], "when": "roof.loft_insulation_mm >= 270", "reason": "Loft already at recommended depth"},
@@ -16,15 +16,18 @@
     {"id": "R_NO_FLOOR", "blocks": ["floor_insulation"], "when": "floor.type == another_dwelling_below or floor.insulated", "reason": "No ground floor to insulate, or already insulated"},
     {"id": "R_HHR_ONLY_STORAGE", "blocks": ["hhr_storage_heaters"], "when": "heating.main_system not in [electric_storage, electric_direct]", "reason": "High-heat-retention storage heaters replace electric heating only"},
     {"id": "R_SMART_DONE", "blocks": ["smart_thermostat"], "when": "smart_thermostat in controls", "reason": "Already has smart controls"},
-    {"id": "R_BATTERY_NEEDS_PV", "blocks": ["battery"], "when": "renewables.pv_kwp == 0 and solar_pv not in scenario", "reason": "Battery only recommended with PV"}
+    {"id": "R_BATTERY_NEEDS_PV", "blocks": ["battery"], "when": "renewables.pv_kwp == 0 and solar_pv not in scenario", "reason": "Battery only recommended with PV"},
+    {"id": "R_LED_DONE", "blocks": ["led_lighting"], "when": "low_energy_lighting_pct >= 90", "reason": "Lighting is already almost all low-energy"},
+    {"id": "R_TOU_NEEDS_SMART_METER", "blocks": [], "downgrade": {"time_of_use_tariff": "feasible_with_conditions"}, "when": "smart_meter not in controls", "reason": "Needs a smart meter (installed free by the supplier)"}
   ],
   "ordering": [
     ["draught_proofing", "loft_insulation", "cavity_wall_insulation", "internal_wall_insulation", "external_wall_insulation", "floor_insulation"],
     ["double_glazing", "triple_glazing", "secondary_glazing"],
-    ["smart_thermostat"],
+    ["smart_thermostat", "led_lighting"],
     ["air_source_heat_pump", "hhr_storage_heaters"],
     ["solar_pv"],
-    ["battery"]
+    ["battery"],
+    ["time_of_use_tariff"]
   ],
   "ordering_doc": "Fabric first, then glazing, controls, the heating system (sized on the reduced demand), then generation and storage. Within a group, order by expected net benefit."
 }

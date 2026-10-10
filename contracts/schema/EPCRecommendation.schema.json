@@ -1,0 +1,68 @@
+{
+  "description": "One assessor recommendation from the EPC recommendations table. Label for recommendation checks.",
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "measure_code": {
+      "description": "EPC improvement id, mapped to a catalogue id where possible",
+      "title": "Measure Code",
+      "type": "string"
+    },
+    "catalogue_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Catalogue Id"
+    },
+    "order": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Order"
+    },
+    "indicative_cost_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Indicative Cost Text"
+    },
+    "typical_saving_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Typical Saving Text"
+    }
+  },
+  "required": [
+    "property_id",
+    "measure_code"
+  ],
+  "title": "EPCRecommendation",
+  "type": "object"
+}

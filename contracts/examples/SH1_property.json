@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.3.0",
+  "schema_version": "0.4.0",
   "property_id": "SH1",
   "customer_id": "C-SH1",
   "source": "showcase",
@@ -8,6 +8,7 @@
     "postcode_district": "M14",
     "lsoa_code": null,
     "local_authority": "Manchester",
+    "local_authority_code": "E08000003",
     "region": "North West",
     "lat": 53.447,
     "lon": -2.222,

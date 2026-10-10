@@ -1,0 +1,334 @@
+{
+  "$defs": {
+    "CredibleInterval": {
+      "description": "Central (equal-tailed) credible interval, e.g. level 0.9 = P5..P95.",
+      "properties": {
+        "level": {
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Level",
+          "type": "number"
+        },
+        "lo": {
+          "title": "Lo",
+          "type": "number"
+        },
+        "hi": {
+          "title": "Hi",
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
+        "lo",
+        "hi"
+      ],
+      "title": "CredibleInterval",
+      "type": "object"
+    },
+    "Distribution": {
+      "description": "Full posterior summary of an uncertain quantity (replaces the old mean/lo/hi Interval).\n\nBuilt from posterior samples by ``contracts.summarise.summarise``. A known-exact value\n(e.g. gas after a heat pump removes the boiler) is a degenerate distribution: std = 0.",
+      "properties": {
+        "unit": {
+          "description": "e.g. 'kWh/yr', 'GBP/yr', 'kgCO2e/yr', 'points', '%'",
+          "title": "Unit",
+          "type": "string"
+        },
+        "n_samples": {
+          "description": "Posterior samples the summary was computed from",
+          "minimum": 1,
+          "title": "N Samples",
+          "type": "integer"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "median": {
+          "description": "Equals percentiles.p50",
+          "title": "Median",
+          "type": "number"
+        },
+        "mode": {
+          "description": "Most likely value: peak of the sample density (KDE)",
+          "title": "Mode",
+          "type": "number"
+        },
+        "std": {
+          "minimum": 0,
+          "title": "Std",
+          "type": "number"
+        },
+        "skewness": {
+          "default": 0.0,
+          "description": "Sample skewness; |skew| > 0.5 -> headline uses the median",
+          "title": "Skewness",
+          "type": "number"
+        },
+        "percentiles": {
+          "$ref": "#/$defs/Percentiles"
+        },
+        "credible_intervals": {
+          "description": "At least the 50% and 90% intervals",
+          "items": {
+            "$ref": "#/$defs/CredibleInterval"
+          },
+          "title": "Credible Intervals",
+          "type": "array"
+        },
+        "tail_probabilities": {
+          "items": {
+            "$ref": "#/$defs/TailProbability"
+          },
+          "title": "Tail Probabilities",
+          "type": "array"
+        },
+        "worst_tail": {
+          "default": "low",
+          "description": "Which side is the bad outcome (low for savings, high for costs)",
+          "enum": [
+            "low",
+            "high"
+          ],
+          "title": "Worst Tail",
+          "type": "string"
+        },
+        "worst_5pct_mean": {
+          "description": "Mean of the worst 5% of samples (expected shortfall)",
+          "title": "Worst 5Pct Mean",
+          "type": "number"
+        },
+        "histogram": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Histogram"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "headline": {
+          "default": "mean",
+          "description": "Which centre the UI/LLM shows first",
+          "enum": [
+            "mean",
+            "median"
+          ],
+          "title": "Headline",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unit",
+        "n_samples",
+        "mean",
+        "median",
+        "mode",
+        "std",
+        "percentiles",
+        "credible_intervals",
+        "worst_5pct_mean"
+      ],
+      "title": "Distribution",
+      "type": "object"
+    },
+    "Histogram": {
+      "description": "Sample histogram for the UI density plot; len(bin_edges) == len(counts) + 1.",
+      "properties": {
+        "bin_edges": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Bin Edges",
+          "type": "array"
+        },
+        "counts": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Counts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "bin_edges",
+        "counts"
+      ],
+      "title": "Histogram",
+      "type": "object"
+    },
+    "Percentiles": {
+      "description": "Posterior percentiles; must be non-decreasing from p1 to p99.",
+      "properties": {
+        "p1": {
+          "title": "P1",
+          "type": "number"
+        },
+        "p5": {
+          "title": "P5",
+          "type": "number"
+        },
+        "p10": {
+          "title": "P10",
+          "type": "number"
+        },
+        "p25": {
+          "title": "P25",
+          "type": "number"
+        },
+        "p50": {
+          "title": "P50",
+          "type": "number"
+        },
+        "p75": {
+          "title": "P75",
+          "type": "number"
+        },
+        "p90": {
+          "title": "P90",
+          "type": "number"
+        },
+        "p95": {
+          "title": "P95",
+          "type": "number"
+        },
+        "p99": {
+          "title": "P99",
+          "type": "number"
+        }
+      },
+      "required": [
+        "p1",
+        "p5",
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90",
+        "p95",
+        "p99"
+      ],
+      "title": "Percentiles",
+      "type": "object"
+    },
+    "TailProbability": {
+      "description": "Probability that the quantity falls beyond a meaningful threshold, e.g. P(saving < 0).",
+      "properties": {
+        "label": {
+          "description": "Human-readable event, e.g. 'bill rises by more than \u00a3100/yr'",
+          "title": "Label",
+          "type": "string"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "below",
+            "above"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Probability",
+          "type": "number"
+        }
+      },
+      "required": [
+        "label",
+        "threshold",
+        "direction",
+        "probability"
+      ],
+      "title": "TailProbability",
+      "type": "object"
+    }
+  },
+  "description": "PS section 3: 100 x (E_base - E_after) / E_base on purchased energy, with ALL feasible retrofits run together.",
+  "properties": {
+    "pct": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Null when the baseline is 0 or unavailable"
+    },
+    "unavailable_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unavailable Reason"
+    },
+    "electricity_change_kwh": {
+      "$ref": "#/$defs/Distribution",
+      "description": "baseline - after; negative = increase"
+    },
+    "gas_change_kwh": {
+      "$ref": "#/$defs/Distribution"
+    },
+    "included_retrofits": {
+      "description": "feasible + feasible_with_conditions",
+      "items": {
+        "type": "string"
+      },
+      "title": "Included Retrofits",
+      "type": "array"
+    },
+    "excluded_needs_survey": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Excluded Needs Survey",
+      "type": "array"
+    },
+    "pct_if_surveys_pass": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Distribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "p_top_decile": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "P(home in top 10% by potential), for ranking",
+      "title": "P Top Decile"
+    }
+  },
+  "required": [
+    "electricity_change_kwh",
+    "gas_change_kwh"
+  ],
+  "title": "ImprovementPotential",
+  "type": "object"
+}

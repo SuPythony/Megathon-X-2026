@@ -1,0 +1,397 @@
+{
+  "$defs": {
+    "Citation": {
+      "properties": {
+        "source": {
+          "enum": [
+            "tool_result",
+            "doc",
+            "rule",
+            "dataset"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "ref": {
+          "description": "scenario_id, doc id, rule id or dataset id",
+          "title": "Ref",
+          "type": "string"
+        },
+        "snippet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snippet"
+        }
+      },
+      "required": [
+        "source",
+        "ref"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "ExplanationCheck": {
+      "description": "Validator output for one LLM answer.",
+      "properties": {
+        "numbers_found": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Numbers Found",
+          "type": "array"
+        },
+        "unsupported_numbers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unsupported Numbers",
+          "type": "array"
+        },
+        "jev_supported_probability": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Jev Supported Probability"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "numbers_found",
+        "unsupported_numbers",
+        "passed"
+      ],
+      "title": "ExplanationCheck",
+      "type": "object"
+    },
+    "RetrofitAction": {
+      "properties": {
+        "retrofit_id": {
+          "title": "Retrofit Id",
+          "type": "string"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. kWp, mm, kW",
+          "title": "Size"
+        },
+        "stage_year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Roadmap year (0 = now)",
+          "title": "Stage Year"
+        }
+      },
+      "required": [
+        "retrofit_id"
+      ],
+      "title": "RetrofitAction",
+      "type": "object"
+    },
+    "ScenarioSpec": {
+      "properties": {
+        "schema_version": {
+          "default": "0.4.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "property_id": {
+          "title": "Property Id",
+          "type": "string"
+        },
+        "retrofits": {
+          "description": "Empty = baseline only",
+          "items": {
+            "$ref": "#/$defs/RetrofitAction"
+          },
+          "title": "Retrofits",
+          "type": "array"
+        },
+        "weather": {
+          "default": "typical",
+          "enum": [
+            "typical",
+            "cold_year",
+            "warm_year",
+            "forecast_week",
+            "ukcp18_2050"
+          ],
+          "title": "Weather",
+          "type": "string"
+        },
+        "n_samples": {
+          "default": 500,
+          "description": "Posterior samples to propagate",
+          "title": "N Samples",
+          "type": "integer"
+        },
+        "include_value": {
+          "default": true,
+          "title": "Include Value",
+          "type": "boolean"
+        },
+        "include_pareto": {
+          "default": false,
+          "title": "Include Pareto",
+          "type": "boolean"
+        },
+        "include_element_heat_loss": {
+          "default": true,
+          "title": "Include Element Heat Loss",
+          "type": "boolean"
+        },
+        "include_electricity_profile": {
+          "default": false,
+          "title": "Include Electricity Profile",
+          "type": "boolean"
+        },
+        "seed": {
+          "default": 42,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "goal": {
+          "default": "bills",
+          "description": "Defines 'net benefit' for suitability/verdicts; never changes computed numbers",
+          "enum": [
+            "bills",
+            "carbon"
+          ],
+          "title": "Goal",
+          "type": "string"
+        },
+        "requested_by": {
+          "default": "ui",
+          "enum": [
+            "ui",
+            "llm",
+            "batch",
+            "jev_router",
+            "eval"
+          ],
+          "title": "Requested By",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "property_id"
+      ],
+      "title": "ScenarioSpec",
+      "type": "object"
+    },
+    "ToolCallRecord": {
+      "properties": {
+        "name": {
+          "enum": [
+            "get_home_facts",
+            "get_results",
+            "run_scenario",
+            "search_docs",
+            "query_graph"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "input": {
+          "additionalProperties": true,
+          "title": "Input",
+          "type": "object"
+        },
+        "output_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. the scenario_id a run_scenario call produced",
+          "title": "Output Ref"
+        }
+      },
+      "required": [
+        "name",
+        "input"
+      ],
+      "title": "ToolCallRecord",
+      "type": "object"
+    },
+    "WhatIfRoute": {
+      "description": "Output of the System-1 router (Jev or Claude fallback).",
+      "properties": {
+        "intent": {
+          "enum": [
+            "numeric",
+            "comparative",
+            "feasibility",
+            "explain",
+            "out_of_scope"
+          ],
+          "title": "Intent",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "scenario": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScenarioSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "needs_clarification": {
+          "default": false,
+          "title": "Needs Clarification",
+          "type": "boolean"
+        },
+        "clarifying_question": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clarifying Question"
+        },
+        "router": {
+          "enum": [
+            "jev",
+            "claude_fallback"
+          ],
+          "title": "Router",
+          "type": "string"
+        }
+      },
+      "required": [
+        "intent",
+        "confidence",
+        "router"
+      ],
+      "title": "WhatIfRoute",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "answer": {
+      "title": "Answer",
+      "type": "string"
+    },
+    "route": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WhatIfRoute"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "tool_calls": {
+      "items": {
+        "$ref": "#/$defs/ToolCallRecord"
+      },
+      "title": "Tool Calls",
+      "type": "array"
+    },
+    "citations": {
+      "items": {
+        "$ref": "#/$defs/Citation"
+      },
+      "title": "Citations",
+      "type": "array"
+    },
+    "check": {
+      "$ref": "#/$defs/ExplanationCheck"
+    },
+    "scenario_result_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Scenario Result Id"
+    },
+    "fallback": {
+      "default": "none",
+      "enum": [
+        "none",
+        "regenerated",
+        "template"
+      ],
+      "title": "Fallback",
+      "type": "string"
+    },
+    "model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "LLM model id, or None for the template explainer",
+      "title": "Model"
+    }
+  },
+  "required": [
+    "answer",
+    "check"
+  ],
+  "title": "ChatResponse",
+  "type": "object"
+}

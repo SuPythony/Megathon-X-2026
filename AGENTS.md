@@ -15,7 +15,9 @@ Every UK home gets a calibrated **physics digital twin**. From it we compute:
 Every uncertain number carries a **full Bayesian distribution** (mean, median, mode, std, percentiles, 90% interval, tail probabilities). A **tool-only LLM** explains results and answers what-ifs by rerunning the models. **Jev**, a System-1 model, routes questions and screens feasibility. A **Three.js 3D twin** shows retrofits inside and outside the house. A **Lloyds dashboard** (locality heat map, segments, Green Profits) turns this into green-lending demand.
 
 - Plan: `docs/IMPLEMENTATION_PLAN.md` (tiers) and `docs/IMPLEMENTATION_PLAN_v2.md` (build blocks)
-- System design: `deliverables/SYSTEM_DESIGN.pdf` (source `deliverables/src/build_system_design.py`)
+- **System design: `SYSTEM_DESIGN.pdf`** (repo root; source `deliverables/src/build_system_design.py`): the five parts, architecture, data, build plan.
+- **Low-level design: `LLD.pdf`** (repo root; source `deliverables/src/build_lld.py` + `lld_content.md` + `lld_data.md`): every contract field, interface, algorithm, table schema and dataset download step. Contract and interface sections are generated from the code.
+- Dataset list (verified 11 Oct 2026): `deliverables/src/datasets.py`, shared by both PDFs.
 - Submission PDF: `deliverables/M1.pdf` (source `deliverables/src/build_m1.py`)
 - Living strategy doc: https://claude.ai/code/artifact/5db02f30-587d-4e5a-9bec-16e560798f48
 - Git remote: https://github.com/IIIT-ECell/megathon26-megamind.git
@@ -62,6 +64,8 @@ This is a hackathon. **Speed is the goal, not bug-free code.** A working, good-l
 ## Decisions (do not relitigate without the team lead)
 | Decision | Detail |
 | --- | --- |
+| Five parts | **1 Digital twin** (JAX physics, Bayesian calibration, 3D, photo capture) · **2 Energy & retrofit engine** (EBM prior, baseline, ladder, savings/carbon/bills, improvement potential, rating after, Pareto) · **3 Green Home Score** · **4 Property value** · **5 Feasibility (rules → Jev), LLM explanation and chat**; plus Part 0 data layer and the orchestrator. Parts 1+2 are the coupled core; 0, 3, 4, 5 and the UI are independent and code against `greentwin/interfaces.py`. |
+| EPC live tables | MHCLG live tables (D1/D3/EB4, LA × quarter) are aggregates: used for population calibration targets, download/mapper reconciliation, twin standard-mode validation, score peer context and dashboard layers. Never as per-home training data. |
 | Region | **UK only** (England & Wales data). The India pack was dropped. |
 | Core engine | **Level 1 RC + equipment simulator**, Bayesian-calibrated, is the **only source of numbers**. Level 2 (spatial PINO, 3D heat-flow detail) is **visual only** and is gated to agree within ±5% with Level 1. |
 | Learned models | **EBM primary**, XGBoost baseline. Learned models calibrate, rank, value, or act as surrogates; they never directly produce customer savings. |
@@ -105,7 +109,8 @@ This is a hackathon. **Speed is the goal, not bug-free code.** A working, good-l
 8. **3D element colours.** `ElementHeatLoss.estimated = true`. Show the `basis` label: "Estimated from home type and EPC descriptions; only the total heat loss is calibrated to bills".
 
 ## Shared data formats
-- **Source of truth:** `contracts/models.py` (Pydantic v2). TS mirror: `contracts/types.ts`. Change both in the same commit.
+- **Source of truth:** `contracts/models.py` (Pydantic v2, schema 0.4.0, grouped by part). `contracts/types.ts` is **generated** (`python -m contracts.export_ts`); never edit it by hand (a test fails if it is stale).
+- **Interfaces:** `greentwin/interfaces.py` has one Protocol per part (DataLayer, DigitalTwin, EnergyRetrofitEngine, GreenHomeScorer, ValueModel, FeasibilityEngine, Router, Explainer, Orchestrator). Call other parts only through these.
 - Configs:
   - `contracts/score_mapping.json`: weights + sub-score mappings.
   - `contracts/feasibility_rules.json`: rules + ordering.
@@ -113,7 +118,7 @@ This is a hackathon. **Speed is the goal, not bug-free code.** A working, good-l
   - `contracts/emission_factors.json` (DESNZ 2025) and `contracts/tariffs.json` (Ofgem Q4 2026).
   - `contracts/sap_estimator.json`: the post-retrofit rating method.
   - `contracts/green_profits_assumptions.json`: the scenario rule, assumptions only.
-- Examples: `contracts/examples/` (showcase homes, usage, scenario spec, a **MOCK** result that is shape only).
+- Examples: `contracts/examples/` (showcase homes, usage, scenario spec, and **MOCK** ScenarioResult, TwinScene and ChatResponse, shape only).
 - JSON Schema: `python -m contracts.export_schemas` → `contracts/schema/`.
 - Units:
   - kWh/yr, GBP, kgCO2e, m2, W/m2K, W/K.

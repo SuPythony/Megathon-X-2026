@@ -109,3 +109,58 @@ def test_sap_estimator_documented():
 def test_green_profits_is_scenario_not_trained():
     gp = _load("green_profits_assumptions.json")
     assert all(v["status"] == "assumption" for v in gp["take_up_rule"]["coefficients"].values())
+
+
+# --------------------------------------------------------------------------- 0.4.0: parts, mocks, generated TS
+from contracts import export_ts  # noqa: E402
+from contracts.models import (  # noqa: E402
+    AreaEPCStats, ChatResponse, LoadProfileArchetype, TwinScene,
+)
+
+
+def test_scene_and_chat_mocks_validate():
+    scene = TwinScene.model_validate_json((EX / "SH2_twin_scene_MOCK.json").read_text(encoding="utf-8"))
+    assert all(s.estimated for s in scene.surfaces)  # heat-loss split is never presented as measured
+    chat = ChatResponse.model_validate_json((EX / "SH2_chat_response_MOCK.json").read_text(encoding="utf-8"))
+    assert chat.check.passed and not chat.check.unsupported_numbers
+
+
+def test_mock_result_uses_structured_improvement_potential_and_issues():
+    res = ScenarioResult.model_validate_json((EX / "SH2_scenario_result_MOCK.json").read_text(encoding="utf-8"))
+    assert res.improvement_potential.pct is not None
+    assert res.score_before.key_issues and res.score_before.key_issues[0].code
+    assert res.score_after.projected and res.score_after.rating_source == "estimated"
+
+
+def test_types_ts_is_generated_from_models():
+    assert (ROOT / "contracts" / "types.ts").read_text(encoding="utf-8") == export_ts.render(), \
+        "contracts/types.ts is stale: run `python -m contracts.export_ts`"
+
+
+def test_load_profile_must_have_48_shares_summing_to_one():
+    LoadProfileArchetype(archetype_id="a", season="winter", day_type="weekday",
+                         half_hourly_share=[1 / 48] * 48, n_households=10)
+    with pytest.raises(ValueError):
+        LoadProfileArchetype(archetype_id="a", season="winter", day_type="weekday",
+                             half_hourly_share=[0.1] * 48, n_households=10)
+
+
+def test_area_epc_stats_row_from_live_table_d1():
+    row = AreaEPCStats(area_code="E07000223", area_type="local_authority", period="2008/4", lodgements=522,
+                       total_floor_area_m2=36714.1, band_counts={"A": 1, "B": 52, "C": 141, "D": 180, "E": 105,
+                                                                 "F": 33, "G": 10}, source_tables=["D1"],
+                       release="data to June 2026")
+    assert sum(row.band_counts.values()) == row.lodgements
+
+
+def test_interfaces_import_and_cover_every_part():
+    from greentwin import interfaces as it
+    for name in ["DataLayer", "DigitalTwin", "EnergyRetrofitEngine", "GreenHomeScorer", "ValueModel",
+                 "FeasibilityEngine", "Router", "Explainer", "Orchestrator"]:
+        assert hasattr(it, name), name
+
+
+def test_tariff_switch_changes_bills_not_kwh():
+    cat = _load("retrofit_catalogue.json")
+    tou = next(i for i in cat["items"] if i["id"] == "time_of_use_tariff")
+    assert RetrofitItem.model_validate(tou).changes_kwh is False

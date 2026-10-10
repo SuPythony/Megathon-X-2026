@@ -1,0 +1,101 @@
+{
+  "$defs": {
+    "Feasibility": {
+      "properties": {
+        "retrofit_id": {
+          "title": "Retrofit Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "feasible",
+            "feasible_with_conditions",
+            "needs_survey",
+            "infeasible"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "decided_by": {
+          "enum": [
+            "rules",
+            "jev",
+            "claude_fallback",
+            "agent"
+          ],
+          "title": "Decided By",
+          "type": "string"
+        },
+        "reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reason Codes",
+          "type": "array"
+        },
+        "reasons": {
+          "description": "Human-readable, from rules/KB (never the LLM)",
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "p_feasible": {
+          "description": "1.0/0.0 for rules; recalibrated confidence for Jev",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "P Feasible",
+          "type": "number"
+        }
+      },
+      "required": [
+        "retrofit_id",
+        "status",
+        "decided_by",
+        "p_feasible"
+      ],
+      "title": "Feasibility",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "property_id": {
+      "title": "Property Id",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/Feasibility"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "rules_version": {
+      "title": "Rules Version",
+      "type": "string"
+    },
+    "jev_used": {
+      "default": false,
+      "title": "Jev Used",
+      "type": "boolean"
+    },
+    "router": {
+      "default": "rules_only",
+      "enum": [
+        "jev",
+        "claude_fallback",
+        "rules_only"
+      ],
+      "title": "Router",
+      "type": "string"
+    }
+  },
+  "required": [
+    "property_id",
+    "items",
+    "rules_version"
+  ],
+  "title": "FeasibilityReport",
+  "type": "object"
+}
