@@ -172,8 +172,11 @@ function RoomDetail({ scene, roomId }: { scene: RoomScene; roomId: string }) {
   )
 }
 
+type Tab = 'home' | 'retrofits' | 'geometry' | 'data'
+const TABS: [Tab, string][] = [['home', 'Overview'], ['retrofits', 'Retrofits'], ['geometry', 'Geometry'], ['data', 'Data']]
+
 export function Panel({ scene }: { scene: RoomScene }) {
-  const { selectedRoom, appliances, addScene } = useViewer()
+  const { selectedRoom, appliances, addScene, panelTab: tab, setPanelTab: setTab } = useViewer()
   const onUpload = async (file: File | undefined) => {
     if (!file) return
     try {
@@ -182,21 +185,35 @@ export function Panel({ scene }: { scene: RoomScene }) {
       alert('That file is not a valid room scene JSON.')
     }
   }
+  const tabs = TABS.filter(([t]) => scene.energy || (t !== 'retrofits' && t !== 'geometry'))
   return (
-    <aside className="panel">
-      {selectedRoom ? <RoomDetail scene={scene} roomId={selectedRoom} /> : <HouseSummary scene={scene} />}
-      {!selectedRoom && <GeometryCard key={`${scene.property_id}:${scene.geometry?.confirmed_at ?? ''}`} scene={scene} />}
-      <RetrofitPanel scene={scene} />
-      <section className="card actions">
-        <button onClick={() => download(`${scene.property_id}_appliances.json`, exportPlacements(scene, appliances))}>
-          Export appliance placements
-        </button>
-        <label className="upload">
-          Load scene JSON
-          <input type="file" accept=".json,application/json" onChange={(e) => onUpload(e.target.files?.[0])} />
-        </label>
-      </section>
-      <p className="basis">{scene.basis}</p>
+    <aside className="panel glass">
+      <div className="tabs" role="tablist">
+        {tabs.map(([t, label]) => (
+          <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{label}</button>
+        ))}
+      </div>
+      <div className="panel-body">
+        {tab === 'home' && (selectedRoom ? <RoomDetail scene={scene} roomId={selectedRoom} /> : <HouseSummary scene={scene} />)}
+        {tab === 'retrofits' && <RetrofitPanel scene={scene} />}
+        {tab === 'geometry' && <GeometryCard key={`${scene.property_id}:${scene.geometry?.confirmed_at ?? ''}`} scene={scene} />}
+        {tab === 'data' && (
+          <>
+            <section className="card actions">
+              <h3>Data</h3>
+              <button onClick={() => download(`${scene.property_id}_appliances.json`, exportPlacements(scene, appliances))}>
+                Export appliance placements
+              </button>
+              <label className="upload">
+                Load scene JSON
+                <input type="file" accept=".json,application/json" onChange={(e) => onUpload(e.target.files?.[0])} />
+              </label>
+            </section>
+            <p className="basis">{scene.basis}</p>
+            <p className="basis">Textures: Poly Haven, CC0.</p>
+          </>
+        )}
+      </div>
     </aside>
   )
 }

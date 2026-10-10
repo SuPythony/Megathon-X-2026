@@ -1,6 +1,8 @@
+import { Edges } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import { useRef } from 'react'
 import * as THREE from 'three'
+import { useShallow } from 'zustand/react/shallow'
 import { rotationY, toPlan, toThree } from '../geometry'
 import { useViewer } from '../store'
 import type { RoomScene, SceneAppliance } from '../types'
@@ -17,7 +19,7 @@ function Body({ app, opacity }: { app: SceneAppliance; opacity: number }) {
   if (app.shape === 'cylinder') {
     return (
       <group>
-        <mesh>
+        <mesh castShadow receiveShadow>
           <cylinderGeometry args={[w / 2, w / 2, h, 24]} />
           {mat(app.colour, { metalness: 0.3 })}
         </mesh>
@@ -63,7 +65,12 @@ function Body({ app, opacity }: { app: SceneAppliance; opacity: number }) {
 }
 
 function Appliance({ app, scene }: { app: SceneAppliance; scene: RoomScene }) {
-  const { selectedRoom, selectedAppliance, explode, selectRoom, selectAppliance, moveAppliance, setDragging } = useViewer()
+  const { selectedRoom, selectedAppliance, explode, selectRoom, selectAppliance, moveAppliance, setDragging } = useViewer(
+    useShallow((s) => ({
+      selectedRoom: s.selectedRoom, selectedAppliance: s.selectedAppliance, explode: s.explode, selectRoom: s.selectRoom,
+      selectAppliance: s.selectAppliance, moveAppliance: s.moveAppliance, setDragging: s.setDragging,
+    })),
+  )
   const dragging = useRef(false)
   const room = app.room_id ? scene.rooms.find((r) => r.room_id === app.room_id) : undefined
   const selected = scene.rooms.find((r) => r.room_id === selectedRoom) ?? null
@@ -127,8 +134,9 @@ function Appliance({ app, scene }: { app: SceneAppliance; scene: RoomScene }) {
       )}
       {isSelected && (
         <mesh>
-          <boxGeometry args={[w + 0.06, h + 0.06, d + 0.06]} />
-          <meshBasicMaterial color="#2a6fdb" wireframe />
+          <boxGeometry args={[w + 0.05, h + 0.05, d + 0.05]} />
+          <meshBasicMaterial transparent opacity={0.08} color="#2a6fdb" depthWrite={false} />
+          <Edges color="#2a6fdb" lineWidth={2} />
         </mesh>
       )}
     </group>

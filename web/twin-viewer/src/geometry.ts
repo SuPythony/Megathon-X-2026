@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { planarUV } from './materials'
 import type { SceneAppliance, SceneOpening, SceneRoom, SceneWall, Side, Vec2, Vec3 } from './types'
 
 export const EXPLODE_GAP_M = 2.0
@@ -122,9 +123,13 @@ export function wallPieces(wall: SceneWall, openings: SceneOpening[], baseY: num
   // Internal walls stop short of the outer walls, so they don't show through the facade.
   const onEdge = (x: number, y: number) =>
     Math.abs(x) < 1e-6 || Math.abs(y) < 1e-6 || Math.abs(x - footprint[0]) < 1e-6 || Math.abs(y - footprint[1]) < 1e-6
+  // Front/back outer walls stop where the side walls run, so two boxes never share a face at a corner (z-fighting).
+  const onSide = (x: number) => Math.abs(x) < 1e-6 || Math.abs(x - footprint[0]) < 1e-6
+  const side = wallSide(wall)
+  const outerFrontBack = wall.kind !== 'internal' && (side === 'front' || side === 'back')
   const trim = wall.kind === 'internal' ? WALL_THICKNESS.exterior : 0
-  const t0 = onEdge(sx, sy) ? trim : 0
-  const t1 = onEdge(ex, ey) ? trim : 0
+  const t0 = outerFrontBack ? (onSide(sx) ? WALL_THICKNESS.exterior : 0) : onEdge(sx, sy) ? trim : 0
+  const t1 = outerFrontBack ? (onSide(ex) ? WALL_THICKNESS.exterior : 0) : onEdge(ex, ey) ? trim : 0
   const [ax, ay] = [sx + dx * t0, sy + dy * t0]
   const len = full - t0 - t1
   if (len < 1e-3) return []
@@ -164,7 +169,7 @@ export function wallPieces(wall: SceneWall, openings: SceneOpening[], baseY: num
 /** Roof slopes and gable ends as triangle soups (three coords), built for ridge along x, swapped for y. */
 export function roofGeometry(
   type: 'gable' | 'hip', width: number, depth: number, eaveY: number, rise: number, ridgeAxis: 'x' | 'y',
-  overhang = 0.3,
+  overhang = 0.3, tile = 1.6,
 ): { slopes: THREE.BufferGeometry; gables: THREE.BufferGeometry | null } {
   // Work in (u along ridge, v across); map back to plan (x, y).
   const U = ridgeAxis === 'x' ? width : depth
@@ -186,7 +191,7 @@ export function roofGeometry(
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3))
     g.computeVertexNormals()
-    return g
+    return planarUV(g, tile)
   }
   if (type === 'hip') return { slopes: geo([...slopes, ...ends]), gables: null }
   return { slopes: geo(slopes), gables: geo(ends) }

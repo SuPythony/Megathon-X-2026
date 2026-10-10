@@ -40,6 +40,10 @@ interface ViewerState {
   baselineRooms: EnergyOverlay | null
   twinSource: TwinSource
   twinBusy: boolean
+  viewNonce: number
+  panelTab: 'home' | 'retrofits' | 'geometry' | 'data'
+  setPanelTab: (t: 'home' | 'retrofits' | 'geometry' | 'data') => void
+  resetView: () => void
   setScene: (key: string) => void
   addScene: (scene: RoomScene) => void
   selectRoom: (roomId: string | null) => void
@@ -79,6 +83,10 @@ export const useViewer = create<ViewerState>((set, get) => ({
   baselineRooms: EXAMPLE_SCENES[firstKey]?.energy ?? null,
   twinSource: 'idle',
   twinBusy: false,
+  viewNonce: 0,
+  panelTab: 'home',
+  setPanelTab: (t) => set({ panelTab: t }),
+  resetView: () => set((s) => ({ viewNonce: s.viewNonce + 1 })),
 
   setScene: (key) =>
     set((s) => ({
@@ -90,7 +98,7 @@ export const useViewer = create<ViewerState>((set, get) => ({
     set((s) => ({ scenes: { ...s.scenes, [key]: sc } }))
     get().setScene(key)
   },
-  selectRoom: (roomId) => set({ selectedRoom: roomId, selectedAppliance: null, notice: null }),
+  selectRoom: (roomId) => set((s) => ({ selectedRoom: roomId, selectedAppliance: null, notice: null, panelTab: roomId ? 'home' : s.panelTab })),
   selectAppliance: (id) => set({ selectedAppliance: id }),
   setDragging: (on) => set({ dragging: on }),
   toggleRoof: () => set((s) => ({ showRoof: !s.showRoof })),

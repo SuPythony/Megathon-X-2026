@@ -43,6 +43,17 @@ Adding an appliance asks its size questions (`appliance_energy.json`: fridge siz
 kW...). The answers can be edited for the selected appliance. Answers are exported with placements and drive the
 appliance's energy, schedule and heat gains.
 
+## Look and feel
+- Full-screen 3D with floating glass panels. A left toolbar handles roof, exploded floors, heat-loss colours, back to
+  the whole house and reset view; the right panel has tabs for overview / room, retrofits, geometry and data.
+- Real materials: CC0 photo textures from Poly Haven (`public/textures/`, see `CREDITS.md`) mapped in metres, so
+  bricks and tiles keep real size. Soft sun shadows, sky, a procedural environment for reflections on glass and PV
+  (no runtime downloads).
+- No jitter: outer walls are trimmed at corners (no coplanar faces), the shadow camera is fixed and fitted,
+  rendering is on demand, and components subscribe only to the state they use.
+- Retrofits drop gently into place. Heat-loss mode makes outer walls glow on a colour-blind-safe cividis scale,
+  with a legend.
+
 ## Notes
 - Showcase scenes (SH1-SH3) carry per-room energy from the twin; archetype examples show geometry only.
 - Plan coordinates map to three.js as `(x, z, -y)`, so the plan stays right-handed on screen.
