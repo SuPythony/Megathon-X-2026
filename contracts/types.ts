@@ -680,7 +680,7 @@ export interface ScoreResult {
   score: number;
   /** Score over posterior samples */
   score_distribution?: Distribution | null;
-  /** Mode of band_probabilities (most probable band) */
+  /** Classification of the rounded score (brief section 2); band_probabilities gives the spread over posterior samples */
   band: "Highly efficient" | "Good" | "Moderate" | "Poor" | "Very poor";
   /** P(each band); sums to 1 */
   band_probabilities?: Record<string, number>;

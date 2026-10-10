@@ -811,7 +811,8 @@ class KeyIssue(BaseModel):
 class ScoreResult(BaseModel):
     score: int = Field(ge=0, le=100, description="Rounded weighted sum (of the posterior mean inputs)")
     score_distribution: Optional[Distribution] = Field(None, description="Score over posterior samples")
-    band: ScoreBand = Field(description="Mode of band_probabilities (most probable band)")
+    band: ScoreBand = Field(description="Classification of the rounded score (brief section 2); "
+                                        "band_probabilities gives the spread over posterior samples")
     band_probabilities: dict[str, float] = Field(default_factory=dict, description="P(each band); sums to 1")
     p_poor_or_very_poor: Optional[float] = Field(None, ge=0, le=1)
     components: list[ScoreComponent]

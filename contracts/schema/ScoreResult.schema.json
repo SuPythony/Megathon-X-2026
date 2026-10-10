@@ -410,7 +410,7 @@
       "description": "Score over posterior samples"
     },
     "band": {
-      "description": "Mode of band_probabilities (most probable band)",
+      "description": "Classification of the rounded score (brief section 2); band_probabilities gives the spread over posterior samples",
       "enum": [
         "Highly efficient",
         "Good",
