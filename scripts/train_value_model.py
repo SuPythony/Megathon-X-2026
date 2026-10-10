@@ -92,9 +92,12 @@ def main() -> None:
     post = fit.posterior(1000, a.seed)
     log(f"ELBO loss start {fit.losses[:100].mean():.0f} end {fit.losses[-100:].mean():.0f}")
 
+    post_eval = {k: v[:300] for k, v in post.items()}  # 300 draws x eval rows keeps memory bounded
+
     def bayes_eval(d):
         d = d.sample(min(a.eval_n, len(d)), random_state=a.seed)
-        ys = fit.predict_samples(d, post, rng)
+        ys = np.concatenate([fit.predict_samples(c, post_eval, rng) for c in np.array_split(d, 10)], axis=1)
+        d = pd.concat(np.array_split(d, 10))
         lo, med, hi = np.percentile(ys, [5, 50, 95], axis=0)
         return interval_metrics(d["log_price_adj"].to_numpy(), lo, med, hi)
 

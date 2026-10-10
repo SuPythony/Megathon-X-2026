@@ -16,6 +16,8 @@ Branch: `p4/property-value` (from `p3/green-home-score`, so it reuses the EPC pa
 | V-04 | Coverage: all England & Wales, property-level sample; hierarchy pools sparse areas | Decided (user) |
 | V-05 | Use only sales whose linked EPC was lodged **before** the sale (and within a window): the linked EPC is not the rating at sale | Decided |
 | V-06 | Property key = hash of the full address; the address is never stored; postcode used only to join NSPL, then reduced to district + LSOA | Decided |
+| V-07 | Market conditions: price adjusted to July 2026 with UK HPI by LA × property type (fallback region × type, then England & Wales) | Decided |
+| V-08 | Evaluation: property-level 70/15/15 split + out-of-time test (2024 sales of unseen properties) | Decided |
 
 ---
 
@@ -35,13 +37,27 @@ All England and Wales, sampled by property (10% of properties by address hash �
 ## V-05 The linked EPC is not the rating at sale
 The linked table attaches an EPC to each sale, but not necessarily one in force at the sale: the first rows include a **1998 sale linked to an EPC lodged in 2021**. Using a later EPC would let improvements made after the sale explain the price (leakage, and reverse timing). Rule: keep a sale only if its linked EPC was lodged **before** the transfer date and **at most N years earlier** (N chosen from data, see the extraction results; EPCs are valid for 10 years). Sales before EPCs existed (pre-2007) are therefore dropped from the rating model, though they can still inform location effects. Logged so the value model never sees a post-sale rating.
 
+**Proof** (`uv run python scripts/prepare_sales.py`, 10% property sample, 2,241,184 sales): the gap *sale date − EPC lodgement date* has quantiles P5 −19.7, P25 −11.3, P50 −0.87, P75 +0.67, P95 +7.3 years; **51.4% of linked sales have an EPC lodged after the sale**. With N = 10 years, 1,191,184 sales are dropped and **1,047,182 kept (2008–2024)**. Among the kept sales the EPC was lodged a median **0.7 years** before the sale (mean 2.0), consistent with EPCs commissioned for the sale itself, so the rating is close to the rating at sale.
+
 ## V-06 Privacy
 PPD and the linked table contain full addresses. The extractor builds `prop_key = md5(postcode|PAON|SAON|street|locality)[:16]` for property-level splits and repeat-sales, then drops the address columns before writing. Postcode is kept only until the NSPL join (LSOA, LA, region), then reduced to the outward code. Brief §9: no personal data; location shown as district or LSOA only.
+
+## V-07 Market conditions (UK HPI)
+UK HPI full file to July 2026 (HM Land Registry, OGL) gives a monthly index per local authority with separate detached / semi / terraced / flat series. Each sale price is scaled to July 2026: `price_adj = price × HPI(LA, type, Jul 2026) / HPI(LA, type, sale month)`, falling back to the region × type and then the England & Wales all-type index. Result: 98.8% matched at LA × type, 1.2% at region × type, 0% needed the national fallback. This (a) puts 2008 and 2024 sales on one footing and (b) makes the model's predictions directly "today's money", which is what `current_value_estimate_gbp` is in. Residual year effects stay in the model to absorb HPI misfit. Raw prices: median £225,000; adjusted: median £308,636.
+
+## V-08 Evaluation design
+- Property-level split by address hash (V-06): 732,252 / 157,991 / 156,939 sales; no property in two splits (brief §9). The fit uses only pre-2024 sales: **train 712,053**, **test 152,630**.
+- Out-of-time test: 2024 sales of properties in val/test (**8,602**): unseen homes in an unseen period, the "market conditions" check.
+- Metrics (brief §11, LLD §10): 90% interval coverage, mean pinball loss at 5/50/95%, MAE of log price, median absolute % error of the median; rating effect vs the published premiums (VALUE_RESEARCH.md §1).
+- Baselines: OLS with LA + type/form + age + year fixed effects, **without** SAP and **with** SAP (does the rating add anything?), and LightGBM quantile (non-linear ceiling for the intervals).
 
 ---
 
 ## Data on hand
 | Dataset | Path (git-ignored) | Rows | Notes |
 | --- | --- | --- | --- |
-| UCL linked sales, 10% of properties | `data/interim/sales/tranall_link_26122024_s10.parquet` | ≈ 2.2M (extracting) | 42 columns incl. price, date, PPD type/tenure/new-build, EPC rating, floor area, rooms, age, element descriptions |
+| UCL linked sales, 10% of properties | `data/interim/sales/tranall_link_26122024_s10.parquet` | 2,241,184 | 41 columns incl. price, date, PPD type/tenure/new-build, EPC rating, floor area, rooms, age, element descriptions; streamed in 51 min (3.25 GB read) |
+| Prepared training table | `data/processed/sales_prepared_v1.parquet` | 1,047,182 | After V-05, NSPL join, HPI adjustment, splits |
+| NSPL Nov 2024 | `data/interim/geo/NSPL21_NOV_2024_UK.parquet` | 2,709,658 postcodes | LSOA21, MSOA21, LA, region, IMD rank, urban/rural |
+| UK HPI full file Jul 2026 | `data/raw/hpi/UK-HPI-full-file-2026-07.csv` | 151,920 | LA × month, by property type |
 | EPC register 25% sample, NEED | in the score worktree (`data/interim/epc25`, `data/raw/need`) | 7M certs / 4M | Reused for priors and features |
