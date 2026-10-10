@@ -96,10 +96,10 @@ cp .env.example .env            # fill only what you have; see Keys
 - UCL linked dataset variable names (854942 / 857911).
 
 ## Owners
-- P1: Data & Geography
-- P2: Physics & Bayesian
-- P3: ML, Value & Causal
-- P4: LLM / KB / Jev / API
-- P5: Front-end & 3D
+- P1 (A): Data & Geography
+- P2 (B): Physics & Bayesian
+- P3 (C): ML, Value & Causal
+- P4 (D): LLM / KB / Jev / API
+- P5 (E): Front-end & 3D
 
 See `docs/IMPLEMENTATION_PLAN.md` §1 and §6.

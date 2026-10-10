@@ -14,15 +14,15 @@ Related documents:
 
 ## 1. Team and ownership (5 members)
 
-Member names are placeholders. Fill them in and keep this table current.
+Keep this table current.
 
-| ID | Role | Owns (code) | Owns (deliverables) |
-| --- | --- | --- | --- |
-| **P1** | Data & Geography engineer | `greentwin/data`, `greentwin/geo`, data scripts | Data sources/licences doc, schema doc, splits, maps, Lloyds heat-map layers |
-| **P2** | Physics & Bayesian lead | `greentwin/twin`, `greentwin/bayes`, `greentwin/score`, `contracts/score_mapping.json` | Sub-score mapping doc (item D), synthetic-data generation doc, calibration report |
-| **P3** | ML, Value & Causal engineer | `greentwin/models`, `greentwin/value`, `greentwin/optimise`, `eval/` metrics | Evaluation report (item G), held-out predictions (item I), value-method note |
-| **P4** | LLM, Knowledge-base, Jev & API engineer | `greentwin/api`, `greentwin/kb`, `greentwin/llm`, `greentwin/jev`, `greentwin/retrofit` | LLM implementation doc (item E), adversarial scenario set, Responsible AI note (item H, with P1) |
-| **P5** | Front-end & 3D engineer | `web/` (React + Vite + react-three-fiber) | Prototype (item A), demo script and video, architecture diagram (item F, with P4) |
+| ID | Name | Role | Owns (code) | Owns (deliverables) |
+| --- | --- | --- | --- | --- |
+| **P1** | A | Data & Geography engineer | `greentwin/data`, `greentwin/geo`, data scripts | Data sources/licences doc, schema doc, splits, maps, Lloyds heat-map layers |
+| **P2** | B | Physics & Bayesian lead | `greentwin/twin`, `greentwin/bayes`, `greentwin/score`, `contracts/score_mapping.json` | Sub-score mapping doc (item D), synthetic-data generation doc, calibration report |
+| **P3** | C | ML, Value & Causal engineer | `greentwin/models`, `greentwin/value`, `greentwin/optimise`, `eval/` metrics | Evaluation report (item G), held-out predictions (item I), value-method note |
+| **P4** | D | LLM, Knowledge-base, Jev & API engineer | `greentwin/api`, `greentwin/kb`, `greentwin/llm`, `greentwin/jev`, `greentwin/retrofit` | LLM implementation doc (item E), adversarial scenario set, Responsible AI note (item H, with P1) |
+| **P5** | E | Front-end & 3D engineer | `web/` (React + Vite + react-three-fiber) | Prototype (item A), demo script and video, architecture diagram (item F, with P4) |
 
 Contract changes (`contracts/`) need two reviewers: the producer and the main consumer.
 
