@@ -1,0 +1,781 @@
+{
+  "property_id": "SH1",
+  "electricity_kwh_m2": {
+    "unit": "kWh/m2/yr",
+    "n_samples": 1000,
+    "mean": 32.300232446425106,
+    "median": 28.058906194809644,
+    "mode": 23.323573174845297,
+    "std": 18.663816181699765,
+    "skewness": 2.1509960211812547,
+    "percentiles": {
+      "p1": 8.346084656054241,
+      "p5": 12.024784710926397,
+      "p10": 14.544394697845878,
+      "p25": 19.971075090984105,
+      "p50": 28.058906194809644,
+      "p75": 39.47076411152702,
+      "p90": 54.527924789486676,
+      "p95": 66.56489334740127,
+      "p99": 99.44744357986313
+    },
+    "credible_intervals": [
+      {
+        "level": 0.5,
+        "lo": 19.971075090984105,
+        "hi": 39.47076411152702
+      },
+      {
+        "level": 0.9,
+        "lo": 12.024784710926397,
+        "hi": 66.56489334740127
+      }
+    ],
+    "tail_probabilities": [
+      {
+        "label": "above the NEED median for mid terrace homes of this age",
+        "threshold": 27.09163346613546,
+        "direction": "above",
+        "probability": 0.527
+      }
+    ],
+    "worst_tail": "high",
+    "worst_5pct_mean": 87.90225365138056,
+    "histogram": {
+      "bin_edges": [
+        5.073862929684626,
+        10.939021379544439,
+        16.804179829404255,
+        22.669338279264068,
+        28.53449672912388,
+        34.39965517898369,
+        40.26481362884351,
+        46.12997207870332,
+        51.99513052856314,
+        57.86028897842294,
+        63.72544742828276,
+        69.59060587814257,
+        75.45576432800239,
+        81.3209227778622,
+        87.18608122772201,
+        93.05123967758182,
+        98.91639812744164,
+        104.78155657730146,
+        110.64671502716126,
+        116.51187347702108,
+        122.37703192688089,
+        128.24219037674072,
+        134.10734882660051,
+        139.97250727646033,
+        145.83766572632015,
+        151.70282417617997,
+        157.56798262603976,
+        163.43314107589958,
+        169.2982995257594,
+        175.16345797561922,
+        181.02861642547902
+      ],
+      "counts": [
+        35,
+        122,
+        179,
+        177,
+        144,
+        105,
+        72,
+        50,
+        34,
+        23,
+        16,
+        11,
+        8,
+        6,
+        4,
+        3,
+        3,
+        1,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "headline": "median"
+  },
+  "gas_kwh_m2": {
+    "unit": "kWh/m2/yr",
+    "n_samples": 1000,
+    "mean": 128.63823623684905,
+    "median": 120.40289955300233,
+    "mode": 110.5432590281512,
+    "std": 61.59454218355184,
+    "skewness": 1.1739483532812764,
+    "percentiles": {
+      "p1": 22.1946573380841,
+      "p5": 44.599986167118814,
+      "p10": 59.886952146845495,
+      "p25": 87.17609205545705,
+      "p50": 120.40289955300233,
+      "p75": 159.79304107996367,
+      "p90": 205.58138385918033,
+      "p95": 239.4277602192564,
+      "p99": 322.57338211122953
+    },
+    "credible_intervals": [
+      {
+        "level": 0.5,
+        "lo": 87.17609205545705,
+        "hi": 159.79304107996367
+      },
+      {
+        "level": 0.9,
+        "lo": 44.599986167118814,
+        "hi": 239.4277602192564
+      }
+    ],
+    "tail_probabilities": [
+      {
+        "label": "above the NEED median for mid terrace homes of this age",
+        "threshold": 113.67861885790172,
+        "direction": "above",
+        "probability": 0.551
+      }
+    ],
+    "worst_tail": "high",
+    "worst_5pct_mean": 292.49280228935385,
+    "histogram": {
+      "bin_edges": [
+        11.033484385648089,
+        27.489631583809604,
+        43.945778781971114,
+        60.401925980132624,
+        76.85807317829415,
+        93.31422037645567,
+        109.77036757461717,
+        126.22651477277869,
+        142.6826619709402,
+        159.1388091691017,
+        175.59495636726322,
+        192.05110356542474,
+        208.50725076358623,
+        224.96339796174775,
+        241.41954515990926,
+        257.8756923580708,
+        274.3318395562323,
+        290.7879867543938,
+        307.24413395255533,
+        323.7002811507168,
+        340.15642834887836,
+        356.61257554703985,
+        373.0687227452014,
+        389.5248699433629,
+        405.9810171415244,
+        422.4371643396859,
+        438.8933115378474,
+        455.34945873600896,
+        471.80560593417044,
+        488.261753132332,
+        504.71790033049353
+      ],
+      "counts": [
+        17,
+        32,
+        53,
+        83,
+        109,
+        125,
+        125,
+        111,
+        92,
+        68,
+        52,
+        38,
+        27,
+        20,
+        14,
+        9,
+        7,
+        4,
+        4,
+        2,
+        2,
+        1,
+        2,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "headline": "median"
+  },
+  "contributions_electricity": [
+    {
+      "feature": "average home (intercept)",
+      "value": null,
+      "contribution": 41.45,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band",
+      "value": "E",
+      "contribution": 7.26,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "main heating fuel",
+      "value": "gas",
+      "contribution": -4.89,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x main heating fuel",
+      "value": "E, gas",
+      "contribution": -2.86,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band",
+      "value": "before 1930",
+      "contribution": -2.29,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x main heating fuel",
+      "value": "before 1930, gas",
+      "contribution": 1.96,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x EPC band",
+      "value": "before 1930, E",
+      "contribution": -1.87,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x age band",
+      "value": "Mid terrace, before 1930",
+      "contribution": -1.83,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x EPC band",
+      "value": "51-100 m2, E",
+      "contribution": -1.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x region",
+      "value": "Mid terrace, North West",
+      "contribution": -0.81,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band",
+      "value": "51-100 m2",
+      "contribution": 0.7,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type",
+      "value": "Mid terrace",
+      "contribution": -0.58,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x region",
+      "value": "before 1930, North West",
+      "contribution": 0.52,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x main heating fuel",
+      "value": "Mid terrace, gas",
+      "contribution": -0.35,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x floor-area band",
+      "value": "before 1930, 51-100 m2",
+      "contribution": -0.34,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x EPC band",
+      "value": "North West, E",
+      "contribution": 0.34,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x floor-area band",
+      "value": "Mid terrace, 51-100 m2",
+      "contribution": -0.29,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed",
+      "value": "no",
+      "contribution": 0.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x deprivation quintile (IMD)",
+      "value": "before 1930, unknown",
+      "contribution": -0.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x conservatory",
+      "value": "E, unknown",
+      "contribution": -0.21,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x main heating fuel",
+      "value": "unknown, gas",
+      "contribution": -0.2,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x conservatory",
+      "value": "before 1930, unknown",
+      "contribution": -0.19,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x deprivation quintile (IMD)",
+      "value": "E, unknown",
+      "contribution": 0.19,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x conservatory",
+      "value": "North West, unknown",
+      "contribution": -0.17,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x conservatory",
+      "value": "51-100 m2, unknown",
+      "contribution": 0.16,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x loft insulation installed",
+      "value": "Mid terrace, no",
+      "contribution": -0.15,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x cavity wall insulation installed",
+      "value": "Mid terrace, no",
+      "contribution": -0.15,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x main heating fuel",
+      "value": "51-100 m2, gas",
+      "contribution": -0.15,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region",
+      "value": "North West",
+      "contribution": 0.14,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "cavity wall insulation installed",
+      "value": "no",
+      "contribution": 0.14,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x loft insulation installed",
+      "value": "before 1930, no",
+      "contribution": 0.13,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x cavity wall insulation installed",
+      "value": "E, no",
+      "contribution": -0.13,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x loft insulation installed",
+      "value": "E, no",
+      "contribution": -0.11,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x EPC band",
+      "value": "Mid terrace, E",
+      "contribution": -0.09,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x deprivation quintile (IMD)",
+      "value": "Mid terrace, unknown",
+      "contribution": 0.08,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x region",
+      "value": "51-100 m2, North West",
+      "contribution": -0.07,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x main heating fuel",
+      "value": "unknown, gas",
+      "contribution": 0.07,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x main heating fuel",
+      "value": "North West, gas",
+      "contribution": -0.06,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x cavity wall insulation installed",
+      "value": "before 1930, no",
+      "contribution": 0.05,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x loft insulation installed",
+      "value": "51-100 m2, no",
+      "contribution": 0.05,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "solar PV",
+      "value": "no",
+      "contribution": 0.04,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD)",
+      "value": "unknown",
+      "contribution": 0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x deprivation quintile (IMD)",
+      "value": "North West, unknown",
+      "contribution": -0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x cavity wall insulation installed",
+      "value": "51-100 m2, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x loft insulation installed",
+      "value": "North West, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x cavity wall insulation installed",
+      "value": "North West, no",
+      "contribution": -0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x conservatory",
+      "value": "unknown, unknown",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x cavity wall insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory",
+      "value": "unknown",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x conservatory",
+      "value": "Mid terrace, unknown",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x deprivation quintile (IMD)",
+      "value": "51-100 m2, unknown",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x loft insulation installed",
+      "value": "unknown, no",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed x cavity wall insulation installed",
+      "value": "no, no",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed x main heating fuel",
+      "value": "no, gas",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "cavity wall insulation installed x main heating fuel",
+      "value": "no, gas",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x loft insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x cavity wall insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor area within band",
+      "value": "85 m2",
+      "contribution": -2.34,
+      "unit": "kWh/m2/yr"
+    }
+  ],
+  "contributions_gas": [
+    {
+      "feature": "average home (intercept)",
+      "value": null,
+      "contribution": 128.68,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band",
+      "value": "before 1930",
+      "contribution": 13.07,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type",
+      "value": "Mid terrace",
+      "contribution": -12.72,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band",
+      "value": "E",
+      "contribution": 9.26,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band",
+      "value": "51-100 m2",
+      "contribution": 7.99,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region",
+      "value": "North West",
+      "contribution": -3.53,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x age band",
+      "value": "Mid terrace, before 1930",
+      "contribution": -2.87,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x floor-area band",
+      "value": "Mid terrace, 51-100 m2",
+      "contribution": -1.35,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x floor-area band",
+      "value": "before 1930, 51-100 m2",
+      "contribution": -1.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "cavity wall insulation installed",
+      "value": "no",
+      "contribution": 0.98,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x deprivation quintile (IMD)",
+      "value": "Mid terrace, unknown",
+      "contribution": -0.86,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x region",
+      "value": "before 1930, North West",
+      "contribution": -0.61,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x deprivation quintile (IMD)",
+      "value": "North West, unknown",
+      "contribution": -0.59,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x region",
+      "value": "Mid terrace, North West",
+      "contribution": -0.53,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x region",
+      "value": "51-100 m2, North West",
+      "contribution": -0.46,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed",
+      "value": "no",
+      "contribution": 0.37,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory",
+      "value": "unknown",
+      "contribution": 0.25,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x deprivation quintile (IMD)",
+      "value": "before 1930, unknown",
+      "contribution": -0.12,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x conservatory",
+      "value": "before 1930, unknown",
+      "contribution": 0.1,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x deprivation quintile (IMD)",
+      "value": "51-100 m2, unknown",
+      "contribution": -0.09,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x conservatory",
+      "value": "North West, unknown",
+      "contribution": 0.09,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD)",
+      "value": "unknown",
+      "contribution": -0.06,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x conservatory",
+      "value": "51-100 m2, unknown",
+      "contribution": 0.06,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x solar PV",
+      "value": "before 1930, no",
+      "contribution": -0.05,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x solar PV",
+      "value": "North West, no",
+      "contribution": 0.05,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x solar PV",
+      "value": "Mid terrace, no",
+      "contribution": -0.04,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "solar PV",
+      "value": "no",
+      "contribution": 0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x conservatory",
+      "value": "Mid terrace, unknown",
+      "contribution": 0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x solar PV",
+      "value": "51-100 m2, no",
+      "contribution": -0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x solar PV",
+      "value": "unknown, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x conservatory",
+      "value": "unknown, unknown",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x solar PV",
+      "value": "unknown, no",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor area within band",
+      "value": "85 m2",
+      "contribution": -7.28,
+      "unit": "kWh/m2/yr"
+    }
+  ],
+  "out_of_distribution": false,
+  "provenance": {
+    "engine": "ebm",
+    "model_version": "m04_energy_prior-v2",
+    "data_version": "need_anon_2025",
+    "seed": 42,
+    "n_samples": 1000
+  }
+}

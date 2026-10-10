@@ -1,0 +1,634 @@
+<meta charset="utf-8">
+<title>GreenTwin M04 Energy Prior</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one reading column (max 1080px) of evidence sections; each section = claim sentence, chart(s), table. */
+:root {
+  --bg: #fbfcfb; --surface: #ffffff; --fg: #15201b; --fg-2: #4a5852; --muted: #7b8783;
+  --line: #e2e8e5; --grid: #edf1ef;
+  --ebm: #0b7d55; --cmp: #2a6fdb; --ctx: #a3aca8; --brand: #0b6e4f;
+  --seq-0: #f2f7f4; --seq-1: #0b6e4f; --warn: #b4232c;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px; --s6: 48px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111614; --surface: #171d1a; --fg: #e8eeeb; --fg-2: #b4c0bb; --muted: #84918c;
+  --line: #2a3330; --grid: #222a27; --ebm: #28a070; --cmp: #5a8ff0; --ctx: #5f6b66; --brand: #28a070;
+  --seq-0: #171d1a; --seq-1: #3cc48c; --warn: #f0707a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #111614; --surface: #171d1a; --fg: #e8eeeb; --fg-2: #b4c0bb; --muted: #84918c;
+  --line: #2a3330; --grid: #222a27; --ebm: #28a070; --cmp: #5a8ff0; --ctx: #5f6b66; --brand: #28a070;
+  --seq-0: #171d1a; --seq-1: #3cc48c; --warn: #f0707a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.55;
+  padding-inline: var(--s2); padding-block: var(--s4) var(--s6); font-variant-numeric: tabular-nums; }
+main { max-width: 1080px; margin-inline: auto; display: grid; gap: var(--s6); }
+header { display: grid; gap: var(--s2); }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); }
+h1 { font-size: clamp(28px, 4vw, 38px); line-height: 1.15; margin: 0; font-weight: 700; text-wrap: balance; }
+h2 { font-size: 22px; margin: 0; font-weight: 650; text-wrap: balance; }
+h3 { font-size: 15px; margin: 0; font-weight: 600; }
+p { margin: 0; max-width: 68ch; color: var(--fg-2); }
+p strong { color: var(--fg); }
+section { display: grid; gap: var(--s2); }
+.lede { font-size: 17px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s2); }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: var(--s2); display: grid; gap: 4px; }
+.kpi .v { font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+.kpi .v small { font-size: 14px; font-weight: 500; color: var(--muted); }
+.kpi .l { font-size: 13px; color: var(--fg-2); }
+.kpi .r { font-size: 12px; color: var(--muted); }
+.tabs { display: flex; gap: var(--s1); flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg); padding-block: var(--s1); border-bottom: 1px solid var(--line); }
+.tabs button { font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg-2); cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+.tabs button:focus-visible { outline: 2px solid var(--cmp); outline-offset: 2px; }
+.tabs .note { margin-left: auto; align-self: center; font-size: 12px; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: var(--s3); }
+.chart { width: 100%; min-height: 320px; min-width: 0; }
+.chart.tall { min-height: 440px; }
+.panel { min-width: 0; display: grid; gap: var(--s1); }
+.cap { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 600; color: var(--fg-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+tr:last-child td { border-bottom: 0; }
+tr.hl td { font-weight: 650; color: var(--fg); }
+tr.hl td:first-child { box-shadow: inset 3px 0 0 var(--ebm); }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--fg-2); }
+.pill.ok { border-color: var(--ebm); color: var(--ebm); }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--s2); }
+.check { border: 1px solid var(--line); border-radius: 10px; padding: var(--s2); background: var(--surface); display: grid; gap: 6px; }
+.check b { font-size: 20px; }
+details { border: 1px solid var(--line); border-radius: 10px; padding: var(--s2); background: var(--surface); }
+summary { cursor: pointer; font-weight: 600; }
+details > div { display: grid; gap: var(--s1); margin-top: var(--s2); }
+ul { margin: 0; padding-left: 20px; color: var(--fg-2); max-width: 72ch; }
+li + li { margin-top: 4px; }
+code { font-size: 12.5px; background: var(--grid); padding: 1px 5px; border-radius: 4px; }
+footer { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow">GreenTwin · Part 2 · Model M04</div>
+    <h1>How well can we predict a home's energy use before we see its meters?</h1>
+    <p class="lede" id="lede"></p>
+    <div class="kpis" id="kpis"></div>
+  </header>
+
+  <nav class="tabs" aria-label="Fuel">
+    <button type="button" id="tab-electricity" data-fuel="electricity" aria-pressed="true">Electricity</button>
+    <button type="button" id="tab-gas" data-fuel="gas" aria-pressed="false">Gas</button>
+    <span class="note">All metrics: held-out test homes · kWh/m²/yr</span>
+  </nav>
+
+  <section id="ladder">
+    <h2 id="ladder-h"></h2>
+    <p id="ladder-text"></p>
+    <div class="grid2">
+      <div class="panel"><h3>R² on test homes (95% bootstrap CI)</h3><div class="chart" id="c-r2"></div></div>
+      <div class="panel"><h3>EBM's MAE advantage over each model (paired bootstrap)</h3><div class="chart" id="c-delta"></div>
+        <div class="cap">Each bar is MAE(model) − MAE(EBM) on the same resampled homes. Right of zero means EBM is better; the whisker is the 95% interval.</div></div>
+    </div>
+    <div class="tablewrap"><table id="t-ladder"></table></div>
+  </section>
+
+  <section id="ceiling">
+    <h2>How close EBM gets to the most these inputs can explain</h2>
+    <p id="ceiling-text"></p>
+    <div class="grid2">
+      <div class="panel"><h3>R² against the explainable-variance ceiling</h3><div class="chart" id="c-ceiling"></div></div>
+      <div class="panel"><h3>Archetype level: mean predicted vs mean metered</h3><div class="chart" id="c-arch"></div>
+        <div class="cap" id="arch-cap"></div></div>
+    </div>
+  </section>
+
+  <section id="fit">
+    <h2>Predicted vs metered intensity</h2>
+    <p>Each panel bins 60,000 test homes by predicted and metered intensity; darker cells hold more homes. A perfect model puts everything on the diagonal. The decile chart groups homes by prediction and compares group averages.</p>
+    <div class="grid2">
+      <div class="panel"><h3>EBM: predicted vs metered</h3><div class="chart" id="c-hist-ebm"></div></div>
+      <div class="panel"><h3>OLS one-hot: predicted vs metered</h3><div class="chart" id="c-hist-ols"></div></div>
+    </div>
+    <div class="panel"><h3>Calibration by decile of prediction</h3><div class="chart" id="c-cal"></div></div>
+  </section>
+
+  <section id="uncertainty">
+    <h2 id="unc-h"></h2>
+    <p id="unc-text"></p>
+    <div class="grid2">
+      <div class="panel"><h3>90% interval coverage on test, by model</h3><div class="chart" id="c-cov"></div></div>
+      <div class="panel"><h3>EBM coverage by stratum</h3><div class="chart" id="c-cov-strata"></div></div>
+    </div>
+  </section>
+
+  <section id="explain">
+    <h2>What drives the prediction</h2>
+    <p>EBM is additive: a home's prediction is the average home plus one contribution per feature (and per allowed pair), all in kWh/m²/yr. That makes every number auditable. We also compare EBM's importance ranking with TreeSHAP on LightGBM; when two different model families agree, the explanation is a property of the data rather than an artefact of one model.</p>
+    <div class="grid2">
+      <div class="panel"><h3>Term importance (mean |contribution|, kWh/m²/yr)</h3><div class="chart tall" id="c-imp"></div></div>
+      <div class="panel"><h3>EBM vs LightGBM TreeSHAP (share of total, main effects)</h3><div class="chart tall" id="c-imp-cmp"></div></div>
+    </div>
+    <h3>Shape functions: how each feature moves the prediction</h3>
+    <div class="cap">Bars are contributions relative to the average home; whiskers show ±1 sd across EBM's bagged fits. Monotone features (marked) are constrained to never move the wrong way.</div>
+    <div class="grid2" id="shapes"></div>
+  </section>
+
+  <section id="local">
+    <h2>Explaining single homes</h2>
+    <p>The same decomposition explains any home. Below are test homes at the low, middle and high end of the predicted range, followed by the three showcase homes.</p>
+    <div class="grid2" id="waterfalls"></div>
+  </section>
+
+  <section id="diag">
+    <h2>Training diagnostics: generalisation, data size and calibration of the full distribution</h2>
+    <p id="diag-text"></p>
+    <div class="grid2">
+      <div class="panel"><h3>Learning curve: test R² vs training homes</h3><div class="chart" id="c-lc"></div></div>
+      <div class="panel"><h3>PIT histogram (flat = calibrated predictive distribution)</h3><div class="chart" id="c-pit"></div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h3>Same model on every split</h3><div class="tablewrap"><table id="t-split"></table></div></div>
+      <div class="panel"><h3>Reliability: nominal vs actual coverage</h3><div class="tablewrap"><table id="t-rel"></table></div></div>
+    </div>
+  </section>
+
+  <section id="bayes">
+    <h2 id="bayes-h">From prior to posterior: updating with a home's own meters</h2>
+    <p id="bayes-text"></p>
+    <div class="checks" id="bayes-cards"></div>
+    <div class="panel"><h3>Held-out test: predicting each home's unseen 2023 reading</h3>
+      <div class="tablewrap"><table id="t-update"></table></div>
+      <div class="cap">Homes from the test split with valid readings in 2021, 2022 and 2023. The prior uses only the home's features; posteriors add its 2022 (or 2021 and 2022) readings. CRPS scores the whole predictive distribution (lower is better). Persistence predicts 2023 = 2022 with an interval from the empirical year-on-year change.</div></div>
+    <h3>Showcase homes: full prior and posterior distributions</h3>
+    <div class="grid2" id="bayes-sh"></div>
+    <div class="tablewrap"><table id="t-dist"></table></div>
+  </section>
+
+  <section id="segments">
+    <h2>Accuracy by segment</h2>
+    <p>Errors are reported per segment so weak spots are visible rather than averaged away.</p>
+    <div class="grid2" id="seg-tables"></div>
+  </section>
+
+  <section id="tuning">
+    <h2>Hyperparameter search</h2>
+    <p id="tune-text"></p>
+    <div class="panel"><h3>Tune-set MAE per trial (lower is better)</h3><div class="chart" id="c-trials"></div></div>
+    <div class="tablewrap"><table id="t-params"></table></div>
+  </section>
+
+  <section id="checks">
+    <h2>Guarantees checked on the test set</h2>
+    <div class="checks" id="check-cards"></div>
+  </section>
+
+  <section id="method">
+    <h2>Method and limits</h2>
+    <details open><summary>Data, target and split</summary><div id="method-data"></div></details>
+    <details><summary>Why per-home R² cannot be high, and what we claim instead</summary><div>
+      <p>NEED gives about ten coarse, banded fields per home. A large share of a home's energy use comes from the people living in it: thermostat setting, occupancy, hours at home, number of occupants. None of that is in the data, so no model of these inputs can explain it. The ceiling section estimates that limit directly.</p>
+      <p>What we claim: EBM is significantly better than simple regression (paired bootstrap), reaches most of the explainable variance, is very accurate at archetype level, and its 90% ranges are calibrated. In GreenTwin this model is only the starting point. Bayesian calibration (M09) then narrows each home's range using its own meter readings.</p>
+    </div></details>
+    <details><summary>Choices that protect against leakage and overfitting</summary><div><ul>
+      <li>Split by property, stratified by type × age × floor band × region × heating fuel, assigned once with seed 42.</li>
+      <li>Hyperparameters chosen on <code>tune</code>; intervals calibrated on <code>cal</code>; <code>test</code> used only for the numbers on this page.</li>
+      <li>Council tax band excluded: GreenTwin's Property record does not carry it, so it would not be available at prediction time.</li>
+      <li>20% of training homes have deprivation masked so the model learns an honest "unknown". The no-IMD test score is reported alongside.</li>
+      <li>Training on unique feature cells weighted by count gives the same least-squares fit as all rows with 22–27× fewer rows to fit.</li>
+    </ul></div></details>
+  </section>
+
+  <footer id="foot"></footer>
+</main>
+
+<script id="report-data" type="application/json">/*__DATA__*/null</script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js" integrity="sha384-cCVCZkAjYNxaYKbM8lsArLznDF/SvMFr1jcZrvOpSTCa0W40ZAdLzHCEulnUa5i7" crossorigin="anonymous"></script>
+<script>
+const D = JSON.parse(document.getElementById("report-data").textContent);
+const NAMES = D.model_names;
+const ORDER = ["global_mean", "need_median", "ols_linear", "ols_onehot", "ols_log", "ridge", "lasso", "poly2_ridge", "xgboost", "lightgbm", "ebm"];
+const LINEAR = new Set(["ols_linear", "ols_onehot", "ols_log", "ridge", "lasso", "poly2_ridge"]);
+let FUEL = "electricity";
+try { const saved = localStorage.getItem("m04-fuel"); if (saved && D.fuels[saved]) FUEL = saved; } catch (e) {}
+
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f1 = x => x == null ? "–" : Number(x).toFixed(1);
+const f2 = x => x == null ? "–" : Number(x).toFixed(2);
+const f3 = x => x == null ? "–" : Number(x).toFixed(3);
+const pct = x => (100 * x).toFixed(1) + "%";
+const unit = "kWh/m²/yr";
+
+function base(extra = {}) {
+  const fg = css("--fg-2"), grid = css("--grid"), line = css("--line");
+  return Object.assign({
+    paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+    font: { family: css("--font"), size: 12, color: fg },
+    margin: { l: 56, r: 16, t: 8, b: 44 }, showlegend: false,
+    xaxis: { gridcolor: grid, zerolinecolor: line, linecolor: line, automargin: true },
+    yaxis: { gridcolor: grid, zerolinecolor: line, linecolor: line, automargin: true },
+    hoverlabel: { bgcolor: css("--surface"), bordercolor: line, font: { color: css("--fg"), family: css("--font") } },
+  }, extra);
+}
+const CFG = { displayModeBar: false, responsive: true };
+const plot = (id, traces, layout) => Plotly.react(id, traces, base(layout), CFG);
+const colorFor = k => k === "ebm" ? css("--ebm") : (LINEAR.has(k) ? css("--cmp") : css("--ctx"));
+
+function header() {
+  const e = D.fuels.electricity, g = D.fuels.gas;
+  const gain = f => f.bootstrap.delta_vs_reference.ols_onehot;
+  document.getElementById("lede").innerHTML =
+    `Trained on <strong>${(e.n.train + e.n.tune + e.n.cal + e.n.test).toLocaleString()}</strong> real homes from DESNZ NEED 2025. ` +
+    `The model gives a full predictive range for electricity and gas intensity from the fields a GreenTwin Property record carries. ` +
+    `It is the prior that Bayesian calibration refines with each home's own meters.`;
+  const k = [
+    [f3(e.test.ebm.r2), "", "Electricity R² (test)", `OLS ${f3(e.test.ols_onehot.r2)} · median baseline ${f3(e.test.need_median.r2)}`],
+    [f3(g.test.ebm.r2), "", "Gas R² (test)", `OLS ${f3(g.test.ols_onehot.r2)} · median baseline ${f3(g.test.need_median.r2)}`],
+    [pct(e.test.ebm.r2 / e.ceiling.all_features.omega2_unbiased), "", "of explainable variance captured (elec)", `gas ${pct(g.test.ebm.r2 / g.ceiling.all_features.omega2_unbiased)}`],
+    [f3(e.archetype.ebm.r2), "", "Archetype-level R² (elec)", `gas ${f3(g.archetype.ebm.r2)} · cells with ≥ 50 homes`],
+    [pct(e.intervals.ebm.coverage), "", "90% range coverage (elec)", `gas ${pct(g.intervals.ebm.coverage)} · target 90%`],
+  ];
+  document.getElementById("kpis").innerHTML = k.map(([v, s, l, r]) =>
+    `<div class="kpi"><div class="v">${v}<small>${s}</small></div><div class="l">${l}</div><div class="r">${r}</div></div>`).join("");
+}
+
+function ladder(F) {
+  const ms = ORDER.filter(k => F.test[k]);
+  const bs = F.bootstrap.models;
+  plot("c-r2", [{
+    type: "bar", orientation: "h", y: ms.map(k => NAMES[k]), x: ms.map(k => F.test[k].r2),
+    marker: { color: ms.map(colorFor) },
+    error_x: { type: "data", symmetric: false, array: ms.map(k => bs[k].r2_ci95[1] - F.test[k].r2),
+               arrayminus: ms.map(k => F.test[k].r2 - bs[k].r2_ci95[0]), color: css("--fg-2"), thickness: 1.2, width: 4 },
+    hovertemplate: "%{y}<br>R² %{x:.4f}<extra></extra>",
+  }], { xaxis: { title: "R²", gridcolor: css("--grid"), rangemode: "tozero" }, margin: { l: 210, r: 16, t: 8, b: 44 } });
+
+  const others = ms.filter(k => k !== "ebm");
+  const dv = F.bootstrap.delta_vs_reference;
+  plot("c-delta", [{
+    type: "bar", orientation: "h", y: others.map(k => NAMES[k]), x: others.map(k => dv[k].mae_gain),
+    marker: { color: others.map(k => dv[k].mae_gain_ci95[0] > 0 ? css("--ebm") : css("--ctx")) },
+    error_x: { type: "data", symmetric: false, array: others.map(k => dv[k].mae_gain_ci95[1] - dv[k].mae_gain),
+               arrayminus: others.map(k => dv[k].mae_gain - dv[k].mae_gain_ci95[0]), color: css("--fg-2"), thickness: 1.2, width: 4 },
+    customdata: others.map(k => [dv[k].mae_gain_pct, dv[k].mae_gain_ci95[0], dv[k].mae_gain_ci95[1]]),
+    hovertemplate: "EBM vs %{y}<br>MAE lower by %{x:.2f} " + unit + " (%{customdata[0]:.1f}%)<br>95% CI %{customdata[1]:.2f} to %{customdata[2]:.2f}<extra></extra>",
+  }], { xaxis: { title: "MAE(model) − MAE(EBM), " + unit, gridcolor: css("--grid"), zeroline: true, zerolinecolor: css("--fg-2") },
+        margin: { l: 210, r: 16, t: 8, b: 44 } });
+
+  const t = F.test, iv = F.intervals;
+  document.getElementById("t-ladder").innerHTML =
+    `<thead><tr><th>Model</th><th>R²</th><th>MAE</th><th>RMSE</th><th>MAPE</th><th>MdAPE</th><th>Bias</th><th>Spearman</th><th>90% cover</th><th>90% width</th></tr></thead><tbody>` +
+    ms.map(k => `<tr class="${k === "ebm" ? "hl" : ""}"><td>${NAMES[k]}</td><td>${f3(t[k].r2)}</td><td>${f2(t[k].mae)}</td><td>${f2(t[k].rmse)}</td>` +
+      `<td>${f1(t[k].mape_pct)}%</td><td>${f1(t[k].mdape_pct)}%</td><td>${f2(t[k].bias)}</td><td>${f3(t[k].spearman)}</td>` +
+      `<td>${pct(iv[k].coverage)}</td><td>${f1(iv[k].mean_width)}</td></tr>`).join("") + "</tbody>";
+
+  const o = dv.ols_onehot, b = dv.need_median;
+  const simple = ["need_median", "ols_linear", "ols_onehot", "ols_log", "ridge", "lasso"].filter(k => dv[k]);
+  const beatsSimple = simple.every(k => dv[k].mae_gain_ci95[0] > 0);
+  const boost = ["poly2_ridge", "lightgbm", "xgboost"].filter(k => dv[k]);
+  const sig = k => dv[k].mae_gain_ci95[0] > 0 ? "better" : (dv[k].mae_gain_ci95[1] < 0 ? "worse" : "tie");
+  document.getElementById("ladder-h").textContent = beatsSimple
+    ? "EBM is significantly more accurate than simple regression and the NEED baseline"
+    : "How EBM compares with simple regression and the NEED baseline";
+  const boostTxt = boost.map(k => {
+    const g = dv[k].mae_gain, s2 = sig(k);
+    if (s2 === "tie") return `${NAMES[k]} is statistically tied with EBM (MAE difference ${f2(g)}, 95% CI ${f2(dv[k].mae_gain_ci95[0])} to ${f2(dv[k].mae_gain_ci95[1])})`;
+    return s2 === "better" ? `EBM's MAE is ${f2(g)} ${unit} lower than ${NAMES[k]}` : `${NAMES[k]}'s MAE is ${f2(-g)} ${unit} lower than EBM's`;
+  }).join("; ");
+  document.getElementById("ladder-text").innerHTML =
+    `On ${F.n.test.toLocaleString()} unseen test homes, EBM reaches <strong>R² ${f3(t.ebm.r2)}</strong> against ${f3(t.ols_onehot.r2)} for one-hot OLS and ${f3(t.need_median.r2)} for the NEED median baseline. ` +
+    `Its MAE is <strong>${f1(o.mae_gain_pct)}% ${o.mae_gain >= 0 ? "lower" : "higher"} than OLS</strong> (paired 95% CI ${f2(o.mae_gain_ci95[0])} to ${f2(o.mae_gain_ci95[1])} ${unit}) and ${f1(Math.abs(b.mae_gain_pct))}% ${b.mae_gain >= 0 ? "lower" : "higher"} than the baseline. ` +
+    `Against the flexible models: ${boostTxt}. ` +
+    (() => {
+      const best = ["lightgbm", "xgboost"].filter(k => t[k]).reduce((a, k) => t[k].r2 > t[a].r2 ? k : a, "lightgbm");
+      const ceil = F.ceiling.all_features.omega2_unbiased, cost = t[best].r2 - t.ebm.r2;
+      return `The best black-box model, ${NAMES[best]}, reaches R² ${f3(t[best].r2)} (${pct(t[best].r2 / ceil)} of the ceiling below), so these inputs are close to fully used. ` +
+        `EBM gives up <strong>${f3(cost)} R²</strong> (${f1(100 * cost / ceil)}% of the explainable variance) in exchange for a glass-box model: ${F.importance.length} readable terms whose kWh/m² contributions sum exactly to each prediction, and physics monotonicity guaranteed by construction (see the checks below). ` +
+        `Degree-2 polynomial ridge matches EBM's accuracy but breaks that physics for a large share of homes.`;
+    })();
+}
+
+function ceiling(F) {
+  const c = F.ceiling.all_features;
+  const bars = [["Explainable ceiling (ω²)", c.omega2_unbiased, css("--fg-2")], ["EBM", F.test.ebm.r2, css("--ebm")],
+                ["EBM, deprivation unknown", F.ebm_imd_unknown.r2, css("--ebm")], ["OLS one-hot", F.test.ols_onehot.r2, css("--cmp")],
+                ["NEED median", F.test.need_median.r2, css("--ctx")]];
+  plot("c-ceiling", [{ type: "bar", x: bars.map(b => b[0]), y: bars.map(b => b[1]), marker: { color: bars.map(b => b[2]) },
+    hovertemplate: "%{x}<br>%{y:.3f}<extra></extra>", text: bars.map(b => b[1].toFixed(3)), textposition: "outside",
+    textfont: { color: css("--fg-2") }, cliponaxis: false }],
+    { yaxis: { title: "Share of variance explained", gridcolor: css("--grid"), rangemode: "tozero" } });
+  document.getElementById("ceiling-text").innerHTML =
+    `If we grouped homes into every combination of the model's inputs (${c.cells.toLocaleString()} groups) and predicted each home by its group's true average, we would explain <strong>${f3(c.omega2_unbiased)}</strong> of the variance (bias-corrected ω²; the raw in-sample value is ${f3(c.eta2_in_sample)}). ` +
+    `No model of these inputs can do better on average. EBM reaches <strong>${pct(F.test.ebm.r2 / c.omega2_unbiased)}</strong> of that ceiling with one smooth additive model. ` +
+    `At the level the dashboard and area priors use, the archetype, EBM's group averages match metered averages with <strong>R² ${f3(F.archetype.ebm.r2)}</strong>.`;
+  const P = F.archetype_points, mx = Math.max(...P.y, ...P.p) * 1.05;
+  plot("c-arch", [
+    { type: "scatter", mode: "lines", x: [0, mx], y: [0, mx], line: { color: css("--ctx"), width: 1, dash: "dot" }, hoverinfo: "skip" },
+    { type: "scatter", mode: "markers", x: P.p, y: P.y, marker: { color: css("--ebm"), size: P.n.map(n => Math.max(5, Math.min(16, Math.sqrt(n) / 3))),
+      opacity: .65, line: { color: css("--surface"), width: 1 } }, customdata: P.n,
+      hovertemplate: "predicted %{x:.1f}<br>metered %{y:.1f}<br>%{customdata} homes<extra></extra>" }],
+    { xaxis: { title: "Mean predicted, " + unit, range: [0, mx], gridcolor: css("--grid") },
+      yaxis: { title: "Mean metered, " + unit, range: [0, mx], gridcolor: css("--grid") } });
+  const a = F.archetype;
+  document.getElementById("arch-cap").textContent =
+    `${a.ebm.cells} archetypes (type × age × floor band × region) with ≥ 50 test homes, ${a.ebm.homes.toLocaleString()} homes. ` +
+    `R²: EBM ${f3(a.ebm.r2)}, OLS ${f3(a.ols_onehot.r2)}, NEED median ${f3(a.need_median.r2)}. Mean abs error EBM ${f2(a.ebm.mae)} ${unit}.`;
+}
+
+function fit(F) {
+  for (const [id, key] of [["c-hist-ebm", "ebm"], ["c-hist-ols", "ols_onehot"]]) {
+    const h = F.hist[key], e = h.edges, mid = e.slice(0, -1).map((v, i) => (v + e[i + 1]) / 2), hi = e[e.length - 1];
+    plot(id, [
+      { type: "heatmap", x: mid, y: mid, z: h.z, colorscale: [[0, css("--seq-0")], [1, css("--seq-1")]], zsmooth: false,
+        showscale: false, hovertemplate: "predicted %{x:.0f}<br>metered %{y:.0f}<br>%{z} homes<extra></extra>",
+        zmax: Math.max(...h.z.flat()) * 0.6 },
+      { type: "scatter", mode: "lines", x: [0, hi], y: [0, hi], line: { color: css("--fg-2"), width: 1, dash: "dot" }, hoverinfo: "skip" }],
+      { xaxis: { title: "Predicted, " + unit, range: [0, hi], gridcolor: css("--grid") },
+        yaxis: { title: "Metered, " + unit, range: [0, hi], gridcolor: css("--grid") } });
+  }
+  const c = F.calibration, mx = Math.max(...c.ebm.actual_mean, ...c.ebm.pred_mean, ...c.ols_onehot.actual_mean) * 1.05;
+  plot("c-cal", [
+    { type: "scatter", mode: "lines", x: [0, mx], y: [0, mx], line: { color: css("--ctx"), width: 1, dash: "dot" }, hoverinfo: "skip" },
+    { type: "scatter", mode: "lines+markers", name: "EBM", x: c.ebm.pred_mean, y: c.ebm.actual_mean, line: { color: css("--ebm"), width: 2 },
+      marker: { size: 8, color: css("--ebm"), line: { color: css("--surface"), width: 2 } }, hovertemplate: "EBM<br>predicted %{x:.1f}<br>metered %{y:.1f}<extra></extra>" },
+    { type: "scatter", mode: "lines+markers", name: "OLS one-hot", x: c.ols_onehot.pred_mean, y: c.ols_onehot.actual_mean, line: { color: css("--cmp"), width: 2 },
+      marker: { size: 8, color: css("--cmp"), line: { color: css("--surface"), width: 2 } }, hovertemplate: "OLS<br>predicted %{x:.1f}<br>metered %{y:.1f}<extra></extra>" }],
+    { showlegend: true, legend: { orientation: "h", y: 1.08, x: 0 },
+      xaxis: { title: "Mean predicted in decile, " + unit, gridcolor: css("--grid"), range: [0, mx] },
+      yaxis: { title: "Mean metered, " + unit, gridcolor: css("--grid"), range: [0, mx] } });
+}
+
+function uncertainty(F) {
+  const ms = ORDER.filter(k => F.intervals[k]);
+  plot("c-cov", [
+    { type: "scatter", mode: "markers", y: ms.map(k => NAMES[k]), x: ms.map(k => F.intervals[k].coverage),
+      marker: { size: 11, color: ms.map(colorFor), line: { color: css("--surface"), width: 2 } },
+      customdata: ms.map(k => F.intervals[k].mean_width),
+      hovertemplate: "%{y}<br>coverage %{x:.3f}<br>mean width %{customdata:.1f} " + unit + "<extra></extra>" }],
+    { xaxis: { title: "Share of test homes inside their 90% range", range: [0.85, 0.95], gridcolor: css("--grid") },
+      margin: { l: 210, r: 16, t: 8, b: 44 },
+      shapes: [{ type: "line", x0: 0.9, x1: 0.9, yref: "paper", y0: 0, y1: 1, line: { color: css("--fg-2"), dash: "dot", width: 1 } }] });
+  const s = Object.entries(F.ebm_strata_coverage).sort((a, b) => a[1] - b[1]);
+  plot("c-cov-strata", [{ type: "scatter", mode: "markers", y: s.map(x => x[0].replace("|", " · ")), x: s.map(x => x[1]),
+    marker: { size: 10, color: css("--ebm"), line: { color: css("--surface"), width: 2 } }, hovertemplate: "%{y}<br>coverage %{x:.3f}<extra></extra>" }],
+    { xaxis: { title: "Coverage", range: [0.85, 0.95], gridcolor: css("--grid") }, margin: { l: 170, r: 16, t: 8, b: 44 },
+      shapes: [{ type: "line", x0: 0.9, x1: 0.9, yref: "paper", y0: 0, y1: 1, line: { color: css("--fg-2"), dash: "dot", width: 1 } }] });
+  const e = F.intervals.ebm, o = F.intervals.ols_onehot;
+  document.getElementById("unc-h").textContent = Math.abs(e.coverage - 0.9) <= 0.015
+    ? `The 90% ranges are calibrated: they contain the metered value ${pct(e.coverage)} of the time`
+    : `90% range coverage on test is ${pct(e.coverage)}`;
+  document.getElementById("unc-text").innerHTML =
+    `Every model gets a split-conformal 90% range, calibrated on a separate set of ${F.n.cal.toLocaleString()} homes and scaled to the prediction. ` +
+    `On test, EBM's ranges contain the metered value for <strong>${pct(e.coverage)}</strong> of homes, with a mean width of ${f1(e.mean_width)} ${unit} ` +
+    `(OLS: ${pct(o.coverage)} at ${f1(o.mean_width)}). Equal coverage with a narrower range is the better forecast. The calibration step later narrows these ranges with each home's own meter readings.`;
+}
+
+function explain(F) {
+  const imp = F.importance.slice(0, 14).reverse();
+  plot("c-imp", [{ type: "bar", orientation: "h", y: imp.map(t => t.term), x: imp.map(t => t.ebm),
+    marker: { color: imp.map(t => t.term.includes("×") ? css("--ctx") : css("--ebm")) },
+    hovertemplate: "%{y}<br>%{x:.2f} " + unit + "<extra></extra>" }],
+    { xaxis: { title: "Mean |contribution|, " + unit, gridcolor: css("--grid") }, margin: { l: 230, r: 16, t: 8, b: 44 } });
+  const main = F.importance.filter(t => !t.term.includes("×"));
+  const se = main.reduce((a, t) => a + t.ebm, 0), shapTot = Object.values(F.shap).reduce((a, b) => a + b, 0);
+  const rows = main.map(t => ({ term: t.term, ebm: t.ebm / se, shap: (F.shap[t.term] || 0) / shapTot })).reverse();
+  plot("c-imp-cmp", [
+    { type: "bar", orientation: "h", name: "EBM", y: rows.map(r => r.term), x: rows.map(r => r.ebm), marker: { color: css("--ebm") },
+      hovertemplate: "EBM · %{y}<br>%{x:.1%}<extra></extra>" },
+    { type: "bar", orientation: "h", name: "LightGBM TreeSHAP", y: rows.map(r => r.term), x: rows.map(r => r.shap), marker: { color: css("--cmp") },
+      hovertemplate: "SHAP · %{y}<br>%{x:.1%}<extra></extra>" }],
+    { barmode: "group", bargap: 0.25, bargroupgap: 0.08, showlegend: true, legend: { orientation: "h", y: 1.06, x: 0 },
+      xaxis: { title: "Share of total importance", tickformat: ".0%", gridcolor: css("--grid") }, margin: { l: 230, r: 16, t: 8, b: 44 } });
+
+  const mono = D.config.monotone[F.fuel] || {};
+  const host = document.getElementById("shapes");
+  host.innerHTML = "";
+  F.shapes.forEach((s, i) => {
+    const key = Object.keys(mono).find(k => s.term === k);
+    const div = document.createElement("div");
+    div.className = "panel";
+    div.innerHTML = `<h3>${s.label} ${key ? `<span class="pill ok">monotone ${mono[key] > 0 ? "↑" : "↓"}</span>` : ""}</h3><div class="chart" id="shape-${i}" style="min-height:260px"></div>`;
+    host.appendChild(div);
+  });
+  F.shapes.forEach((s, i) => {
+    plot(`shape-${i}`, [{ type: "bar", x: s.bins, y: s.scores,
+      marker: { color: s.scores.map(v => v >= 0 ? css("--ebm") : css("--cmp")) },
+      error_y: { type: "data", symmetric: false, array: s.upper.map((u, j) => Math.max(0, u - s.scores[j])),
+                 arrayminus: s.lower.map((l, j) => Math.max(0, s.scores[j] - l)), color: css("--fg-2"), thickness: 1, width: 3 },
+      hovertemplate: "%{x}<br>%{y:+.2f} " + unit + "<extra></extra>" }],
+      { yaxis: { title: "Contribution", gridcolor: css("--grid"), zeroline: true, zerolinecolor: css("--fg-2") },
+        xaxis: { type: "category", gridcolor: "rgba(0,0,0,0)" }, margin: { l: 56, r: 8, t: 8, b: 60 } });
+  });
+}
+
+const tidy = t => { const x = String(t).replace(/_/g, " "); return x.charAt(0).toUpperCase() + x.slice(1); };
+const short = (t, n = 34) => t.length > n ? t.slice(0, n - 1) + "…" : t;
+function waterfall(id, title, intercept, terms, prediction, actual) {
+  const top = terms.slice(0, 8), rest = terms.slice(8).reduce((a, t) => a + t[1], 0);
+  const full = ["Average home", ...top.map(t => tidy(t[0])), ...(terms.length > 8 ? [`Other terms (${terms.length - 8})`] : []), "Prediction"];
+  const labels = full.map(t => short(t));
+  const vals = [intercept, ...top.map(t => t[1]), ...(terms.length > 8 ? [rest] : []), prediction];
+  const measure = ["absolute", ...top.map(() => "relative"), ...(terms.length > 8 ? ["relative"] : []), "total"];
+  plot(id, [{ type: "waterfall", orientation: "h", y: labels, x: vals, measure,
+    increasing: { marker: { color: css("--ebm") } }, decreasing: { marker: { color: css("--cmp") } },
+    totals: { marker: { color: css("--fg-2") } }, connector: { line: { color: css("--line"), width: 1 } },
+    customdata: full, hovertemplate: "%{customdata}<br>%{x:+.2f} " + unit + "<extra></extra>" }],
+    { yaxis: { autorange: "reversed", gridcolor: "rgba(0,0,0,0)" }, xaxis: { title: unit, gridcolor: css("--grid") },
+      margin: { l: 220, r: 16, t: 8, b: 44 } });
+}
+
+function local(F) {
+  const host = document.getElementById("waterfalls");
+  host.innerHTML = "";
+  const items = F.exemplars.map(e => ({ title: e.title, sub: e.actual != null ? `predicted ${f1(e.prediction)} · metered ${f1(e.actual)} ${unit}` : "", e }));
+  const shKey = F.fuel === "gas" ? "contrib_g" : "contrib_e";
+  for (const [sh, p] of Object.entries(D.showcase)) {
+    const c = p[shKey];
+    if (!c || !c.length) {
+      items.push({ title: `${sh} showcase home`, sub: "No mains gas: gas prior is exactly 0 (no supply, not missing data)", e: null });
+      continue;
+    }
+    const dist = F.fuel === "gas" ? p.gas : p.elec;
+    const terms = c.slice(1).map(t => [`${t.feature}: ${tidy(t.value)}`, t.contribution]);
+    items.push({ title: `${sh} showcase home`, sub: `median ${f1(dist.median)} ${unit} · 90% range ${f1(dist.credible_intervals.find(x => x.level === 0.9).lo)}–${f1(dist.credible_intervals.find(x => x.level === 0.9).hi)}`,
+      e: { intercept: c[0].contribution, terms, prediction: c.reduce((a, t) => a + t.contribution, 0), actual: null } });
+  }
+  items.forEach((it, i) => {
+    const div = document.createElement("div");
+    div.className = "panel";
+    div.innerHTML = `<h3>${it.title}</h3><div class="cap">${it.sub}</div>` + (it.e ? `<div class="chart" id="wf-${i}" style="min-height:340px"></div>` : "");
+    host.appendChild(div);
+  });
+  items.forEach((it, i) => { if (it.e) waterfall(`wf-${i}`, it.title, it.e.intercept, it.e.terms, it.e.prediction, it.e.actual); });
+}
+
+
+
+function diag(F) {
+  const G = D.diagnostics, sec = document.getElementById("diag");
+  if (!G || !G[F.fuel]) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const g = G[F.fuel], bs = g.by_split, lc = g.learning_curve, pit = g.pit;
+  const gap = bs.train.r2 - bs.test.r2;
+  document.getElementById("diag-text").innerHTML =
+    `The served EBM scores R² ${f3(bs.train.r2)} on the homes it was trained on and ${f3(bs.test.r2)} on unseen test homes, a gap of ${f3(gap)}: ` +
+    `${Math.abs(gap) < 0.01 ? "<strong>no meaningful overfitting</strong>" : "a gap worth watching"}. ` +
+    `The learning curve shows how much more data would help. The PIT histogram checks the whole predictive distribution, not just one interval: ` +
+    `each test home's metered value is placed within its own predicted distribution, and if the distributions are right those positions are uniform (largest deviation ${f3(pit.ks_distance_from_uniform)}).`;
+  plot("c-lc", [{ type: "scatter", mode: "lines+markers", x: lc.map(r => r.homes), y: lc.map(r => r.test_r2),
+    line: { color: css("--ebm"), width: 2 }, marker: { size: 9, color: css("--ebm"), line: { color: css("--surface"), width: 2 } },
+    customdata: lc.map(r => [r.cells, r.test_mae, r.fit_seconds]),
+    hovertemplate: "%{x:,} homes (%{customdata[0]:,} cells)<br>test R² %{y:.4f}<br>MAE %{customdata[1]:.2f}<br>fit %{customdata[2]} s<extra></extra>" }],
+    { xaxis: { type: "log", title: "Training homes (log scale)", gridcolor: css("--grid") }, yaxis: { title: "Test R²", gridcolor: css("--grid") },
+      shapes: F.ceiling ? [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: F.ceiling.all_features.omega2_unbiased, y1: F.ceiling.all_features.omega2_unbiased,
+        line: { color: css("--fg-2"), dash: "dot", width: 1 } }] : [],
+      annotations: F.ceiling ? [{ xref: "paper", x: 0, y: F.ceiling.all_features.omega2_unbiased, text: "ceiling", showarrow: false, xanchor: "left", yanchor: "bottom", font: { size: 11, color: css("--fg-2") } }] : [] });
+  const n = pit.density.length;
+  plot("c-pit", [{ type: "bar", x: pit.density.map((_, i) => (i + 0.5) / n), y: pit.density, marker: { color: css("--ebm") }, width: 0.9 / n,
+    hovertemplate: "PIT %{x:.3f}<br>density %{y:.3f}<extra></extra>" }],
+    { xaxis: { title: "Position of metered value in its predicted distribution", range: [0, 1], gridcolor: css("--grid") },
+      yaxis: { title: "Density", rangemode: "tozero", gridcolor: css("--grid") },
+      shapes: [{ type: "line", x0: 0, x1: 1, y0: 1, y1: 1, line: { color: css("--fg-2"), dash: "dot", width: 1 } }] });
+  document.getElementById("t-split").innerHTML = `<thead><tr><th>Split</th><th>Homes</th><th>R²</th><th>MAE</th><th>RMSE</th><th>Bias</th></tr></thead><tbody>` +
+    Object.entries(bs).map(([k, v]) => `<tr class="${k === "test" ? "hl" : ""}"><td>${k}</td><td>${v.n.toLocaleString()}</td><td>${f3(v.r2)}</td><td>${f2(v.mae)}</td><td>${f2(v.rmse)}</td><td>${f2(v.bias)}</td></tr>`).join("") + "</tbody>";
+  document.getElementById("t-rel").innerHTML = `<thead><tr><th>Nominal interval</th><th>Actual coverage</th><th>Difference</th></tr></thead><tbody>` +
+    pit.reliability.map(r => `<tr><td>${pct(r.nominal)}</td><td>${pct(r.empirical)}</td><td>${(100 * (r.empirical - r.nominal)).toFixed(1)} pp</td></tr>`).join("") + "</tbody>";
+}
+
+function bayes(F) {
+  const B = D.bayes, S = D.showcase_bayes, sec = document.getElementById("bayes");
+  if (!B || !S) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const b = B[F.fuel], u = b.update_test.results, nm = b.noise, ae = b.area_elasticity;
+  document.getElementById("bayes-text").innerHTML =
+    `The EBM output is a prior. When a home has meter readings, Bayes' rule combines the two: posterior ∝ prior × likelihood of the readings. ` +
+    `The likelihood needs to know how much one year's reading wanders around a home's long-run level. We estimated that from <strong>${nm.n_pairs.toLocaleString()}</strong> NEED homes with valid readings in both 2022 and 2023: ` +
+    `a Student-t with ν = ${f2(nm.nu)} and scale ${f3(nm.scale)} on the log scale. The small ν means heavy tails (some households change a lot year to year), so one odd reading cannot drag the posterior far. ` +
+    `On held-out homes, one year of readings cuts the error from ${f1(u.prior_only.mae)} to <strong>${f1(u.posterior_1yr.mae)}</strong> ${unit} and the 90% range from ${f1(u.prior_only.mean_width_90)} to ${f1(u.posterior_1yr.mean_width_90)}, with coverage ${pct(u.posterior_1yr.coverage_90)}.`;
+  const cards = [
+    [`ν ${f2(nm.nu)} · s ${f3(nm.scale)}`, "Year-to-year noise (fitted)", `Student-t on log(reading / long-run level), from ${nm.n_pairs.toLocaleString()} homes. Draws are capped at ×4 change, the range NEED itself keeps.`],
+    [f3(ae.beta), "Floor-area elasticity (fitted)", `Annual kWh grows as area^${f2(ae.beta)} (95% CI ${f3(ae.ci95[0])}–${f3(ae.ci95[1])}), so intensity falls in bigger homes. Used to adjust within NEED's floor-area bands.`],
+    [f2(b.update_test.posterior_sd_ratio_2yr), "Posterior / prior spread", `Median ratio of log-scale SD after two years of readings. Median effective sample size ${Math.round(b.update_test.median_ess_1yr)} of 4,000 draws (one year).`],
+  ];
+  document.getElementById("bayes-cards").innerHTML = cards.map(([v, h, p]) => `<div class="check"><b>${v}</b><h3>${h}</h3><p class="cap">${p}</p></div>`).join("");
+  const nmz = { prior_only: "Prior only (no meters)", posterior_1yr: "Posterior, 1 year of readings", posterior_2yr: "Posterior, 2 years of readings", persistence: "Persistence (2023 = 2022)" };
+  document.getElementById("t-update").innerHTML = `<thead><tr><th>Method</th><th>MAE</th><th>Median AE</th><th>90% coverage</th><th>90% width</th><th>CRPS</th></tr></thead><tbody>` +
+    Object.entries(nmz).map(([k, n]) => `<tr class="${k === "posterior_1yr" ? "hl" : ""}"><td>${n}</td><td>${f2(u[k].mae)}</td><td>${f2(u[k].mdae)}</td><td>${pct(u[k].coverage_90)}</td><td>${f1(u[k].mean_width_90)}</td><td>${u[k].crps == null ? "–" : f2(u[k].crps)}</td></tr>`).join("") + "</tbody>";
+
+  const host = document.getElementById("bayes-sh"), rows = [];
+  host.innerHTML = "";
+  const plots = [];
+  for (const [sh, r] of Object.entries(S)) {
+    const v = r.fuels[F.fuel];
+    const div = document.createElement("div");
+    div.className = "panel";
+    if (!v || !v.prior) { div.innerHTML = `<h3>${sh}</h3><div class="cap">${v ? v.note : "no data"}</div>`; host.appendChild(div); continue; }
+    const o = v.observed;
+    div.innerHTML = `<h3>${sh}: prior → posterior</h3><div class="cap">Metered 2025: ${o.annual_kwh.toLocaleString()} kWh = ${f1(o.intensity_kwh_m2)} ${unit}` +
+      `${o.imputed_months.length ? ` · imputed (not zero): ${o.imputed_months.join(", ")}` : ""} · SD down ${f1(v.sd_reduction_pct)}% · ESS ${Math.round(v.ess).toLocaleString()}</div><div class="chart" id="bsh-${sh}" style="min-height:280px"></div>`;
+    host.appendChild(div);
+    plots.push([sh, v]);
+    for (const [lab, d] of [["Prior", v.prior], ["Posterior", v.posterior], ["Next-year predictive", v.posterior_predictive_next_year]])
+      rows.push([sh, lab, d]);
+  }
+  for (const [sh, v] of plots) {
+    const hist = (d, name, color, dash) => {
+      const e = d.histogram.bin_edges, c = d.histogram.counts, w = e.map((x, i) => i ? x - e[i - 1] : 0).slice(1), tot = c.reduce((a, b) => a + b, 0);
+      return { type: "scatter", mode: "lines", name, line: { color, width: 2, shape: "hvh", dash }, x: e.slice(0, -1).map((x, i) => x + w[i] / 2),
+        y: c.map((n, i) => n / tot / w[i]), hovertemplate: name + "<br>%{x:.1f} " + unit + "<extra></extra>" };
+    };
+    const o = v.observed.intensity_kwh_m2;
+    plot(`bsh-${sh}`, [hist(v.prior, "Prior (EBM)", css("--ctx")), hist(v.posterior, "Posterior", css("--ebm")),
+      hist(v.posterior_predictive_next_year, "Next-year predictive", css("--cmp"), "dot")],
+      { showlegend: true, legend: { orientation: "h", y: 1.12, x: 0 },
+        xaxis: { title: unit, gridcolor: css("--grid") }, yaxis: { title: "Density", gridcolor: css("--grid"), showticklabels: false },
+        shapes: [{ type: "line", x0: o, x1: o, yref: "paper", y0: 0, y1: 1, line: { color: css("--fg"), width: 1.5 } }],
+        annotations: [{ x: o, yref: "paper", y: 1, text: "metered", showarrow: false, yanchor: "bottom", font: { size: 11, color: css("--fg-2") } }] });
+  }
+  const ci = (d, l) => d.credible_intervals.find(x => x.level === l);
+  document.getElementById("t-dist").innerHTML = `<thead><tr><th>Home</th><th>Distribution</th><th>Mean</th><th>Median</th><th>Mode</th><th>SD</th><th>Skew</th><th>P5</th><th>P25</th><th>P75</th><th>P95</th><th>50% CI</th><th>90% CI</th><th>Worst 5% mean</th><th>P(above peers)</th></tr></thead><tbody>` +
+    rows.map(([sh, lab, d]) => `<tr class="${lab === "Posterior" ? "hl" : ""}"><td>${sh}</td><td>${lab}</td><td>${f1(d.mean)}</td><td>${f1(d.median)}</td><td>${f1(d.mode)}</td><td>${f1(d.std)}</td><td>${f2(d.skewness)}</td>` +
+      `<td>${f1(d.percentiles.p5)}</td><td>${f1(d.percentiles.p25)}</td><td>${f1(d.percentiles.p75)}</td><td>${f1(d.percentiles.p95)}</td>` +
+      `<td>${f1(ci(d, 0.5).lo)}–${f1(ci(d, 0.5).hi)}</td><td>${f1(ci(d, 0.9).lo)}–${f1(ci(d, 0.9).hi)}</td><td>${f1(d.worst_5pct_mean)}</td>` +
+      `<td>${d.tail_probabilities.length ? pct(d.tail_probabilities[0].probability) : "–"}</td></tr>`).join("") + "</tbody>";
+}
+
+function segments(F) {
+  const names = { prop_type: "Property type", age_band: "Age band", floor_band: "Floor band", region: "Region", epc_band: "EPC band" };
+  const lab = { age_band: { "1": "pre-1930", "2": "1930-72", "3": "1973-99", "4": "2000+" },
+    floor_band: { "1": "≤50 m²", "2": "51-100", "3": "101-150", "4": "151-200", "5": ">200 m²" },
+    epc_band: { "1.0": "A/B", "2.0": "C", "3.0": "D", "4.0": "E", "5.0": "F/G", "1": "A/B", "2": "C", "3": "D", "4": "E", "5": "F/G", unknown: "No EPC" } };
+  document.getElementById("seg-tables").innerHTML = Object.entries(F.segments).map(([col, rows]) =>
+    `<div class="panel"><h3>${names[col]}</h3><div class="tablewrap"><table><thead><tr><th>${names[col]}</th><th>Homes</th><th>Mean metered</th><th>R²</th><th>MAE</th><th>Bias</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${(lab[col] || {})[r.segment] || r.segment}</td><td>${r.n.toLocaleString()}</td><td>${f1(r.mean_y)}</td><td>${f3(r.r2)}</td><td>${f2(r.mae)}</td><td>${f2(r.bias)}</td></tr>`).join("") +
+    `</tbody></table></div></div>`).join("");
+}
+
+function tuning(F) {
+  const tr = D.trials.filter(t => t.fuel === F.fuel);
+  const models = ["lightgbm", "xgboost", "ebm"];
+  plot("c-trials", models.map(m => {
+    const r = tr.filter(t => t.model === m);
+    return { type: "scatter", mode: "markers", name: NAMES[m], x: r.map(t => t.trial), y: r.map(t => t.tune_mae),
+      marker: { size: 9, color: m === "ebm" ? css("--ebm") : (m === "lightgbm" ? css("--cmp") : css("--ctx")), line: { color: css("--surface"), width: 2 } },
+      customdata: r.map(t => t.seconds), hovertemplate: NAMES[m] + "<br>trial %{x}<br>tune MAE %{y:.3f}<br>%{customdata:.0f} s<extra></extra>" };
+  }), { showlegend: true, legend: { orientation: "h", y: 1.08, x: 0 },
+        xaxis: { title: "Trial", gridcolor: css("--grid") }, yaxis: { title: "Tune MAE (cell means)", gridcolor: css("--grid") } });
+  const bp = F.best_params;
+  document.getElementById("t-params").innerHTML = `<thead><tr><th>Model</th><th>Chosen hyperparameters</th></tr></thead><tbody>` +
+    Object.entries(bp).map(([m, p]) => `<tr class="${m === "ebm" ? "hl" : ""}"><td>${NAMES[m]}</td><td style="text-align:left;white-space:normal">${Object.entries(p).map(([k, v]) => `<code>${k}=${v}</code>`).join(" ")}</td></tr>`).join("") + "</tbody>";
+  const counts = models.map(m => `${tr.filter(t => t.model === m).length} ${NAMES[m].split(" ")[0]}`).join(", ");
+  document.getElementById("tune-text").innerHTML =
+    `Seeded random search (${counts} trials), each scored on the separate tune split; the test set played no part. ` +
+    `The score is the count-weighted MAE of tune-cell averages, which ranks settings without the per-home noise. Winners were refit on the full training set with early stopping.`;
+}
+
+function checks(F) {
+  const mono = Object.entries(F.monotonicity);
+  const viol = mono.reduce((a, [, v]) => a + v.violations, 0), checked = mono.reduce((a, [, v]) => a + v.checked, 0);
+  const cards = [
+    [viol === 0 ? "0 violations" : `${viol} violations`, "Physics monotonicity", `${checked.toLocaleString()} paired predictions checked: ${mono.map(([k, v]) => `${k} ${v.direction > 0 ? "↑" : "↓"}`).join(", ")}. Better insulation or EPC never raises gas; PV never raises grid import.`],
+    ...(F.monotonicity_poly2 ? [(() => { const pv = Object.values(F.monotonicity_poly2).reduce((a, v) => a + v.violations, 0),
+        pc = Object.values(F.monotonicity_poly2).reduce((a, v) => a + v.checked, 0);
+      return [`${pv.toLocaleString()} violations`, "Same check on polynomial ridge", `${pct(pv / pc)} of ${pc.toLocaleString()} paired predictions move the wrong way. Unconstrained models can learn confounded effects (homes that received scheme insulation were worse to begin with); EBM's constraint rules that out.`]; })()] : []),
+    [`${F.additivity.toExponential(1)}`, "Additivity error (max)", `Largest gap between the sum of contributions and the prediction, over all ${F.n.test.toLocaleString()} test homes, in ${unit}.`],
+    [f3(F.ebm_imd_unknown.r2), "R² with deprivation unknown", `Most Property records carry no IMD. With it removed from every test home, R² is ${f3(F.ebm_imd_unknown.r2)} (vs ${f3(F.test.ebm.r2)} with it).`],
+    [pct(F.intervals.ebm.coverage), "90% range coverage", `Calibrated on ${F.n.cal.toLocaleString()} separate homes, checked on test.`],
+  ];
+  document.getElementById("check-cards").innerHTML = cards.map(([b, h, p]) => `<div class="check"><b>${b}</b><h3>${h}</h3><p class="cap">${p}</p></div>`).join("");
+}
+
+function methodText() {
+  const c = D.config, F = D.fuels[FUEL];
+  document.getElementById("method-data").innerHTML =
+    `<p><strong>Source:</strong> ${c.source}. Real metered consumption, England and Wales, licensed under the Open Government Licence.</p>` +
+    `<p><strong>Target:</strong> ${F.target}. Floor area is banded in NEED, so intensity uses band midpoints (≤50 m² taken as 40, >200 m² as 250).</p>` +
+    `<p><strong>Split:</strong> by property, stratified on ${c.split.strata.join(" × ")}: 60% train, 10% tune, 10% calibration, 20% test. ` +
+    `This fuel: ${F.n.train.toLocaleString()} train (${F.n.train_cells.toLocaleString()} unique feature cells), ${F.n.tune.toLocaleString()} tune, ${F.n.cal.toLocaleString()} calibration, ${F.n.test.toLocaleString()} test.</p>`;
+  document.getElementById("foot").textContent = `GreenTwin · M04 energy prior v2 · seed 42 · data ${"need_anon_2025"} · generated from artifacts/m04_energy_prior/v2/results.json`;
+}
+
+function render() {
+  const F = D.fuels[FUEL];
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.fuel === FUEL)));
+  ladder(F); ceiling(F); fit(F); uncertainty(F); explain(F); local(F); diag(F); bayes(F); segments(F); tuning(F); checks(F); methodText();
+}
+
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+  FUEL = b.dataset.fuel;
+  try { localStorage.setItem("m04-fuel", FUEL); } catch (e) {}
+  render();
+}));
+header();
+if (window.Plotly) render();
+else document.getElementById("lede").insertAdjacentHTML("afterend", "<p class='cap'>Charts need the Plotly library from jsDelivr; tables below still show every number.</p>");
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => window.Plotly && render());
+new MutationObserver(() => window.Plotly && render()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>

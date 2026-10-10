@@ -1,0 +1,237 @@
+{
+  "model_id": "m04_energy_prior",
+  "version": "v2",
+  "seed": 42,
+  "data_version": "need_anon_2025",
+  "source": "DESNZ NEED anonymised data 2025, 4M-row sample (OGL v3)",
+  "target_years": [
+    2021,
+    2022,
+    2023
+  ],
+  "floor_band_area_m2": {
+    "1": 40.0,
+    "2": 75.5,
+    "3": 125.5,
+    "4": 175.5,
+    "5": 250.0
+  },
+  "split": {
+    "strata": [
+      "PROP_TYPE",
+      "PROP_AGE_BAND",
+      "FLOOR_AREA_BAND",
+      "REGION",
+      "MAIN_HEAT_FUEL"
+    ],
+    "cumulative_cuts": {
+      "train": 0.6,
+      "tune": 0.7,
+      "cal": 0.8,
+      "test": 1.0
+    },
+    "unit": "property"
+  },
+  "features": {
+    "electricity": [
+      "prop_type",
+      "age_band",
+      "floor_band",
+      "region",
+      "epc_band",
+      "imd_quintile",
+      "conservatory",
+      "li_flag",
+      "cwi_flag",
+      "pv_flag",
+      "main_heat_fuel"
+    ],
+    "gas": [
+      "prop_type",
+      "age_band",
+      "floor_band",
+      "region",
+      "epc_band",
+      "imd_quintile",
+      "conservatory",
+      "li_flag",
+      "cwi_flag",
+      "pv_flag"
+    ]
+  },
+  "monotone": {
+    "electricity": {
+      "pv_flag": -1
+    },
+    "gas": {
+      "epc_band": 1,
+      "li_flag": -1,
+      "cwi_flag": -1
+    }
+  },
+  "conformal_strata": {
+    "electricity": [
+      "main_heat_fuel",
+      "prop_type"
+    ],
+    "gas": [
+      "prop_type"
+    ]
+  },
+  "imd_mask_frac": 0.2,
+  "search_spaces": {
+    "lightgbm": {
+      "learning_rate": [
+        0.02,
+        0.05,
+        0.1
+      ],
+      "num_leaves": [
+        15,
+        31,
+        63,
+        127,
+        255
+      ],
+      "min_sum_hessian_in_leaf": [
+        10,
+        50,
+        200,
+        1000
+      ],
+      "feature_fraction": [
+        0.7,
+        0.85,
+        1.0
+      ],
+      "lambda_l2": [
+        0,
+        1,
+        10,
+        100
+      ],
+      "log_target": [
+        false,
+        true
+      ]
+    },
+    "xgboost": {
+      "learning_rate": [
+        0.03,
+        0.05,
+        0.1
+      ],
+      "max_depth": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "min_child_weight": [
+        10,
+        50,
+        200,
+        1000
+      ],
+      "subsample": [
+        0.7,
+        0.85,
+        1.0
+      ],
+      "reg_lambda": [
+        0,
+        1,
+        10,
+        100
+      ]
+    },
+    "ebm": {
+      "learning_rate": [
+        0.01,
+        0.02,
+        0.05
+      ],
+      "max_leaves": [
+        2,
+        3
+      ],
+      "min_samples_leaf": [
+        2,
+        10,
+        50
+      ],
+      "min_hessian": [
+        0.0001,
+        1.0,
+        50.0
+      ],
+      "smoothing_rounds": [
+        0,
+        200,
+        500
+      ],
+      "interactions": [
+        0,
+        5,
+        10,
+        20
+      ]
+    }
+  },
+  "best_params": {
+    "electricity": {
+      "lightgbm": {
+        "num_leaves": 255,
+        "min_sum_hessian_in_leaf": 10,
+        "log_target": false,
+        "learning_rate": 0.02,
+        "lambda_l2": 10,
+        "feature_fraction": 0.7
+      },
+      "xgboost": {
+        "subsample": 0.85,
+        "reg_lambda": 100,
+        "min_child_weight": 10,
+        "max_depth": 10,
+        "learning_rate": 0.05
+      },
+      "ebm": {
+        "smoothing_rounds": 500,
+        "min_samples_leaf": 10,
+        "min_hessian": 1.0,
+        "max_leaves": 3,
+        "learning_rate": 0.05,
+        "interactions": 20
+      }
+    },
+    "gas": {
+      "lightgbm": {
+        "num_leaves": 255,
+        "min_sum_hessian_in_leaf": 10,
+        "log_target": false,
+        "learning_rate": 0.02,
+        "lambda_l2": 10,
+        "feature_fraction": 0.7
+      },
+      "xgboost": {
+        "subsample": 1.0,
+        "reg_lambda": 10,
+        "min_child_weight": 1000,
+        "max_depth": 10,
+        "learning_rate": 0.05
+      },
+      "ebm": {
+        "smoothing_rounds": 500,
+        "min_samples_leaf": 10,
+        "min_hessian": 1.0,
+        "max_leaves": 3,
+        "learning_rate": 0.05,
+        "interactions": 20
+      }
+    }
+  },
+  "excluded_features": {
+    "COUNCIL_TAX_BAND": "not in the Property contract (unavailable at prediction time)"
+  },
+  "training": "unique feature cells weighted by count (same optimum as rows for squared loss)"
+}

@@ -1,0 +1,517 @@
+{
+  "property_id": "SH3",
+  "electricity_kwh_m2": {
+    "unit": "kWh/m2/yr",
+    "n_samples": 1000,
+    "mean": 72.06328088970871,
+    "median": 57.859979913873694,
+    "mode": 36.013472071963115,
+    "std": 52.78814679002306,
+    "skewness": 1.8360918614325488,
+    "percentiles": {
+      "p1": 11.931435912652637,
+      "p5": 17.259476621525906,
+      "p10": 21.80397754759558,
+      "p25": 33.613629357592785,
+      "p50": 57.859979913873694,
+      "p75": 95.79938959327188,
+      "p90": 139.78576352150498,
+      "p95": 172.42931526294223,
+      "p99": 252.17667804570522
+    },
+    "credible_intervals": [
+      {
+        "level": 0.5,
+        "lo": 33.613629357592785,
+        "hi": 95.79938959327188
+      },
+      {
+        "level": 0.9,
+        "lo": 17.259476621525906,
+        "hi": 172.42931526294223
+      }
+    ],
+    "tail_probabilities": [
+      {
+        "label": "above the NEED median for flat homes of this age",
+        "threshold": 47.5,
+        "direction": "above",
+        "probability": 0.593
+      }
+    ],
+    "worst_tail": "high",
+    "worst_5pct_mean": 224.58643306758634,
+    "histogram": {
+      "bin_edges": [
+        7.580500534481521,
+        22.256509075545253,
+        36.93251761660898,
+        51.60852615767272,
+        66.28453469873645,
+        80.96054323980017,
+        95.63655178086391,
+        110.31256032192763,
+        124.98856886299137,
+        139.6645774040551,
+        154.34058594511885,
+        169.01659448618258,
+        183.69260302724632,
+        198.36861156831006,
+        213.04462010937377,
+        227.7206286504375,
+        242.39663719150124,
+        257.072645732565,
+        271.7486542736287,
+        286.42466281469245,
+        301.10067135575616,
+        315.7766798968199,
+        330.45268843788364,
+        345.12869697894735,
+        359.8047055200111,
+        374.4807140610748,
+        389.1567226021386,
+        403.8327311432023,
+        418.508739684266,
+        433.18474822532977,
+        447.8607567663935
+      ],
+      "counts": [
+        106,
+        184,
+        156,
+        121,
+        100,
+        82,
+        63,
+        50,
+        37,
+        29,
+        18,
+        14,
+        10,
+        8,
+        5,
+        4,
+        3,
+        3,
+        2,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "headline": "median"
+  },
+  "gas_kwh_m2": {
+    "unit": "kWh/m2/yr",
+    "n_samples": 1,
+    "mean": 0.0,
+    "median": 0.0,
+    "mode": 0.0,
+    "std": 0.0,
+    "skewness": 0.0,
+    "percentiles": {
+      "p1": 0.0,
+      "p5": 0.0,
+      "p10": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "p90": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "credible_intervals": [
+      {
+        "level": 0.5,
+        "lo": 0.0,
+        "hi": 0.0
+      },
+      {
+        "level": 0.9,
+        "lo": 0.0,
+        "hi": 0.0
+      }
+    ],
+    "tail_probabilities": [],
+    "worst_tail": "low",
+    "worst_5pct_mean": 0.0,
+    "histogram": {
+      "bin_edges": [
+        0.0,
+        0.0
+      ],
+      "counts": [
+        1
+      ]
+    },
+    "headline": "mean"
+  },
+  "contributions_electricity": [
+    {
+      "feature": "average home (intercept)",
+      "value": null,
+      "contribution": 41.45,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "main heating fuel",
+      "value": "not_gas",
+      "contribution": 19.83,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x main heating fuel",
+      "value": "London, not_gas",
+      "contribution": -8.35,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x main heating fuel",
+      "value": "2000 or later, not_gas",
+      "contribution": 5.13,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x age band",
+      "value": "Flat, 2000 or later",
+      "contribution": 3.54,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x EPC band",
+      "value": "London, C",
+      "contribution": 3.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band",
+      "value": "2000 or later",
+      "contribution": 3.07,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x main heating fuel",
+      "value": "C, not_gas",
+      "contribution": -3.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band",
+      "value": "C",
+      "contribution": -2.35,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x floor-area band",
+      "value": "2000 or later, 51-100 m2",
+      "contribution": -2.04,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x main heating fuel",
+      "value": "Flat, not_gas",
+      "contribution": 1.65,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type",
+      "value": "Flat",
+      "contribution": -1.44,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x conservatory",
+      "value": "2000 or later, unknown",
+      "contribution": 1.35,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x region",
+      "value": "2000 or later, London",
+      "contribution": 1.28,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x region",
+      "value": "Flat, London",
+      "contribution": -1.26,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x EPC band",
+      "value": "2000 or later, C",
+      "contribution": 1.1,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x EPC band",
+      "value": "Flat, C",
+      "contribution": -0.87,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x floor-area band",
+      "value": "Flat, 51-100 m2",
+      "contribution": -0.72,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band",
+      "value": "51-100 m2",
+      "contribution": 0.7,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x main heating fuel",
+      "value": "unknown, not_gas",
+      "contribution": 0.69,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x region",
+      "value": "51-100 m2, London",
+      "contribution": 0.64,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x deprivation quintile (IMD)",
+      "value": "Flat, unknown",
+      "contribution": -0.58,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x conservatory",
+      "value": "London, unknown",
+      "contribution": 0.44,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x deprivation quintile (IMD)",
+      "value": "London, unknown",
+      "contribution": 0.41,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x cavity wall insulation installed",
+      "value": "London, no",
+      "contribution": 0.35,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x deprivation quintile (IMD)",
+      "value": "C, unknown",
+      "contribution": 0.27,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed",
+      "value": "no",
+      "contribution": 0.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x main heating fuel",
+      "value": "51-100 m2, not_gas",
+      "contribution": -0.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x conservatory",
+      "value": "Flat, unknown",
+      "contribution": -0.21,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x main heating fuel",
+      "value": "unknown, not_gas",
+      "contribution": 0.21,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x conservatory",
+      "value": "51-100 m2, unknown",
+      "contribution": 0.16,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "cavity wall insulation installed",
+      "value": "no",
+      "contribution": 0.14,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x deprivation quintile (IMD)",
+      "value": "2000 or later, unknown",
+      "contribution": -0.13,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x loft insulation installed",
+      "value": "2000 or later, no",
+      "contribution": -0.13,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x conservatory",
+      "value": "C, unknown",
+      "contribution": 0.13,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x cavity wall insulation installed",
+      "value": "2000 or later, no",
+      "contribution": -0.12,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x loft insulation installed",
+      "value": "London, no",
+      "contribution": 0.12,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x loft insulation installed",
+      "value": "C, no",
+      "contribution": -0.08,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x cavity wall insulation installed",
+      "value": "C, no",
+      "contribution": -0.07,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "cavity wall insulation installed x main heating fuel",
+      "value": "no, not_gas",
+      "contribution": 0.06,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x loft insulation installed",
+      "value": "51-100 m2, no",
+      "contribution": 0.05,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "solar PV",
+      "value": "no",
+      "contribution": 0.04,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD)",
+      "value": "unknown",
+      "contribution": 0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x loft insulation installed",
+      "value": "Flat, no",
+      "contribution": -0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed x main heating fuel",
+      "value": "no, not_gas",
+      "contribution": -0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region",
+      "value": "London",
+      "contribution": -0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x cavity wall insulation installed",
+      "value": "Flat, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x EPC band",
+      "value": "51-100 m2, C",
+      "contribution": -0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x cavity wall insulation installed",
+      "value": "51-100 m2, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x conservatory",
+      "value": "unknown, unknown",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x cavity wall insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory",
+      "value": "unknown",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x deprivation quintile (IMD)",
+      "value": "51-100 m2, unknown",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x loft insulation installed",
+      "value": "unknown, no",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed x cavity wall insulation installed",
+      "value": "no, no",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x loft insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x cavity wall insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor area within band",
+      "value": "62 m2",
+      "contribution": 8.0,
+      "unit": "kWh/m2/yr"
+    }
+  ],
+  "contributions_gas": [],
+  "out_of_distribution": false,
+  "provenance": {
+    "engine": "ebm",
+    "model_version": "m04_energy_prior-v2",
+    "data_version": "need_anon_2025",
+    "seed": 42,
+    "n_samples": 1000
+  }
+}
