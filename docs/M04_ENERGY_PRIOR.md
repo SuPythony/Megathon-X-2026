@@ -149,6 +149,14 @@ Assumptions (labelled): gas_weather_cv = 0.07 (assumption); imputed_month_relati
 | SH3 | electricity | 74.2 | 72.1 / 57.9 / 52.7 | 75.1 / 74.1 / 73.6 / 16.9 | 51.4–101.5 | 97% | 68% |
 | SH3 | gas | – | No mains gas supply: gas is structurally 0 (not missing data). | | | | |
 
+## Using it
+
+- Python: `from greentwin.models.energy_prior import energy_prior` → `EnergyPrior`; `greentwin.models.prior_update.update_with_meters(load_default(), prop, usage)` → prior/posterior per fuel.
+- CLI: `uv run python -m greentwin.models.energy_prior contracts/examples/SH2_property.json --usage contracts/examples/SH2_usage_2025.json`.
+- HTTP: `greentwin.api.energy_prior.router` (mount with `app.include_router(router)`): `POST /m04/energy-prior`, `POST /m04/energy-prior/update`, `GET /m04/health`. Standalone: `uv run uvicorn greentwin.api.energy_prior:app --port 8040`.
+- Monitoring: `uv run python scripts/check_energy_prior.py` (10 checks: artefacts, contract, additivity, monotonicity, Bayesian update, quality thresholds, staleness, HTTP round-trip, fresh re-score of held-out homes); each pass is appended to `artifacts/m04_energy_prior/v2/monitor.log`.
+- Repo notes: the trained `model.pkl` (≈250 KB) is committed despite the `*.pkl` ignore rule so the API and demo work without a 1 GB download and retraining; `uv.lock` is not committed (the repo does not track one).
+
 ## Limits
 
 - Per-home R² is bounded by behaviour that no NEED field records; the ceiling quantifies this.

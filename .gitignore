@@ -52,3 +52,4 @@ Green_Home_Ideas.pdf
 
 # git worktrees (isolated per-task checkouts)
 .worktrees/
+artifacts/**/monitor.log

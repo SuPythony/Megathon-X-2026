@@ -146,6 +146,19 @@ def main():
                   f"{q['mean']:.1f} / {q['median']:.1f} / {q['mode']:.1f} / {q['std']:.1f} | {ci['lo']:.1f}–{ci['hi']:.1f} | {tail} | "
                   f"{v['sd_reduction_pct']:.0f}% |")
         w("")
+    w("## Using it\n")
+    w("- Python: `from greentwin.models.energy_prior import energy_prior` → `EnergyPrior`; "
+      "`greentwin.models.prior_update.update_with_meters(load_default(), prop, usage)` → prior/posterior per fuel.")
+    w("- CLI: `uv run python -m greentwin.models.energy_prior contracts/examples/SH2_property.json "
+      "--usage contracts/examples/SH2_usage_2025.json`.")
+    w("- HTTP: `greentwin.api.energy_prior.router` (mount with `app.include_router(router)`): "
+      "`POST /m04/energy-prior`, `POST /m04/energy-prior/update`, `GET /m04/health`. "
+      "Standalone: `uv run uvicorn greentwin.api.energy_prior:app --port 8040`.")
+    w("- Monitoring: `uv run python scripts/check_energy_prior.py` (10 checks: artefacts, contract, additivity, "
+      "monotonicity, Bayesian update, quality thresholds, staleness, HTTP round-trip, fresh re-score of held-out "
+      "homes); each pass is appended to `artifacts/m04_energy_prior/v2/monitor.log`.")
+    w("- Repo notes: the trained `model.pkl` (≈250 KB) is committed despite the `*.pkl` ignore rule so the API and "
+      "demo work without a 1 GB download and retraining; `uv.lock` is not committed (the repo does not track one).\n")
     w("## Limits\n")
     w("- Per-home R² is bounded by behaviour that no NEED field records; the ceiling quantifies this.")
     w("- NEED floor area is banded; intensity uses band midpoints, with a fitted within-band area elasticity.")

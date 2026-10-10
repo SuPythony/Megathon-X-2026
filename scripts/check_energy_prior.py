@@ -157,7 +157,50 @@ def main():
         return not bad, bad or "report, model card and contract examples match the current model"
     check("outputs up to date", fresh)
 
+    def api():
+        from fastapi.testclient import TestClient
+        from greentwin.api.energy_prior import app
+        c = TestClient(app)
+        r = c.post("/m04/energy-prior", json=json.loads((ROOT / "contracts/examples/SH2_property.json").read_text()))
+        EnergyPrior.model_validate(r.json())
+        h = c.get("/m04/health").json()
+        return r.status_code == 200 and h["bayes_layer"], f"POST /m04/energy-prior {r.status_code}, health {h['model']}"
+    check("HTTP API round-trip", api)
+
+    def rescore():
+        """A fresh random sample of held-out homes each run: recomputed R2 / 90% coverage vs the recorded metrics."""
+        import pandas as pd
+        from greentwin.models.m04_eval import point_metrics
+        from greentwin.models.energy_prior import STRATA, interval_from_quantiles
+        table = ROOT / "data/processed/need_intensity.parquet"
+        if not table.exists():
+            return True, "skipped: NEED table not built on this machine"
+        df = pd.read_parquet(table)
+        seed = int(time.time()) % 100_000
+        out = {}
+        for fuel, col in (("electricity", "elec"), ("gas", "gas")):
+            d = df[(df.split == "test") & df[f"{col}_kwh"].notna()]
+            if fuel == "gas":
+                d = d[d.main_heat_fuel == "gas"]
+            d = d.sample(20_000, random_state=seed)
+            d = d.assign(y=d[f"{col}_kwh"] / d.floor_area_rep_m2)
+            yhat = model.predict_point(d, fuel)
+            keys = d[STRATA[fuel]].astype(str).agg("|".join, axis=1).to_numpy()
+            lo, hi = interval_from_quantiles(yhat, keys, model.residual_quantiles[fuel])
+            r2 = point_metrics(d.y.to_numpy(), yhat)["r2"]
+            cov = float(np.mean((d.y >= lo) & (d.y <= hi)))
+            rec = m[fuel]["test"]["ebm"]["r2"]
+            out[fuel] = (r2, cov, rec)
+            if abs(r2 - rec) > 0.03 or not 0.875 <= cov <= 0.925:
+                return False, f"{fuel}: sample R2 {r2:.3f} vs recorded {rec:.3f}, coverage {cov:.3f} (seed {seed})"
+        return True, f"seed {seed}: " + ", ".join(f"{f} R2 {v[0]:.3f} (rec {v[2]:.3f}) cover {v[1]:.3f}" for f, v in out.items())
+    check("fresh re-score of held-out homes", rescore)
+
     n_fail = sum(not r["ok"] for r in results)
+    log = RUN / "monitor.log"  # append-only history of monitoring passes (git-ignored)
+    with log.open("a") as fh:
+        fh.write(json.dumps({"at": time.strftime("%Y-%m-%d %H:%M:%S"), "passed": len(results) - n_fail,
+                             "total": len(results), "failed": [r["check"] for r in results if not r["ok"]]}) + "\n")
     if a.json:
         print(json.dumps({"ok": n_fail == 0, "checked_at": time.strftime("%Y-%m-%d %H:%M:%S"), "results": results}, indent=2))
     else:
