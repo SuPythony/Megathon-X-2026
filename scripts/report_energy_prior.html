@@ -39,6 +39,13 @@ section { display: grid; gap: var(--s2); }
 .kpi .v small { font-size: 14px; font-weight: 500; color: var(--muted); }
 .kpi .l { font-size: 13px; color: var(--fg-2); }
 .kpi .r { font-size: 12px; color: var(--muted); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+.toc a { color: var(--fg-2); text-decoration: none; border-bottom: 1px solid var(--line); }
+.toc a:hover, .toc a:focus-visible { color: var(--brand); border-color: var(--brand); outline: none; }
+pre.cmds { margin: 0; padding: var(--s2); background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  overflow-x: auto; font-size: 12.5px; line-height: 1.6; }
+.ok-t { color: var(--ebm); font-weight: 650; } .bad-t { color: var(--warn); font-weight: 650; }
+section { scroll-margin-top: 56px; }
 .tabs { display: flex; gap: var(--s1); flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
   background: var(--bg); padding-block: var(--s1); border-bottom: 1px solid var(--line); }
 .tabs button { font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line);
@@ -81,6 +88,11 @@ footer { font-size: 12px; color: var(--muted); }
     <h1>How well can we predict a home's energy use before we see its meters?</h1>
     <p class="lede" id="lede"></p>
     <div class="kpis" id="kpis"></div>
+    <nav class="toc" aria-label="Contents">
+      <a href="#ladder">Model comparison</a><a href="#ceiling">Ceiling</a><a href="#fit">Fit</a><a href="#uncertainty">Uncertainty</a>
+      <a href="#explain">Explanations</a><a href="#local">Single homes</a><a href="#diag">Diagnostics</a><a href="#bayes">Bayesian update</a>
+      <a href="#segments">Segments</a><a href="#tuning">Tuning</a><a href="#checks">Guarantees</a><a href="#proof">Proof</a><a href="#method">Method</a>
+    </nav>
   </header>
 
   <nav class="tabs" aria-label="Fuel">
@@ -188,6 +200,23 @@ footer { font-size: 12px; color: var(--muted); }
   <section id="checks">
     <h2>Guarantees checked on the test set</h2>
     <div class="checks" id="check-cards"></div>
+  </section>
+
+  <section id="proof">
+    <h2>Proof: where every number comes from, and how to check it</h2>
+    <p id="proof-text"></p>
+    <div class="checks" id="proof-cards"></div>
+    <div class="grid2">
+      <div class="panel"><h3>Source files (downloaded from gov.uk)</h3><div class="tablewrap"><table id="t-files"></table></div></div>
+      <div class="panel"><h3>Split by property, stratified</h3><div class="tablewrap"><table id="t-splits"></table></div></div>
+    </div>
+    <div class="panel"><h3>Health check, run when this report was built</h3><div class="tablewrap"><table id="t-health"></table></div></div>
+    <div class="grid2">
+      <div class="panel"><h3>EBM before and after the wider search</h3><div class="tablewrap"><table id="t-rounds"></table></div>
+        <div class="cap">The first search picked settings at the edge of its grid, so a second search widened it (up to all allowed interaction pairs). Test accuracy barely moved: the gap to tree models is a property of the additive model form, not of tuning.</div></div>
+      <div class="panel"><h3>Code history</h3><div class="tablewrap"><table id="t-commits"></table></div></div>
+    </div>
+    <div class="panel"><h3>Reproduce from scratch</h3><pre class="cmds" id="cmds"></pre></div>
   </section>
 
   <section id="method">
@@ -565,6 +594,38 @@ function bayes(F) {
       `<td>${d.tail_probabilities.length ? pct(d.tail_probabilities[0].probability) : "–"}</td></tr>`).join("") + "</tbody>";
 }
 
+
+function proof() {
+  const P = D.proof, sec = document.getElementById("proof");
+  if (!P) { sec.hidden = true; return; }
+  const hc = P.health_check, nOk = hc.results.filter(r => r.ok).length, t = P.tests, d = P.data, sp = P.split;
+  const maxGap = Math.max(...Object.values(sp.max_gap_pp_by_stratum));
+  document.getElementById("proof-text").innerHTML =
+    `All results come from <strong>${d.rows.toLocaleString()}</strong> real homes in the DESNZ NEED 2025 anonymised sample (${d.licence}). ` +
+    `Nothing is synthetic and no real customer data is used. The checks below were run at ${P.generated_at}, on branch <code>${P.branch}</code>; the served model file has SHA-256 <code>${P.model_sha256.slice(0, 16)}…</code>.`;
+  const cards = [
+    [d.rows.toLocaleString(), "Homes in the data", `${d.valid_elec_target.toLocaleString()} with a valid electricity target, ${d.valid_gas_target.toLocaleString()} gas-heated with a valid gas target.`],
+    [`${maxGap.toFixed(3)} pp`, "Largest split imbalance", "Most any type, age, size, region or fuel group's share differs between train, tune, calibration and test."],
+    [`${nOk}/${hc.results.length}`, "Health checks passed", "Artefacts, contract, additivity, physics, Bayesian update, quality, freshness, HTTP and a fresh re-score."],
+    [`${t.passed} passed`, "Automated tests", `${t.failed || 0} failed, ${t.skipped || 0} skipped, across ${t.files.length} test files.`],
+  ];
+  document.getElementById("proof-cards").innerHTML = cards.map(([b, h, p]) => `<div class="check"><b>${b}</b><h3>${h}</h3><p class="cap">${p}</p></div>`).join("");
+  document.getElementById("t-files").innerHTML = `<thead><tr><th>File</th><th>Size</th><th>SHA-256 (first 16)</th></tr></thead><tbody>` +
+    d.files.map(f => `<tr><td>${f.url ? `<a href="${f.url}">${f.file}</a>` : f.file}</td><td>${(f.bytes / 1e6).toFixed(1)} MB</td><td><code>${f.sha256.slice(0, 16)}</code></td></tr>`).join("") +
+    `<tr><td><a href="${d.page}">Publication page</a></td><td colspan="2" style="text-align:left">${d.publisher}</td></tr></tbody>`;
+  document.getElementById("t-splits").innerHTML = `<thead><tr><th>Split</th><th>Homes</th><th>Share</th><th>Used for</th></tr></thead><tbody>` +
+    [["train", "fitting every model"], ["tune", "choosing hyperparameters"], ["cal", "calibrating the 90% ranges"], ["test", "every number in this report"]]
+      .map(([k, u]) => `<tr><td>${k}</td><td>${sp.counts[k].toLocaleString()}</td><td>${pct(sp.shares[k])}</td><td style="text-align:left">${u}</td></tr>`).join("") +
+    `</tbody>`;
+  document.getElementById("t-health").innerHTML = `<thead><tr><th>Check</th><th>Result</th><th style="text-align:left">Detail</th></tr></thead><tbody>` +
+    hc.results.map(r => `<tr><td>${r.check}</td><td class="${r.ok ? "ok-t" : "bad-t"}">${r.ok ? "Pass" : "Fail"}</td><td style="text-align:left;white-space:normal">${typeof r.detail === "string" ? r.detail : Object.entries(r.detail).map(([k, v]) => `${k}: ${v}`).join("; ")}</td></tr>`).join("") + "</tbody>";
+  document.getElementById("t-rounds").innerHTML = `<thead><tr><th>Fuel</th><th>Round</th><th>Test R²</th><th>Test MAE</th><th style="text-align:left">Interactions · leaves</th></tr></thead><tbody>` +
+    Object.entries(P.ebm_rounds).flatMap(([f, r]) => ["round1", "round2"].map(k => `<tr class="${k === "round2" ? "hl" : ""}"><td>${f}</td><td>${k === "round1" ? "First grid" : "Wide grid (served)"}</td><td>${f3(r[k].r2)}</td><td>${f2(r[k].mae)}</td><td style="text-align:left">${r[k].params.interactions} · ${r[k].params.max_leaves}</td></tr>`)).join("") + "</tbody>";
+  document.getElementById("t-commits").innerHTML = `<thead><tr><th>Commit</th><th style="text-align:left">Change</th></tr></thead><tbody>` +
+    P.commits.map(([h, m]) => `<tr><td><code>${h}</code></td><td style="text-align:left;white-space:normal">${m}</td></tr>`).join("") + "</tbody>";
+  document.getElementById("cmds").textContent = P.reproduce.join("\n");
+}
+
 function segments(F) {
   const names = { prop_type: "Property type", age_band: "Age band", floor_band: "Floor band", region: "Region", epc_band: "EPC band" };
   const lab = { age_band: { "1": "pre-1930", "2": "1930-72", "3": "1973-99", "4": "2000+" },
@@ -634,6 +695,7 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
   render();
 }));
 header();
+proof();
 if (window.Plotly) render();
 else document.getElementById("lede").insertAdjacentHTML("afterend", "<p class='cap'>Charts need the Plotly library from jsDelivr; tables below still show every number.</p>");
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => window.Plotly && render());

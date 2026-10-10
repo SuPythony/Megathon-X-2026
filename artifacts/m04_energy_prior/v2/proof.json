@@ -1,0 +1,223 @@
+{
+  "generated_at": "2026-10-11 04:54:08",
+  "data": {
+    "publisher": "DESNZ, National Energy Efficiency Data-Framework (NEED) anonymised data 2025",
+    "page": "https://www.gov.uk/government/statistics/national-energy-efficiency-data-framework-need-anonymised-data-2025",
+    "licence": "Open Government Licence v3",
+    "files": [
+      {
+        "file": "anon2025_4million.zip",
+        "bytes": 259555320,
+        "sha256": "fcb2986b323925fe78fb0d4859444b5c8fb7abb5d6a42883b80a2865704494d5",
+        "url": "https://assets.publishing.service.gov.uk/media/685c04734cd6b03168709827/anon2025_4million.zip"
+      },
+      {
+        "file": "anon2025_4million.csv",
+        "bytes": 1157429677,
+        "sha256": "49d80d32113cc938e48a20080ea8b2fef1808c2b7fb0330c630730e947845258",
+        "url": null
+      },
+      {
+        "file": "NEED-2025-metadata.ods",
+        "bytes": 190993,
+        "sha256": "d28c4ab89aaf382847266ac65459b544677b802c01c9196c96262219cf6ed5c5",
+        "url": "https://assets.publishing.service.gov.uk/media/685c02aa0433072fce0e1025/NEED-2025-anonymised-dataset-metadata.ods"
+      }
+    ],
+    "rows": 4000000,
+    "unique_properties": 4000000,
+    "gas_heated": 3190916,
+    "valid_gas_target": 3134461,
+    "valid_elec_target": 3861028
+  },
+  "split": {
+    "shares": {
+      "train": 0.59991,
+      "test": 0.20019,
+      "tune": 0.09998,
+      "cal": 0.09992
+    },
+    "counts": {
+      "train": 2399638,
+      "test": 800749,
+      "tune": 399934,
+      "cal": 399679
+    },
+    "max_gap_pp_by_stratum": {
+      "prop_type": 0.0176,
+      "age_band": 0.0255,
+      "floor_band": 0.0415,
+      "region": 0.0125,
+      "main_heat_fuel": 0.0483
+    },
+    "disjoint": true
+  },
+  "health_check": {
+    "ok": true,
+    "checked_at": "2026-10-11 04:54:18",
+    "results": [
+      {
+        "check": "artefacts present",
+        "ok": true,
+        "detail": "all 8 present",
+        "seconds": 0.0
+      },
+      {
+        "check": "model metadata (Bayes layer fitted)",
+        "ok": true,
+        "detail": {
+          "noise": true,
+          "area_elasticity": true,
+          "peer_median_kwh_m2": true
+        },
+        "seconds": 0.0
+      },
+      {
+        "check": "served prior: contract + provenance",
+        "ok": true,
+        "detail": "3 homes valid, provenance ebm, SH3 gas = 0",
+        "seconds": 0.0
+      },
+      {
+        "check": "contributions sum to prediction",
+        "ok": true,
+        "detail": "max |sum - prediction| = 0.042 kWh/m2/yr (rounding to 0.01 per term)",
+        "seconds": 0.09
+      },
+      {
+        "check": "physics monotonicity (showcase edits)",
+        "ok": true,
+        "detail": "8 physics edits, 0 violations",
+        "seconds": 0.06
+      },
+      {
+        "check": "Bayesian update narrows prior",
+        "ok": true,
+        "detail": "SH1 electricity sd -62%, SH1 gas sd -51%, SH2 electricity sd -68%, SH2 gas sd -59%, SH3 electricity sd -68%",
+        "seconds": 0.86
+      },
+      {
+        "check": "model quality thresholds",
+        "ok": true,
+        "detail": {
+          "electricity": "R2 0.285 (OLS 0.236), cover 0.898, PIT KS 0.0017",
+          "gas": "R2 0.182 (OLS 0.170), cover 0.899, PIT KS 0.0017"
+        },
+        "seconds": 0.0
+      },
+      {
+        "check": "outputs up to date",
+        "ok": true,
+        "detail": "report, model card and contract examples match the current model",
+        "seconds": 0.0
+      },
+      {
+        "check": "HTTP API round-trip",
+        "ok": true,
+        "detail": "POST /m04/energy-prior 200, health m04_energy_prior-v2",
+        "seconds": 0.26
+      },
+      {
+        "check": "fresh re-score of held-out homes",
+        "ok": true,
+        "detail": "seed 74656: electricity R2 0.277 (rec 0.285) cover 0.899, gas R2 0.178 (rec 0.182) cover 0.899",
+        "seconds": 3.1
+      }
+    ]
+  },
+  "tests": {
+    "passed": 53,
+    "skipped": 0,
+    "failed": 0,
+    "summary": "53 passed in 7.76s",
+    "files": [
+      "test_contracts.py",
+      "test_distribution.py",
+      "test_energy_prior.py",
+      "test_energy_prior_api.py",
+      "test_prior_update.py"
+    ]
+  },
+  "ebm_rounds": {
+    "electricity": {
+      "round1": {
+        "r2": 0.28310889841027986,
+        "mae": 19.036014684761764,
+        "params": {
+          "smoothing_rounds": 500,
+          "min_samples_leaf": 10,
+          "min_hessian": 1.0,
+          "max_leaves": 3,
+          "learning_rate": 0.05,
+          "interactions": 20
+        }
+      },
+      "round2": {
+        "r2": 0.2848159184828566,
+        "mae": 19.003560435547968,
+        "params": {
+          "smoothing_rounds": 1000,
+          "min_samples_leaf": 2,
+          "min_hessian": 0.0001,
+          "max_leaves": 3,
+          "learning_rate": 0.05,
+          "interactions": 45
+        }
+      }
+    },
+    "gas": {
+      "round1": {
+        "r2": 0.1824427110658231,
+        "mae": 44.98244739457119,
+        "params": {
+          "smoothing_rounds": 500,
+          "min_samples_leaf": 10,
+          "min_hessian": 1.0,
+          "max_leaves": 3,
+          "learning_rate": 0.05,
+          "interactions": 20
+        }
+      },
+      "round2": {
+        "r2": 0.182455332058308,
+        "mae": 44.98241134189245,
+        "params": {
+          "smoothing_rounds": 200,
+          "min_samples_leaf": 10,
+          "min_hessian": 1.0,
+          "max_leaves": 6,
+          "learning_rate": 0.05,
+          "interactions": 45
+        }
+      }
+    }
+  },
+  "commits": [
+    [
+      "e587f45",
+      "M04: HTTP router, deeper monitoring checks, usage docs"
+    ],
+    [
+      "81c6b48",
+      "M04: system entry points, health check, chart fixes"
+    ],
+    [
+      "d8025d3",
+      "M04 energy-intensity prior: EBM on NEED 2025, model ladder, Bayesian meter update"
+    ]
+  ],
+  "branch": "p3/energy-pred-model",
+  "model_sha256": "5fc21f8cdc8192c7635a1eb3223235cf95947813d9f52498fc537fd9401f600e",
+  "reproduce": [
+    "uv sync",
+    "curl -L -o data/raw/need/anon2025_4million.zip <NEED 4M URL>  &&  unzip it in data/raw/need/",
+    "uv run python -m greentwin.data.need",
+    "uv run python scripts/train_energy_prior.py --trials-lgb 20 --trials-xgb 12 --trials-ebm 10",
+    "uv run python scripts/train_energy_prior.py --fixed-params artifacts/m04_energy_prior/v2/config_round1.json --retune ebm --ebm-space wide --trials-ebm 8",
+    "uv run python scripts/bayes_energy_prior.py",
+    "uv run python scripts/diagnostics_energy_prior.py",
+    "uv run python scripts/proof_energy_prior.py",
+    "uv run python scripts/report_energy_prior.py && uv run python scripts/model_card_energy_prior.py",
+    "uv run python scripts/check_energy_prior.py && uv run pytest -q"
+  ]
+}

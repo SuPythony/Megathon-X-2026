@@ -131,7 +131,7 @@ def main():
                      for sh, p in showcase.items()},
         "config": {k: config[k] for k in ("split", "monotone", "imd_mask_frac", "floor_band_area_m2", "source")},
     }
-    for name in ("bayes.json", "showcase_bayes.json", "diagnostics.json"):  # Bayesian layer (scripts/bayes_energy_prior.py), optional
+    for name in ("bayes.json", "showcase_bayes.json", "diagnostics.json", "proof.json"):  # Bayesian layer (scripts/bayes_energy_prior.py), optional
         f = run / name
         data[name.split(".")[0]] = json.loads(f.read_text()) if f.exists() else None
     template = (ROOT / "scripts/report_energy_prior.html").read_text()
