@@ -4,7 +4,8 @@
 
 Writes artifacts/retrofit/v1/<SH>_retrofit.json (feasibility, ladder, improvement potential, rating after the
 recommended package, Pareto front with the knee for each goal) and metrics.json (seed, data version, Pareto vs greedy baseline).
-Engine "mock" in the provenance = stand-in physics: NOT for the demo until the real physics is on this branch.
+Samples are each home's Bayesian posterior (P2's SVI calibration on its 2025 meter readings, development weather).
+Engine "mock" in the provenance would mean the stand-in physics: never for the demo.
 """
 
 from __future__ import annotations
@@ -22,7 +23,6 @@ from greentwin.optimise.pareto import greedy_baseline, pareto  # noqa: E402
 from greentwin.retrofit.engine import RetrofitEngine  # noqa: E402
 from greentwin.retrofit.rules import assess  # noqa: E402
 from greentwin.score import GreenHomeScorer  # noqa: E402
-from greentwin.twin.simulate import prior_samples  # noqa: E402
 from greentwin.twin.twin import GreenDigitalTwin  # noqa: E402
 
 EX = ROOT / "contracts" / "examples"
@@ -37,7 +37,7 @@ def rng(d) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=500)
+    ap.add_argument("--n", type=int, default=256, help="posterior draws (the twin caps calibrated draws at 256)")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     homes = {}
@@ -46,13 +46,13 @@ def main() -> None:
         usage = [EnergyUsageMonth.model_validate(r) for r in json.loads((EX / f"{pid}_usage_2025.json").read_text())]
         homes[pid] = (prop, usage)
     engine = RetrofitEngine(usage={k: v[1] for k, v in homes.items()}, scorer=GreenHomeScorer(n_samples=1000))
-    twin = GreenDigitalTwin()
+    twin = GreenDigitalTwin(n_samples=args.n, seed=42)
     metrics = {"seed": engine.seed, "n_samples": args.n, "data_version": "showcase examples + synthetic weather",
-               "posterior": "prior_only (calibration not on main)", "homes": {}}
+               "posterior": "per-home SVI calibration (GreenDigitalTwin.calibrate)", "homes": {}}
 
-    for pid, (prop, _) in homes.items():
+    for pid, (prop, usage) in homes.items():
         t0 = time.time()
-        s = prior_samples(twin.params_from_property(prop), args.n, engine.seed)
+        calib, s = twin.calibrate(prop, usage, [])
         feas = assess(prop)
         base = engine.baseline(prop, s)
         steps = engine.ladder(prop, s, feas, "bills")
@@ -66,7 +66,7 @@ def main() -> None:
         front = [pt.model_dump(mode="json") for pt in res.points if pt.p_on_front >= 0.5 or pt.is_knee]
         knees = {g: list(k) if k is not None else None for g, k in res.knees.items()}
         out = {
-            "property_id": pid, "provenance": engine.provenance(args.n).model_dump(mode="json"),
+            "property_id": pid, "calibration": calib.model_dump(mode="json"), "provenance": engine.provenance(args.n).model_dump(mode="json"),
             "feasibility": feas.model_dump(mode="json"), "baseline": base.model_dump(mode="json"),
             "ladder": [x.model_dump(mode="json") for x in steps],
             "improvement_potential": pot.model_dump(mode="json"),
@@ -75,7 +75,7 @@ def main() -> None:
             "pareto": {"points": front, "knee_by_goal": knees, "excluded": res.excluded}, "warnings": engine.warnings.get(pid, []),
         }
         (OUT / f"{pid}_retrofit.json").write_text(json.dumps(out), encoding="utf-8")
-        metrics["homes"][pid] = {"seconds": round(time.time() - t0, 1), "pareto_vs_greedy": greedy,
+        metrics["homes"][pid] = {"calibration": calib.method, "n_samples": s.n_samples, "seconds": round(time.time() - t0, 1), "pareto_vs_greedy": greedy,
                                  "improvement_potential_median_pct": pot.pct.median if pot.pct else None}
 
         print(f"\n### {pid}: {prop.property_type.value}, {prop.construction_age_band}, SAP {prop.epc.sap_score}\n")

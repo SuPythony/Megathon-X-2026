@@ -1,15 +1,16 @@
 """Run the twin on many retrofit packages at once, then price, carbon-count and meter-anchor the results.
 
-Every package is ONE twin run on the whole package (never a sum). For speed, all packages that share a fuel
-configuration are stacked into a single ``jax.vmap`` call with a cached ``jit`` (R-08): the ladder, improvement
-potential and Pareto front then cost a few compiled calls instead of one compile per package.
+Every package is ONE twin run on the whole package (never a sum). For speed, packages that the twin's ``simulate``
+would treat identically (same fuel, PV/battery layer, standard-mode behaviour) are stacked into one ``simulate``
+call (R-08): the ladder, improvement potential and Pareto front then cost a few calls instead of one per package.
 
-Meter anchoring (R-07). Until the Bayesian calibration lands on ``main``, twin samples come from the prior and can
-sit far from the home's bills (SH1 gas: twin median ~25,000 vs metered ~15,000 kWh). When metered annual energy is
+Meter anchoring (R-07). Prior samples (no calibration) can sit far from the home's bills (SH1 gas on the stand-in
+physics: twin median ~25,000 vs metered ~15,000 kWh). When metered annual energy is
 available, each fuel's "after" is anchored to it: after_f = metered_f x twin_after_f / twin_base_f, per sample
 (electricity added by a fuel switch takes the heating fuel's ratio, see ``anchored``).
 The physics still decides the relative change, interactions included; the meter decides the level. With a
-calibrated posterior the ratio metered / twin_base is ~1 and the anchor changes little.
+calibrated posterior (``GreenDigitalTwin.calibrate``) the ratio metered / twin_base is ~1 and the anchor changes
+little; it then only removes the residual level error left by the fit.
 """
 
 from __future__ import annotations
@@ -20,16 +21,14 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional, Sequence
 
-import jax
-import jax.numpy as jnp
 import numpy as np
 
 from contracts.models import EnergyBreakdown, Property, RetrofitAction
 from contracts.summarise import summarise
 from greentwin.interfaces import PosteriorSamples, TwinRun
 from greentwin.twin.params import ExtendedTwinParams, fuel_config
-from greentwin.twin.physics_api import BEHAVIOUR_KEYS, ELEMENTS, MONTHLY_KEYS, TOTAL_KEYS, FuelConfig, get_run_physics
-from greentwin.twin.simulate import _input_keys
+from greentwin.twin.physics_api import BEHAVIOUR_KEYS, TOTAL_KEYS, FuelConfig, get_run_physics
+from greentwin.twin.simulate import _input_keys, _needs_electricity_layer, simulate
 from greentwin.twin.twin import retrofit_samples
 from greentwin.twin.weather import resolve_weather
 
@@ -72,12 +71,6 @@ def fuel_supported(prop: Property) -> bool:
 
 
 # --------------------------------------------------------------------------- batched twin runs
-@lru_cache(maxsize=None)
-def _compiled(mode: str, fuel: FuelConfig):
-    fn, _ = get_run_physics()
-    return jax.jit(jax.vmap(lambda p, w: fn(p, w, mode, fuel), in_axes=(0, None)))
-
-
 def engine_name() -> str:
     return get_run_physics()[1]
 
@@ -88,42 +81,53 @@ def _fuel(base) -> FuelConfig:
     return FuelConfig(heating_fuel=base.heating_fuel, hot_water_fuel=base.heating_fuel)
 
 
-def _package_params(samples: PosteriorSamples, mode: str) -> dict[str, np.ndarray]:
-    """Full parameter arrays for one (already retrofitted) sample set, honouring standard-mode behaviour."""
-    out = {}
-    for key in _input_keys(samples.base):
-        if (mode == "standard" and key in BEHAVIOUR_KEYS) or key not in samples.params:
-            out[key] = np.full(samples.n_samples, float(getattr(samples.base, key)), dtype=np.float32)
-        else:
-            out[key] = np.asarray(samples.params[key], dtype=np.float32)
-    return out
+ELEC_LAYER_KEYS = ("pv_kwp", "battery_kwh", "pv_azimuth_deg", "pv_tilt_deg", "battery_round_trip_efficiency")
+
+
+def _group_key(s: PosteriorSamples, mode: str) -> tuple:
+    """Packages can share one simulate call only if everything simulate reads from ``base`` (not per sample) agrees:
+    fuel config, input keys, the PV/battery electricity layer and, in standard mode, the behaviour values."""
+    key: tuple = (_fuel(s.base), tuple(_input_keys(s.base)), tuple(sorted(s.params)))
+    if _needs_electricity_layer(s):
+        key += ("elec",) + tuple(float(getattr(s.base, k, 0.0) or 0.0) for k in ELEC_LAYER_KEYS)
+    if mode == "standard":
+        key += tuple(float(getattr(s.base, k)) for k in BEHAVIOUR_KEYS)
+    return key
+
+
+def _concat(group: list[PosteriorSamples]) -> PosteriorSamples:
+    first = group[0]
+    params = {k: np.concatenate([np.asarray(g.params[k]) for g in group]) for k in first.params}
+    inputs = None
+    if first.inputs is not None:
+        inputs = {k: np.concatenate([np.asarray(g.inputs[k]) for g in group]) for k in first.inputs}
+    return PosteriorSamples(property_id=first.property_id, n_samples=first.n_samples * len(group), params=params,
+                            base=first.base, seed=first.seed, inputs=inputs)
 
 
 def run_packages(samples: PosteriorSamples, packages: Sequence[Sequence[RetrofitAction]],
                  mode: str = "calibrated") -> list[TwinRun]:
-    """One TwinRun per package, each the whole package re-simulated. Packages are batched by fuel config."""
+    """One TwinRun per package, each the whole package re-simulated through the twin's own ``simulate`` (so the
+    standard-mode rules, the PV/battery electricity layer and per-sample calibrated weather all apply). Packages
+    that ``simulate`` would treat identically apart from per-sample parameters share one call (R-08)."""
     weather, _ = resolve_weather(getattr(samples.base, "postcode_district", "UNKNOWN"))
-    w = {k: jnp.asarray(v) for k, v in weather.items()}
     n = samples.n_samples
     prepared = [retrofit_samples(samples, list(p)) for p in packages]
     groups: dict[tuple, list[int]] = {}
     for i, s in enumerate(prepared):
-        keys = tuple(_input_keys(s.base))
-        groups.setdefault((_fuel(s.base), keys), []).append(i)
+        groups.setdefault(_group_key(s, mode), []).append(i)
 
     runs: list[Optional[TwinRun]] = [None] * len(packages)
-    for (fuel, keys), idx in groups.items():
-        per = [_package_params(prepared[i], mode) for i in idx]
-        batch = {k: jnp.asarray(np.concatenate([p[k] for p in per])) for k in keys}
-        out = _compiled(mode, fuel)(batch, w)
-        out = {k: np.asarray(v) for k, v in out.items() if k != "element_heat_loss_w_per_k"} | {
-            "element_heat_loss_w_per_k": {k: np.asarray(v) for k, v in out.get("element_heat_loss_w_per_k", {}).items()}}
+    for idx in groups.values():
+        batch = _concat([prepared[i] for i in idx])
+        run, _ = simulate(batch, weather, _fuel(batch.base), mode)  # type: ignore[arg-type]
         for j, i in enumerate(idx):
             sl = slice(j * n, (j + 1) * n)
             runs[i] = TwinRun(
-                **{k: out[k][sl] for k in TOTAL_KEYS},
-                monthly_electricity_kwh=out[MONTHLY_KEYS[0]][sl], monthly_gas_kwh=out[MONTHLY_KEYS[1]][sl],
-                element_heat_loss_w_per_k={e: v[sl] for e, v in out["element_heat_loss_w_per_k"].items() if e in ELEMENTS},
+                **{k: np.asarray(getattr(run, k))[sl] for k in TOTAL_KEYS},
+                monthly_electricity_kwh=np.asarray(run.monthly_electricity_kwh)[sl],
+                monthly_gas_kwh=np.asarray(run.monthly_gas_kwh)[sl],
+                element_heat_loss_w_per_k={e: np.asarray(v)[sl] for e, v in run.element_heat_loss_w_per_k.items()},
             )
     return runs  # type: ignore[return-value]
 

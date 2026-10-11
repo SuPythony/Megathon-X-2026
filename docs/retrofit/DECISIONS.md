@@ -26,6 +26,9 @@ Branch: `p2/retrofit-engine` (from `main`). Design source: `LLD.pdf` §4.2 (`del
 | R-16 | Knee = furthest point above the cost–benefit chord on the 2-D median front (benefit = goal metric) | Decided (revised once) |
 | R-17 | Fix in `twin.retrofit_samples`: the controls retrofit shifts each sample's setpoint instead of overwriting it with one value | Fixed (Part 1 file; tell the owner) |
 | R-18 | Ladder leaves out the time-of-use tariff (changes bills not kWh, no sourced tariff) and keeps unsourced-cost items, which are capped at "optional" | Decided |
+| R-19 | After main gained P2's physics + calibration: `run_packages` delegates to the twin's own `simulate` (standard mode, PV/battery layer, per-sample weather) instead of re-implementing it; showcase uses `GreenDigitalTwin.calibrate` (SVI) | Decided (11 Oct 2026) |
+| R-20 | Twin fixes found on the calibrated posterior: retrofits never make a draw worse (U = min(draw, new); draught proofing cuts each draw's air changes); fixed draw values copied into `base` | Fixed (Part 1 files; tell the owner) |
+| R-21 | Twin fix: `simulate` splits draws by PV orientation, one electricity layer per roof face (SH1's posterior has two faces, and every PV run was NaN) | Fixed (Part 1 file; tell the owner) |
 
 ---
 
@@ -133,7 +136,29 @@ Order follows the groups in `feasibility_rules.json`; within a group, the item t
 ## R-17 Setpoint fix in the twin
 `retrofit_samples` replaced every sample's `setpoint_c` with `base − 0.5`, which removed the calibrated spread of the setpoint. It is now an additive shift, like the existing multiplicative rule for baseload and heating hours. This is a Part 1 file, so the owner needs to know.
 
-## Worked example (stand-in physics, prior samples, meter-anchored)
+## R-19 – R-21 Moving onto P2's physics and calibration
+**R-19 Delegate to `simulate`.** On main, `greentwin/twin/simulate.py` now does three things my batched runner skipped:
+- Sets SAP standard occupancy for `physics_l1`, which has no standard mode of its own.
+- Builds the PV/battery half-hourly layer.
+- Replays each draw's own calibrated monthly weather and schedules (`PosteriorSamples.inputs`).
+
+`run_packages` now calls `simulate` once per group of packages that it would treat alike: fuel config, keys, PV layer and standard-mode behaviour.
+- After calibration, the twin is within about 3% of the bills. SH1 gas: twin 16,010 vs metered 15,493 kWh. SH2 gas: 13,221 vs 12,792.
+- So the meter anchor (R-07) now only trims the small residual.
+
+**R-20 Retrofits never make a draw worse.** `retrofit_samples` set every draw of an edited field to one value. On the calibrated posterior this backfired:
+- Draught proofing *raised* SH1 gas from 16,010 to 16,805 kWh. The calibrated air-change draws sat below `base − 0.15`, so overwriting them with `base − 0.15` increased ventilation.
+- Cavity fill (U 0.55) raised use on newer walls.
+
+The fixes:
+- Air changes: each draw minus the same cut.
+- Fabric U: min(draw, new U).
+- `calibrate` copies values that P2 held fixed across draws into `base`. P2's fixed SH2 roof angles are 168°/28.7°, not the 180°/35° default.
+
+**R-21 PV orientation.** SH1's posterior samples its PV roof face per draw (186°/29° or 241°/47°). `simulate` built one shared PV layer from `base`, and `physics_l1` fails closed on a geometry mismatch, so every PV run on SH1 was NaN. `simulate` now splits draws by orientation, builds a layer per face and merges the runs back in draw order.
+
+## Worked example, first version (stand-in physics, prior samples, meter-anchored)
+**To regenerate:** `artifacts/retrofit/v1/` and this table still come from the stand-in physics (provenance `mock`, so they never reach the demo). Rerun `uv run python scripts/retrofit_showcase.py` on P2's physics with calibrated posteriors. It takes more than 10 minutes, because Pareto recompiles per package group.
 Reproduce with `uv run python scripts/retrofit_showcase.py`; the full tables are printed and written to `artifacts/retrofit/v1/`. These numbers come from engine `mock` (stand-in physics). They show the method, not results.
 
 | | SH1 Victorian terrace | SH2 1970s semi | SH3 electric flat |
