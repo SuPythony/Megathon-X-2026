@@ -186,10 +186,11 @@ Proposed (unconfirmed) items are returned separately, marked as unconfirmed. Not
 The `ToolCallRecord.name` literal in `contracts/models.py` is extended with the four new tool names (§10).
 
 ### 5.2 Loop (OpenAI Agents SDK on the Responses API)
-- **Models** from env: `LLM_MODEL` for answers (start with `gpt-6.1-sol`, the balanced model in the current
-  docs; `gpt-6-astra` for evaluation runs if budget allows) and `LLM_MODEL_FAST` for routing and memory
-  proposals (`gpt-6-luna`). Confirm the IDs with `client.models.list()` once the key works; never hard-code
-  them in code. Reasoning effort `low` for chat routes, raised only if evaluation shows a gain.
+- **Model:** `gpt-6-luna` for everything: answers, routing, memory proposals, Cognee `improve`, the optional
+  explanation check and evaluation runs (decision 11 Oct 2026). Set once as `LLM_MODEL=gpt-6-luna` in `.env`;
+  confirm the ID with `client.models.list()` once the key works; never hard-code it. Luna is the
+  cost-sensitive, high-volume model and is the only one offering reasoning effort `none`: use `none` for
+  routing and memory proposals, `low` for answers, and raise only if evaluation shows a gain.
 - **Agent:** one `Agent` with the §5.1 function tools and `output_type` = the explanation plan (§5.3). The
   validator (§5.4) runs as an **output guardrail**; a failure triggers one rerun with the failed claims named,
   then the template explainer.
