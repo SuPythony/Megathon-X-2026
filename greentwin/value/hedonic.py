@@ -48,6 +48,11 @@ def add_design_cols(df: pd.DataFrame) -> pd.DataFrame:
 def arrays(d: pd.DataFrame, enc: Encoding) -> dict[str, np.ndarray]:
     la_of_lsoa = None  # filled by the fitter
     out = {k: enc.codes(d[k], k) for k in ["rgn", "laua", "lsoa21", "rt", *CATS]}
+    # V-12: a sale year after the training data (e.g. 2024, or 'today' in the product) takes the LATEST fitted
+    # year's effect: prices are HPI-adjusted to the reference month, so the newest year is the closest market.
+    yl = enc.levels["year"]
+    late = d["year"].astype(str).to_numpy() > yl[-1]
+    out["year"] = np.where(late, len(yl) - 1, out["year"])
     out["lease"] = d["leasehold"].astype(float).to_numpy()
     out["new"] = d["new_build"].astype(float).to_numpy()
     out["log_tfa"] = (d["log_tfa"] - 4.5).to_numpy(float)

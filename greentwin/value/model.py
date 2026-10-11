@@ -47,15 +47,35 @@ class HedonicValueModel:
         self.version = version
         self.post = dict(np.load(d / "posterior.npz"))
         self.levels = json.loads((d / "encoding.json").read_text())
+        eff = d / "rating_effects.json"
+        self.effects = json.loads(eff.read_text()) if eff.exists() else None
         self.n, self.seed = n_samples, seed
 
-    def _beta(self, prop: Property, rng) -> np.ndarray:
+    def _beta_bayes(self, prop: Property, rng, n: int) -> np.ndarray:
+        """Bayesian hierarchical draws, per SAP point (log points)."""
         key = f"{REGION_CODE.get(prop.location.region, '')}|{ppd_type(prop)}"
         lv = self.levels["rt"]
         b = self.post["beta_rt"]
         col = lv.index(key) if key in lv else None
         draws = b[:, col] if col is not None else self.post["beta0"]  # unseen region x type -> pooled mean
-        return rng.choice(draws, size=self.n, replace=True)
+        return rng.choice(draws, size=n, replace=True) / SAP_SCALE
+
+    def _beta(self, prop: Property, rng) -> np.ndarray:
+        """V-13: triangulated rating effect. Each sample comes from one design (equal weights): OLS with LA effects,
+        within-neighbourhood cells, Bayesian hierarchical. The spread across designs is model uncertainty."""
+        if not self.effects:
+            return self._beta_bayes(prop, rng, self.n)
+        designs = self.effects["designs"]
+        names = list(designs)
+        w = np.array([self.effects["weights"][k] for k in names])
+        pick = rng.choice(len(names), size=self.n, p=w / w.sum())
+        out = np.empty(self.n)
+        for i, k in enumerate(names):
+            idx = np.flatnonzero(pick == i)
+            spec = designs[k]
+            out[idx] = (self._beta_bayes(prop, rng, len(idx)) if spec["type"] == "posterior"
+                        else rng.normal(spec["mean"], spec["sd"], len(idx)))
+        return out
 
     def value_impact(self, prop: Property, rating_after: Optional[RatingEstimate]) -> ValueImpact:
         rng = np.random.default_rng(self.seed)
@@ -72,8 +92,8 @@ class HedonicValueModel:
                                unavailable_reason="No recorded SAP rating, so the rating change is not anchored.")
         d_sap = from_distribution(rating_after.sap, self.n, rng) - sap_before
         beta = self._beta(prop, rng)
-        uplift = np.exp(beta * d_sap / SAP_SCALE) - 1
-        per_pt = (np.exp(beta / SAP_SCALE) - 1) * 100
+        uplift = np.exp(beta * d_sap) - 1          # beta is per SAP point (log points)
+        per_pt = (np.exp(beta) - 1) * 100
         tails = [("no clear increase (uplift <= 0)", 0.0, "below")]
         out = dict(
             current_value_gbp=cur, band_before=before, band_after=rating_after.band,

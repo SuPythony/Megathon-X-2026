@@ -1,0 +1,98 @@
+{
+  "version": "v1",
+  "seed": 42,
+  "n_test_eval": 50000,
+  "n_oot_eval": 8602,
+  "bayes": {
+    "test": {
+      "coverage_90": 0.8819,
+      "mean_width_90_log": 0.6286,
+      "pinball_mean": 0.04326,
+      "mae_log": 0.1568,
+      "median_ape_price": 0.1134,
+      "n": 50000
+    },
+    "out_of_time": {
+      "coverage_90": 0.8711,
+      "mean_width_90_log": 0.629,
+      "pinball_mean": 0.04641,
+      "mae_log": 0.1664,
+      "median_ape_price": 0.1179,
+      "n": 8602
+    }
+  },
+  "ols_without_sap": {
+    "test": {
+      "coverage_90": 0.8964,
+      "mean_width_90_log": 0.8723,
+      "pinball_mean": 0.05571,
+      "mae_log": 0.2073,
+      "median_ape_price": 0.1578,
+      "n": 50000
+    },
+    "out_of_time": {
+      "coverage_90": 0.8911,
+      "mean_width_90_log": 0.8723,
+      "pinball_mean": 0.05719,
+      "mae_log": 0.2091,
+      "median_ape_price": 0.1536,
+      "n": 8602
+    }
+  },
+  "ols_with_sap": {
+    "test": {
+      "coverage_90": 0.8964,
+      "mean_width_90_log": 0.8717,
+      "pinball_mean": 0.05569,
+      "mae_log": 0.2073,
+      "median_ape_price": 0.1577,
+      "n": 50000
+    },
+    "out_of_time": {
+      "coverage_90": 0.8915,
+      "mean_width_90_log": 0.8717,
+      "pinball_mean": 0.05729,
+      "mae_log": 0.2095,
+      "median_ape_price": 0.1536,
+      "n": 8602
+    },
+    "sap_coef_pct_per_point": 0.0764,
+    "sap_coef_log_per_point": 0.0007634158728235733,
+    "sap_coef_log_se": 6.23811154387719e-05
+  },
+  "lgbm_quantile": {
+    "test": {
+      "coverage_90": 0.8548,
+      "mean_width_90_log": 0.6539,
+      "pinball_mean": 0.04479,
+      "mae_log": 0.1665,
+      "median_ape_price": 0.1191,
+      "n": 50000
+    },
+    "out_of_time": {
+      "coverage_90": 0.8556,
+      "mean_width_90_log": 0.6737,
+      "pinball_mean": 0.04733,
+      "mae_log": 0.1737,
+      "median_ape_price": 0.1213,
+      "n": 8602
+    }
+  },
+  "within_cell": {
+    "cells": "LSOA x type/form x age band x sale year, >= 2 sales",
+    "n_sales": 224603,
+    "n_cells": 93720,
+    "sap_pct_per_point": 0.2053,
+    "sap_pct_per_point_boot_p5_p95": [
+      0.1908,
+      0.2151
+    ],
+    "implied_AB_vs_D_pct": 6.24
+  },
+  "repeat_sales": {
+    "n_pairs_total": 184107,
+    "n_pairs_sap_changed_same_area": 17850,
+    "sap_pct_per_point": 0.4832,
+    "median_d_sap": 4.0
+  }
+}

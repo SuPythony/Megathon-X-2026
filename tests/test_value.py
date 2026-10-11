@@ -52,6 +52,17 @@ def test_wording_label_and_current_value(fake_artifacts):
     assert abs(v.value_after_gbp.median / p.current_value_estimate_gbp - 1 - v.uplift_pct.median / 100) < 0.002
 
 
+def test_triangulated_mixture_spans_designs(fake_artifacts):
+    eff = {"designs": {"low": {"type": "normal", "mean": 0.0008, "sd": 1e-5},
+                       "high": {"type": "normal", "mean": 0.0025, "sd": 1e-5},
+                       "bayes": {"type": "posterior"}},
+           "weights": {"low": 1 / 3, "high": 1 / 3, "bayes": 1 / 3}}
+    (Path(fake_artifacts) / "rating_effects.json").write_text(json.dumps(eff))
+    v = HedonicValueModel(artifact_dir=fake_artifacts).value_impact(load("SH2"), rating(80, sd=0.01))  # dSAP 20
+    lo, hi = v.uplift_pct.interval(0.9).lo, v.uplift_pct.interval(0.9).hi
+    assert lo < 1.8 and hi > 4.5  # 0.08%/pt x 20 = 1.6% ... 0.25%/pt x 20 = 5.1%
+
+
 def test_no_change_no_uplift(fake_artifacts):
     p = load("SH2")
     v = HedonicValueModel(artifact_dir=fake_artifacts).value_impact(
