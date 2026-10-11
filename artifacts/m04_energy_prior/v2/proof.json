@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-11 04:54:08",
+  "generated_at": "2026-10-11 06:04:04",
   "data": {
     "publisher": "DESNZ, National Energy Efficiency Data-Framework (NEED) anonymised data 2025",
     "page": "https://www.gov.uk/government/statistics/national-energy-efficiency-data-framework-need-anonymised-data-2025",
@@ -54,7 +54,7 @@
   },
   "health_check": {
     "ok": true,
-    "checked_at": "2026-10-11 04:54:18",
+    "checked_at": "2026-10-11 06:04:20",
     "results": [
       {
         "check": "artefacts present",
@@ -81,26 +81,26 @@
       {
         "check": "contributions sum to prediction",
         "ok": true,
-        "detail": "max |sum - prediction| = 0.042 kWh/m2/yr (rounding to 0.01 per term)",
-        "seconds": 0.09
+        "detail": "max |sum - prediction| = 0.036 kWh/m2/yr (rounding to 0.01 per term)",
+        "seconds": 0.85
       },
       {
         "check": "physics monotonicity (showcase edits)",
         "ok": true,
         "detail": "8 physics edits, 0 violations",
-        "seconds": 0.06
+        "seconds": 1.09
       },
       {
         "check": "Bayesian update narrows prior",
         "ok": true,
-        "detail": "SH1 electricity sd -62%, SH1 gas sd -51%, SH2 electricity sd -68%, SH2 gas sd -59%, SH3 electricity sd -68%",
-        "seconds": 0.86
+        "detail": "SH1 electricity sd -61%, SH1 gas sd -51%, SH2 electricity sd -68%, SH2 gas sd -58%, SH3 electricity sd -72%",
+        "seconds": 1.46
       },
       {
         "check": "model quality thresholds",
         "ok": true,
         "detail": {
-          "electricity": "R2 0.285 (OLS 0.236), cover 0.898, PIT KS 0.0017",
+          "electricity": "R2 0.285 (OLS 0.236), cover 0.898, PIT KS 0.0021",
           "gas": "R2 0.182 (OLS 0.170), cover 0.899, PIT KS 0.0017"
         },
         "seconds": 0.0
@@ -115,13 +115,13 @@
         "check": "HTTP API round-trip",
         "ok": true,
         "detail": "POST /m04/energy-prior 200, health m04_energy_prior-v2",
-        "seconds": 0.26
+        "seconds": 0.58
       },
       {
         "check": "fresh re-score of held-out homes",
         "ok": true,
-        "detail": "seed 74656: electricity R2 0.277 (rec 0.285) cover 0.899, gas R2 0.178 (rec 0.182) cover 0.899",
-        "seconds": 3.1
+        "detail": "seed 78855: electricity R2 0.290 (rec 0.302) cover 0.898, gas R2 0.186 (rec 0.190) cover 0.900",
+        "seconds": 5.87
       }
     ]
   },
@@ -129,7 +129,7 @@
     "passed": 53,
     "skipped": 0,
     "failed": 0,
-    "summary": "53 passed in 7.76s",
+    "summary": "53 passed in 10.99s",
     "files": [
       "test_contracts.py",
       "test_distribution.py",
@@ -194,6 +194,14 @@
   },
   "commits": [
     [
+      "5240d83",
+      "M04 hybrid experiment: EBM + monotone LightGBM residual correction (not served: 19 gas EPC monotonicity violations)"
+    ],
+    [
+      "bf6f158",
+      "M04 report: proof and reproducibility section, contents nav"
+    ],
+    [
       "e587f45",
       "M04: HTTP router, deeper monitoring checks, usage docs"
     ],
@@ -207,7 +215,7 @@
     ]
   ],
   "branch": "p3/energy-pred-model",
-  "model_sha256": "5fc21f8cdc8192c7635a1eb3223235cf95947813d9f52498fc537fd9401f600e",
+  "model_sha256": "b97d801d7fb5ebc866ecba571d8d54f89e5cb608ad0356c529d2cd11ff384894",
   "reproduce": [
     "uv sync",
     "curl -L -o data/raw/need/anon2025_4million.zip <NEED 4M URL>  &&  unzip it in data/raw/need/",

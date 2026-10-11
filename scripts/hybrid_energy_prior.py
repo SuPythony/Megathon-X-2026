@@ -55,12 +55,16 @@ def main():
     ap.add_argument("--trials", type=int, default=8)
     ap.add_argument("--n-boot", type=int, default=1000)
     ap.add_argument("--serve", action="store_true", help="replace the served model if the hybrid passes every gate")
+    ap.add_argument("--from-saved", action="store_true", help="reuse the corrections in model_hybrid.pkl (no refit)")
     a = ap.parse_args()
     served = EnergyPriorModel.load(RUN / "model.pkl")
     cfg = json.loads((RUN / "config.json").read_text())
     rng = np.random.default_rng(SEED)
     hybrid = EnergyPriorModel(models=dict(served.models), residual_quantiles={}, metadata=dict(served.metadata),
                               corrections={})
+    saved = EnergyPriorModel.load(RUN / "model_hybrid.pkl") if a.from_saved else None
+    prev = json.loads((RUN / "hybrid.json").read_text()) if a.from_saved else {}
+    hybrid.metadata["hybrid"] = {"enforce_monotone": True}
     report = {"seed": SEED, "search_space": SPACE}
     for fuel in ("electricity", "gas"):
         t0 = time.time()
@@ -70,7 +74,10 @@ def main():
         tr_c, tu_c = cells(tr, fuel), cells(tu, fuel)
         ebm = served.models[fuel]
         trials, best = [], (np.inf, None, None)
-        for i, p in enumerate(ParameterSampler(SPACE, n_iter=a.trials, random_state=SEED)):
+        if saved is not None:  # reuse the fitted correction and its search history
+            best = (None, prev[fuel]["best_params"], saved.corrections[fuel])
+            trials = prev[fuel]["trials"]
+        for i, p in enumerate([] if saved is not None else ParameterSampler(SPACE, n_iter=a.trials, random_state=SEED)):
             booster, score = fit_correction(tr_c, tu_c, ebm, fuel, p)
             trials.append({**p, "tune_mae": score, "rounds": booster.best_iteration})
             print(f"  [{fuel}] trial {i} tune MAE {score:.3f} rounds {booster.best_iteration} {p}", flush=True)
@@ -130,7 +137,8 @@ def main():
         }
     report["gates"] = gates
     report["passed"] = all(all(g.values()) for g in gates.values())
-    hybrid.metadata["hybrid"] = {"kind": "EBM + monotone LightGBM residual correction",
+    hybrid.metadata["hybrid"] = {"kind": "EBM + monotone LightGBM residual correction (monotone envelope)",
+                                 "enforce_monotone": True,
                                  "params": {f: report[f]["best_params"] for f in ("electricity", "gas")}}
     hybrid.save(RUN / "model_hybrid.pkl")
     (RUN / "hybrid.json").write_text(json.dumps(report, indent=2, default=str))

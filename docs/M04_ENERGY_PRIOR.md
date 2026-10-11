@@ -99,15 +99,26 @@ Test homes: 627,118 · train 1,880,562 (70,018 unique feature cells) · tune 313
 - **Chosen hyperparameters:** LightGBM (monotone): num_leaves=255, min_sum_hessian_in_leaf=10, log_target=False, learning_rate=0.02, lambda_l2=10, feature_fraction=0.7; XGBoost (monotone): subsample=1.0, reg_lambda=10, min_child_weight=1000, max_depth=10, learning_rate=0.05; EBM (monotone): smoothing_rounds=200, min_samples_leaf=10, min_hessian=1.0, max_leaves=6, learning_rate=0.05, interactions=45.
 - **Penalty search (tune split):** Ridge (L2), one-hot α=0.001; Lasso (L1), one-hot α=1e-06; Polynomial deg-2 + Ridge α=100.
 
+## Served model: EBM + monotone LightGBM correction
+
+Prediction = every EBM term + one 'higher-order interactions (tree correction)' term from a LightGBM fitted to the EBM's residuals under the same monotone constraints, replaced by its monotone envelope so the constraint holds exactly. Gates (all must pass to serve): **passed**.
+
+| Fuel | EBM R² / MAE | Hybrid R² / MAE | LightGBM R² / MAE | Coverage | PIT KS | Violations | Mean |correction| |
+|---|---|---|---|---|---|---|---|
+| electricity | 0.285 / 19.00 | **0.302 / 18.67** | 0.302 / 18.67 | 89.8% | 0.0021 | 0 | 2.87 |
+| gas | 0.182 / 44.98 | **0.190 / 44.81** | 0.191 / 44.76 | 89.9% | 0.0017 | 0 | 3.68 |
+
+The EBM-only model is kept as `artifacts/m04_energy_prior/v2/model_ebm_only.pkl`. The 11-model ladder below reports the EBM component.
+
 ## Training diagnostics
 
-**electricity** — served EBM on each split: train R² 0.285 / MAE 19.01 (n=2,316,535), tune R² 0.285 / MAE 19.04 (n=385,928), cal R² 0.283 / MAE 19.03 (n=385,682), test R² 0.285 / MAE 19.00 (n=772,883).
+**electricity** — served EBM on each split: train R² 0.308 / MAE 18.62 (n=2,316,535), tune R² 0.302 / MAE 18.70 (n=385,928), cal R² 0.299 / MAE 18.71 (n=385,682), test R² 0.302 / MAE 18.67 (n=772,883).
 Learning curve (test R²): 5,000 homes → 0.2494, 20,000 homes → 0.2710, 100,000 homes → 0.2810, 400,000 homes → 0.2838, 2,316,535 homes → 0.2848.
-PIT max deviation from uniform 0.0017; reliability: 50% → 50.1%, 80% → 79.9%, 90% → 89.9%, 95% → 95.0%.
+PIT max deviation from uniform 0.0021; reliability: 50% → 50.1%, 80% → 80.0%, 90% → 89.9%, 95% → 95.0%.
 
-**gas** — served EBM on each split: train R² 0.182 / MAE 44.97 (n=1,880,562), tune R² 0.182 / MAE 44.89 (n=313,488), cal R² 0.183 / MAE 44.87 (n=313,293), test R² 0.182 / MAE 44.98 (n=627,118).
+**gas** — served EBM on each split: train R² 0.191 / MAE 44.73 (n=1,880,562), tune R² 0.189 / MAE 44.71 (n=313,488), cal R² 0.189 / MAE 44.69 (n=313,293), test R² 0.190 / MAE 44.81 (n=627,118).
 Learning curve (test R²): 5,000 homes → 0.1626, 20,000 homes → 0.1729, 100,000 homes → 0.1794, 400,000 homes → 0.1818, 1,880,562 homes → 0.1825.
-PIT max deviation from uniform 0.0017; reliability: 50% → 49.8%, 80% → 80.0%, 90% → 90.0%, 95% → 95.0%.
+PIT max deviation from uniform 0.0017; reliability: 50% → 49.9%, 80% → 80.0%, 90% → 90.0%, 95% → 95.0%.
 
 ## Bayesian update with a home's own meters
 
@@ -118,22 +129,22 @@ Posterior ∝ prior (M04 predictive) × likelihood of annual readings. Likelihoo
 | electricity | 1.78 | 0.130 | 2,060,220 | 0.408 (0.395–0.420) |
 | gas | 1.67 | 0.089 | 1,693,651 | 0.535 (0.522–0.545) |
 
-**electricity** — 20,000 held-out homes; median ESS 1250/4,000 (1 yr).
+**electricity** — 20,000 held-out homes; median ESS 1265/4,000 (1 yr).
 
 | Method | MAE | Median AE | 90% coverage | 90% width | CRPS |
 |---|---|---|---|---|---|
-| Prior only | 18.56 | 11.29 | 91.8% | 88.1 | 13.57 |
-| Posterior, 1 yr | 10.49 | 4.51 | 90.7% | 46.9 | 7.99 |
-| Posterior, 2 yrs | 10.22 | 4.63 | 88.4% | 41.4 | 7.76 |
+| Prior only | 18.35 | 11.14 | 91.8% | 87.2 | 13.43 |
+| Posterior, 1 yr | 10.50 | 4.53 | 90.6% | 46.8 | 7.99 |
+| Posterior, 2 yrs | 10.22 | 4.64 | 88.4% | 41.4 | 7.75 |
 | Persistence (2023 = 2022) | 10.80 | 4.78 | 90.6% | 54.1 | – |
 
-**gas** — 20,000 held-out homes; median ESS 1134/4,000 (1 yr).
+**gas** — 20,000 held-out homes; median ESS 1138/4,000 (1 yr).
 
 | Method | MAE | Median AE | 90% coverage | 90% width | CRPS |
 |---|---|---|---|---|---|
-| Prior only | 44.36 | 33.70 | 91.8% | 211.1 | 32.02 |
-| Posterior, 1 yr | 20.64 | 11.84 | 91.8% | 105.8 | 15.73 |
-| Posterior, 2 yrs | 22.14 | 12.98 | 88.2% | 96.9 | 16.69 |
+| Prior only | 44.21 | 33.41 | 91.9% | 210.4 | 31.91 |
+| Posterior, 1 yr | 20.64 | 11.82 | 91.7% | 105.7 | 15.73 |
+| Posterior, 2 yrs | 22.14 | 12.95 | 88.2% | 97.0 | 16.69 |
 | Persistence (2023 = 2022) | 20.61 | 11.92 | 90.5% | 108.8 | – |
 
 Assumptions (labelled): gas_weather_cv = 0.07 (assumption); imputed_month_relative_sd = 0.5 (assumption).
@@ -142,11 +153,11 @@ Assumptions (labelled): gas_weather_cv = 0.07 (assumption); imputed_month_relati
 
 | Home | Fuel | Metered | Prior mean / median / SD | Posterior mean / median / mode / SD | Posterior 90% CI | P(above peers) | SD ↓ |
 |---|---|---|---|---|---|---|---|
-| SH1 | electricity | 36.5 | 32.3 / 28.1 / 18.6 | 35.7 / 35.5 / 35.5 / 7.1 | 24.9–46.8 | 92% | 62% |
-| SH1 | gas | 183.8 | 128.6 / 120.4 / 61.6 | 174.2 / 176.0 / 179.7 / 30.2 | 122.3–218.8 | 97% | 51% |
-| SH2 | electricity | 35.8 | 37.7 / 33.0 / 21.4 | 36.0 / 35.5 / 35.1 / 7.0 | 26.1–47.0 | 80% | 67% |
-| SH2 | gas | 134.7 | 118.4 / 112.5 / 50.0 | 132.7 / 132.4 / 132.4 / 20.7 | 100.3–165.4 | 62% | 59% |
-| SH3 | electricity | 74.2 | 72.1 / 57.9 / 52.7 | 75.1 / 74.1 / 73.6 / 16.9 | 51.4–101.5 | 97% | 68% |
+| SH1 | electricity | 36.5 | 31.3 / 27.2 / 17.9 | 35.5 / 35.4 / 35.1 / 7.1 | 24.6–46.5 | 91% | 61% |
+| SH1 | gas | 183.8 | 129.0 / 120.8 / 61.5 | 174.3 / 175.8 / 178.4 / 30.2 | 122.5–219.0 | 97% | 51% |
+| SH2 | electricity | 35.8 | 38.0 / 33.2 / 21.4 | 36.0 / 35.6 / 35.4 / 7.0 | 26.2–47.1 | 80% | 67% |
+| SH2 | gas | 134.7 | 116.8 / 111.1 / 49.2 | 132.3 / 132.2 / 132.5 / 20.6 | 99.9–164.8 | 61% | 58% |
+| SH3 | electricity | 74.2 | 85.3 / 69.0 / 62.2 | 75.9 / 74.4 / 73.7 / 17.7 | 52.6–103.4 | 97% | 72% |
 | SH3 | gas | – | No mains gas supply: gas is structurally 0 (not missing data). | | | | |
 
 ## Using it

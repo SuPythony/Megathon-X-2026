@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from itertools import combinations
+from itertools import combinations, product
 from pathlib import Path
 from typing import Optional
 
@@ -46,6 +46,8 @@ MONOTONE = {
     "electricity": {"pv_flag": -1},
     "gas": {"epc_band": +1, "li_flag": -1, "cwi_flag": -1},
 }
+# Grid of each monotone feature's levels (for the hybrid correction's monotone envelope).
+MONO_GRID = {"epc_band": (1.0, 2.0, 3.0, 4.0, 5.0), "li_flag": (0.0, 1.0), "cwi_flag": (0.0, 1.0), "pv_flag": (0.0, 1.0)}
 # Conformal strata: residual spread differs a lot between flats/detached and gas/electric heating.
 STRATA = {"electricity": ["main_heat_fuel", "prop_type"], "gas": ["prop_type"]}
 FEATURE_LABELS = {
@@ -198,11 +200,50 @@ class EnergyPriorModel:
                      "metadata": self.metadata, "corrections": self.corrections}, path, compress=3)
 
     def correction(self, df: pd.DataFrame, fuel: str) -> np.ndarray:
-        """Higher-order interaction correction (kWh/m2/yr) from the residual booster; 0 if not hybrid."""
+        """Higher-order interaction correction (kWh/m2/yr) from the residual booster; 0 if not hybrid.
+
+        LightGBM's monotone constraints are not exact when trees also split on categorical features, so the raw
+        correction is replaced by its monotone envelope over the constrained features:
+            c*(x) = max { c(g) : g on the grid, g "below" x }
+        where "below" means lower for +1 features and higher for -1 features. The set grows as x moves in an
+        allowed direction, so c* is exactly monotone; c* >= c and differs only where c broke the constraint.
+        """
         booster = self.corrections.get(fuel)
         if booster is None:
             return np.zeros(len(df))
-        return booster.predict(tree_frame(df, fuel), num_iteration=booster.best_iteration or None)
+
+        def raw(d):
+            return booster.predict(tree_frame(d, fuel), num_iteration=booster.best_iteration or None)
+
+        mono = MONOTONE[fuel]
+        if not self.metadata.get("hybrid", {}).get("enforce_monotone", True) or not mono:
+            return raw(df)
+        feats = list(mono)
+        grid_vals = {f: (MONO_GRID[f]) for f in feats}
+        base = df.copy()
+        x = {f: base[f].astype(float).to_numpy() for f in feats}
+        out = np.full(len(df), -np.inf)
+        for combo in product(*(grid_vals[f] for f in feats)):
+            g = dict(zip(feats, combo))
+            # rows for which this grid point lies "below" the row's own point (a NaN level stays NaN)
+            ok = np.ones(len(df), bool)
+            for f in feats:
+                xf = x[f]
+                below = (g[f] <= xf) if mono[f] > 0 else (g[f] >= xf)
+                ok &= np.where(np.isnan(xf), True, below)  # NaN level: evaluated as NaN below
+            if not ok.any():
+                continue
+            d = base[ok].assign(**g)
+            for f in feats:
+                nan_rows = np.isnan(x[f][ok])
+                if nan_rows.any():
+                    d.loc[d.index[nan_rows], f] = np.nan
+            out[ok] = np.maximum(out[ok], raw(d))
+        # a row whose constrained features are all NaN has no grid point below it: use its raw correction
+        missing = ~np.isfinite(out)
+        if missing.any():
+            out[missing] = raw(base[missing])
+        return out
 
     def predict_point(self, df: pd.DataFrame, fuel: str) -> np.ndarray:
         """Point prediction (kWh/m2/yr) for a NEED-feature frame; floored at 1 so relative residuals apply."""

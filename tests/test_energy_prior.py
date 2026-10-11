@@ -53,7 +53,8 @@ def test_no_gas_supply_is_structural_zero(model):
 def test_contributions_sum_to_prediction(model, fuel):
     feats = property_to_features(_prop("SH2"))
     total = sum(c.contribution for c in model.contributions(feats, fuel))
-    assert total == pytest.approx(float(model.models[fuel].predict(prepare_frame(feats, fuel))[0]), abs=0.05)
+    expect = float(model.models[fuel].predict(prepare_frame(feats, fuel))[0]) + float(model.correction(feats, fuel)[0])
+    assert total == pytest.approx(expect, abs=0.1)  # EBM terms (+ hybrid correction term), each rounded to 0.01
 
 
 @needs_model

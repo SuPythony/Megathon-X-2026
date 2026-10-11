@@ -189,7 +189,9 @@ def main():
             lo, hi = interval_from_quantiles(yhat, keys, model.residual_quantiles[fuel])
             r2 = point_metrics(d.y.to_numpy(), yhat)["r2"]
             cov = float(np.mean((d.y >= lo) & (d.y <= hi)))
-            rec = m[fuel]["test"]["ebm"]["r2"]
+            hyb = RUN / "hybrid.json"  # served hybrid -> compare with the hybrid's recorded test R2
+            rec = (json.loads(hyb.read_text())[fuel]["test"]["hybrid"]["r2"] if model.corrections and hyb.exists()
+                   else m[fuel]["test"]["ebm"]["r2"])
             out[fuel] = (r2, cov, rec)
             if abs(r2 - rec) > 0.03 or not 0.875 <= cov <= 0.925:
                 return False, f"{fuel}: sample R2 {r2:.3f} vs recorded {rec:.3f}, coverage {cov:.3f} (seed {seed})"

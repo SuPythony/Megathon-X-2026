@@ -97,6 +97,21 @@ def main():
             w("- **Penalty search (tune split):** " + "; ".join(f"{names[k]} α={v['chosen_alpha']}" for k, v in ls.items()) + ".")
         w("")
 
+    hyb = json.loads((run / "hybrid.json").read_text()) if (run / "hybrid.json").exists() else None
+    if hyb:
+        w("## Served model: EBM + monotone LightGBM correction\n")
+        w("Prediction = every EBM term + one 'higher-order interactions (tree correction)' term from a LightGBM fitted "
+          "to the EBM's residuals under the same monotone constraints, replaced by its monotone envelope so the "
+          "constraint holds exactly. Gates (all must pass to serve): " + ("**passed**" if hyb["passed"] else "**not passed**") + ".\n")
+        w("| Fuel | EBM R² / MAE | Hybrid R² / MAE | LightGBM R² / MAE | Coverage | PIT KS | Violations | Mean |correction| |")
+        w("|---|---|---|---|---|---|---|---|")
+        for fuel in ("electricity", "gas"):
+            h, t = hyb[fuel], hyb[fuel]["test"]
+            w(f"| {fuel} | {f(t['ebm']['r2'])} / {f(t['ebm']['mae'], 2)} | **{f(t['hybrid']['r2'])} / {f(t['hybrid']['mae'], 2)}** | "
+              f"{f(t['lightgbm']['r2'])} / {f(t['lightgbm']['mae'], 2)} | {100 * h['interval_90']['coverage']:.1f}% | "
+              f"{f(h['pit_ks'], 4)} | {sum(v['violations'] for v in h['monotonicity'].values())} | {f(h['correction']['mean_abs'], 2)} |")
+        w("\nThe EBM-only model is kept as `artifacts/m04_energy_prior/v2/model_ebm_only.pkl`. The 11-model ladder "
+          "below reports the EBM component.\n")
     diag = json.loads((run / "diagnostics.json").read_text()) if (run / "diagnostics.json").exists() else None
     if diag:
         w("## Training diagnostics\n")

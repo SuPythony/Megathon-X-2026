@@ -89,7 +89,7 @@ footer { font-size: 12px; color: var(--muted); }
     <p class="lede" id="lede"></p>
     <div class="kpis" id="kpis"></div>
     <nav class="toc" aria-label="Contents">
-      <a href="#ladder">Model comparison</a><a href="#ceiling">Ceiling</a><a href="#fit">Fit</a><a href="#uncertainty">Uncertainty</a>
+      <a href="#ladder">Model comparison</a><a href="#hybrid">Served hybrid</a><a href="#ceiling">Ceiling</a><a href="#fit">Fit</a><a href="#uncertainty">Uncertainty</a>
       <a href="#explain">Explanations</a><a href="#local">Single homes</a><a href="#diag">Diagnostics</a><a href="#bayes">Bayesian update</a>
       <a href="#segments">Segments</a><a href="#tuning">Tuning</a><a href="#checks">Guarantees</a><a href="#proof">Proof</a><a href="#method">Method</a>
     </nav>
@@ -110,6 +110,13 @@ footer { font-size: 12px; color: var(--muted); }
         <div class="cap">Each bar is MAE(model) − MAE(EBM) on the same resampled homes. Right of zero means EBM is better; the whisker is the 95% interval.</div></div>
     </div>
     <div class="tablewrap"><table id="t-ladder"></table></div>
+  </section>
+
+  <section id="hybrid">
+    <h2>Served model: EBM plus a monotone tree correction</h2>
+    <p>The served model keeps every EBM term and adds one named term, a LightGBM correction fitted to the EBM's residuals under the same physics constraints. Because LightGBM's constraints are not exact when its trees split on categories, the correction is replaced by its monotone envelope, which makes the constraint hold exactly. The waterfall still sums to the prediction. The sections below the comparison describe the EBM component; the Bayesian update, diagnostics and showcase outputs use the served hybrid.</p>
+    <div class="tablewrap"><table id="t-hybrid"></table></div>
+    <div class="tablewrap"><table id="t-gates"></table></div>
   </section>
 
   <section id="ceiling">
@@ -626,6 +633,26 @@ function proof() {
   document.getElementById("cmds").textContent = P.reproduce.join("\n");
 }
 
+
+function hybrid(F) {
+  const H = D.hybrid, sec = document.getElementById("hybrid");
+  if (!H || !H[F.fuel]) { sec.hidden = true; return; }
+  const h = H[F.fuel], t = h.test, d = h.hybrid_vs;
+  document.getElementById("t-hybrid").innerHTML = `<thead><tr><th>Model</th><th>R²</th><th>MAE</th><th>RMSE</th><th>MdAPE</th><th>MAE vs hybrid (95% CI)</th></tr></thead><tbody>` +
+    [["ebm", "EBM alone"], ["hybrid", "Hybrid (served)"], ["lightgbm", "LightGBM alone"]].map(([k, n]) =>
+      `<tr class="${k === "hybrid" ? "hl" : ""}"><td>${n}</td><td>${f3(t[k].r2)}</td><td>${f2(t[k].mae)}</td><td>${f2(t[k].rmse)}</td><td>${f1(t[k].mdape_pct)}%</td>` +
+      `<td>${k === "hybrid" ? "–" : `${f2(d[k].mae_gain)} (${f2(d[k].mae_gain_ci95[0])} to ${f2(d[k].mae_gain_ci95[1])})`}</td></tr>`).join("") + "</tbody>";
+  const g = H.gates[F.fuel], lab = { beats_ebm_mae_ci: "More accurate than EBM (CI excludes 0)", zero_monotone_violations: "Zero physics violations",
+    coverage_88_92: "90% coverage within 88–92%", pit_ks_below_0_01: "Calibrated distribution (PIT)", "pit_ks_below_0.01": "Calibrated distribution (PIT)",
+    additive_waterfall: "Waterfall sums to prediction", single_equals_batch: "Same answer alone or in a batch" };
+  document.getElementById("t-gates").innerHTML = `<thead><tr><th>Gate</th><th>Result</th><th style="text-align:left">Evidence</th></tr></thead><tbody>` +
+    Object.entries(g).map(([k, ok]) => `<tr><td>${lab[k] || k}</td><td class="${ok ? "ok-t" : "bad-t"}">${ok ? "Pass" : "Fail"}</td><td style="text-align:left">${
+      k === "coverage_88_92" ? pct(h.interval_90.coverage) : k.startsWith("pit") ? f3(h.pit_ks) : k === "additive_waterfall" ? `max error ${f2(h.additivity_max_abs_err)}` :
+      k === "zero_monotone_violations" ? Object.entries(h.monotonicity).map(([f, v]) => `${f} ${v.violations}/${v.checked.toLocaleString()}`).join(", ") :
+      k === "single_equals_batch" ? `max difference ${h.single_vs_batch_max_diff}` : `MAE ${f2(d.ebm.mae_gain)} lower`}</td></tr>`).join("") +
+    `<tr><td>Correction size</td><td>–</td><td style="text-align:left">mean |correction| ${f2(h.correction.mean_abs)} kWh/m²/yr (${f1(h.correction.share_of_prediction_pct)}% of the prediction)</td></tr></tbody>`;
+}
+
 function segments(F) {
   const names = { prop_type: "Property type", age_band: "Age band", floor_band: "Floor band", region: "Region", epc_band: "EPC band" };
   const lab = { age_band: { "1": "pre-1930", "2": "1930-72", "3": "1973-99", "4": "2000+" },
@@ -686,7 +713,7 @@ function methodText() {
 function render() {
   const F = D.fuels[FUEL];
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.fuel === FUEL)));
-  ladder(F); ceiling(F); fit(F); uncertainty(F); explain(F); local(F); diag(F); bayes(F); segments(F); tuning(F); checks(F); methodText();
+  ladder(F); hybrid(F); ceiling(F); fit(F); uncertainty(F); explain(F); local(F); diag(F); bayes(F); segments(F); tuning(F); checks(F); methodText();
 }
 
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
