@@ -1,46 +1,61 @@
-"""The seam between the twin wrapper (Part 1, Satyarth) and the physics model (teammate).
+"""Satyarth-compatible, static equipment configuration for differentiable physics."""
 
-The physics owner writes ``run_physics`` in ``greentwin/twin/physics.py`` with the signature below. Until that file
-exists, ``get_run_physics()`` returns the stand-in from ``physics_stub.py``, so the whole pipeline already runs.
-Spec for the physics owner: ``docs/digitaltwinvariables.md``. How to plug in: ``docs/DIGITAL_TWIN_HANDOFF.md``.
-
-    run_physics(params: dict[str, jax.Array],    # one home, one sample: PHYSICS_PARAM_KEYS -> scalars
-                weather: dict[str, jax.Array],   # WEATHER_KEYS -> arrays of shape (n_months,)
-                mode: "calibrated" | "standard", # static
-                fuel: FuelConfig)                # static
-        -> dict[str, jax.Array]                  # OUTPUT_KEYS (+ element_heat_loss_w_per_k dict)
-
-Must be pure ``jax.numpy``, differentiable and ``jax.vmap``-able over ``params``.
-"""
-
-from __future__ import annotations
-
-import importlib
 from dataclasses import dataclass
-from typing import Callable, Literal
-
-FuelName = Literal["mains_gas", "electricity", "oil", "lpg", "solid", "district"]
 
 
 @dataclass(frozen=True)
 class FuelConfig:
-    """Static (not traced): the same for every posterior sample of a home."""
+    heating_fuel: str
+    hot_water_fuel: str
+    # None means same equipment as space heating. Explicit for immersion/independent DHW.
+    hot_water_efficiency: float | None = None
 
-    heating_fuel: FuelName
-    hot_water_fuel: FuelName
 
-
-# Numeric TwinParams fields passed to physics (property_id and tariff are not physics inputs).
-PHYSICS_PARAM_KEYS: tuple[str, ...] = (
-    "wall_area_m2", "roof_area_m2", "floor_area_m2", "window_area_m2", "door_area_m2", "party_wall_area_m2",
-    "wall_u", "roof_u", "floor_u", "window_u", "door_u", "thermal_bridging_y", "air_changes_per_hour", "volume_m3",
-    "heat_loss_multiplier", "setpoint_c", "heating_hours_per_day", "heating_efficiency", "hot_water_kwh_per_day",
-    "baseload_kwh_per_day", "lighting_share_of_baseload", "internal_gains_w", "solar_gain_factor", "pv_kwp",
-    "pv_azimuth_deg", "pv_tilt_deg", "battery_kwh",
+PHYSICS_PARAM_KEYS = (
+    "wall_area_m2",
+    "roof_area_m2",
+    "floor_area_m2",
+    "window_area_m2",
+    "door_area_m2",
+    "party_wall_area_m2",
+    "wall_u",
+    "roof_u",
+    "floor_u",
+    "window_u",
+    "door_u",
+    "thermal_bridging_y",
+    "air_changes_per_hour",
+    "volume_m3",
+    "heat_loss_multiplier",
+    "setpoint_c",
+    "heating_hours_per_day",
+    "heating_efficiency",
+    "hot_water_kwh_per_day",
+    "baseload_kwh_per_day",
+    "lighting_share_of_baseload",
+    "internal_gains_w",
+    "solar_gain_factor",
+    "pv_kwp",
+    "pv_azimuth_deg",
+    "pv_tilt_deg",
+    "battery_kwh",
 )
 
-# Extra numeric inputs from ExtendedTwinParams (Part 1): the hot-water system, separate from space heating.
-# Optional for run_physics: if a key is absent, use the defaults in brackets.
+
+def get_run_physics():
+    from greentwin.twin.physics import run_physics
+
+    return run_physics, "physics_l1"
+
+
+# --------------------------------------------------------------------------- twin wrapper (Part 1) additions
+# Added on merge so the twin wrapper, scenarios and the physics inputs package keep importing from this seam.
+# P2's definitions above are unchanged. Spec: docs/digitaltwinvariables.md; plug-in: docs/DIGITAL_TWIN_HANDOFF.md.
+from typing import Callable, Literal  # noqa: E402
+
+FuelName = Literal["mains_gas", "electricity", "oil", "lpg", "solid", "district"]
+
+# Extra numeric inputs from ExtendedTwinParams; optional for run_physics, defaults in brackets.
 EXTRA_PARAM_KEYS: tuple[str, ...] = (
     "hot_water_efficiency",                 # [heating_efficiency] delivered hot water / fuel, main DHW system
     "hot_water_standing_loss_kwh_per_day",  # [0] cylinder loss, extra useful heat the DHW system must supply
@@ -50,22 +65,20 @@ EXTRA_PARAM_KEYS: tuple[str, ...] = (
     "battery_round_trip_efficiency",        # [0.9] PV energy shifted through the battery loses (1 - this)
 )
 
-# Behaviour fields: in "standard" mode the wrapper passes the home's uncalibrated SAP-based values for these,
-# never the calibrated samples (the rating must not depend on how this household behaves).
+# Behaviour fields: in "standard" mode the wrapper passes the home's uncalibrated SAP-based values for these.
 BEHAVIOUR_KEYS: tuple[str, ...] = (
     "setpoint_c", "heating_hours_per_day", "hot_water_kwh_per_day", "baseload_kwh_per_day", "internal_gains_w",
 )
 
 WEATHER_KEYS: tuple[str, ...] = ("hdd_15_5", "mean_temp_c", "ghi_kwh_m2", "days_in_month", "month_of_year")
 
-# Monthly schedules, passed in the same time-series dict as the weather (shape (n_months,)). Optional: if absent,
-# use the defaults in brackets. Built from the user's appliance list (appliances.py), not calibrated.
+# Monthly schedules from the appliance list, passed with the weather (shape (n_months,)); defaults in brackets.
 SCHEDULE_KEYS: tuple[str, ...] = (
-    "appliance_month_factor",          # [1] baseload shape: monthly baseload = baseload_kwh_per_day x days x factor
-    "gains_month_factor",              # [1] internal gains shape: monthly gains = internal_gains_w x factor
-    "secondary_heating_kwh_monthly",   # [0] plug-in electric heaters: electricity, displaces main space heating
-    "extra_electricity_kwh_monthly",   # [0] outside the envelope (EV charger, hot tub): electricity, no gains
-    "extra_gas_kwh_monthly",           # [0] gas cooking: gas, gains already in internal_gains_w
+    "appliance_month_factor",          # [1] baseload shape
+    "gains_month_factor",              # [1] internal gains shape
+    "secondary_heating_kwh_monthly",   # [0] plug-in electric heaters
+    "extra_electricity_kwh_monthly",   # [0] outside the envelope (EV charger, hot tub)
+    "extra_gas_kwh_monthly",           # [0] gas cooking
 )
 
 TOTAL_KEYS: tuple[str, ...] = (
@@ -75,16 +88,3 @@ MONTHLY_KEYS: tuple[str, ...] = ("monthly_electricity_kwh", "monthly_gas_kwh")
 ELEMENTS: tuple[str, ...] = ("roof", "walls", "floor", "windows", "doors", "ventilation", "party_walls")
 
 RunPhysics = Callable[..., dict]
-
-
-def get_run_physics() -> tuple[RunPhysics, str]:
-    """The teammate's ``greentwin.twin.physics.run_physics`` if it exists, else the stub. Returns (fn, engine name)."""
-    try:
-        module = importlib.import_module("greentwin.twin.physics")
-        return module.run_physics, "physics"
-    except ModuleNotFoundError as e:
-        if e.name != "greentwin.twin.physics":
-            raise  # physics.py exists but one of its imports is missing: surface that, don't hide it
-        from greentwin.twin.physics_stub import run_physics
-
-        return run_physics, "physics_stub"

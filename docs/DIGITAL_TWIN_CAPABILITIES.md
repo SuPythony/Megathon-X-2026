@@ -8,10 +8,10 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 **Status legend:** ✅ built and tested · 🟡 built, runs on stand-in physics or unverified defaults · ⏳ needs another part ·
 ❌ not built.
 
-> **Honesty note.** Until the teammate's physics (`greentwin/twin/physics.py`) and the team's calibration land,
-> every energy number comes from a **stand-in physics model** with **synthetic weather** and **uncalibrated priors**.
-> Those results carry engine `physics_stub` (contract engine `mock`), are labelled in the UI, and must not be
-> presented as real. When the real model drops in, everything re-runs with no code changes.
+> **Honesty note.** The twin now runs P2's physics (`greentwin/twin/physics.py`, engine `physics_l1`): a monthly
+> steady-state heat balance with a half-hourly PV/battery layer. It is **uncalibrated**, uses **synthetic weather**,
+> and the PV/battery layer runs on **development-generated** half-hourly profiles. The precomputed demo city and
+> showcase scenes were built on the earlier stand-in (`physics_stub`, contract engine `mock`) until regenerated.
 
 ---
 
@@ -61,7 +61,7 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 
 | Capability | Status | Where |
 |---|---|---|
-| **Physics seam:** `run_physics(params, weather, mode, fuel)`. The teammate's `physics.py` is picked up automatically, else the stand-in | ✅ seam · 🟡 stand-in physics | `physics_api.py`, `physics_stub.py` |
+| **Physics seam:** `run_physics(params, weather, mode, fuel)`. P2's `physics.py` (physics_l1) is used; the wrapper prepares its half-hourly PV/battery inputs and supplies standard conditions (19 °C, 11 h) for the rating, since physics_l1 has no standard mode | ✅ | `physics_api.py`, `simulate.py` |
 | **Stand-in physics:** monthly heat balance with thermal mass (time constant, SAP gain utilisation, cooling while the heating is off), per-fuel energy, PV, hot water, schedules | 🟡 | `physics_stub.py` |
 | **Run every posterior sample at once** (`jax.vmap`); standard mode (SAP-style) for the rating | ✅ | `simulate.py` |
 | **Physics contract tests** any physics model must pass (outputs, balances, monotonicity, jit/vmap/grad) | ✅ | `tests/test_physics_contract.py` |
@@ -121,7 +121,7 @@ uv run pytest -q                                  # all tests
 
 ## 10. What would make the numbers real
 
-1. **Physics:** the teammate's `greentwin/twin/physics.py`. It's auto-detected; run `tests/test_physics_contract.py` against it.
+1. **Physics:** P2's `greentwin/twin/physics.py` is merged and used. Remaining gaps: no thermal mass, no standard mode (the wrapper supplies it), PV needs the electricity layer. Regenerate the demo city and scenes on it.
 2. **Calibration:** the team's Bayesian calibration on real meter readings, from the physics inputs package.
 3. **Data (Part 0):** EPC lookup by certificate number, real weather by district and month, EPC records for the city.
 4. **Sources:**

@@ -130,7 +130,10 @@ optional, with defaults, in `physics_api.py`):
 ## 3. For the physics owner
 
 **You write one function:** `run_physics(params, weather, mode, fuel)` in **`greentwin/twin/physics.py`**.
-`physics_api.get_run_physics()` picks it up automatically: no other file changes. Until then the stub runs.
+**Merged (P2, engine `physics_l1`).** `physics_api.get_run_physics()` returns it. The twin wrapper (`simulate.py`) adds
+what it needs: the half-hourly PV/battery inputs (`electricity_layer`, development-generated from the monthly weather)
+when any sample has PV or a battery, and standard conditions (19 °C, 11 h, run as `"calibrated"`) for the rating.
+The stub stays available as `simulate(..., run_physics=physics_stub.run_physics)`.
 
 - Inputs and outputs: `docs/digitaltwinvariables.md` sections 2–5. The key lists are in code in
   `greentwin/twin/physics_api.py`: `PHYSICS_PARAM_KEYS`, `WEATHER_KEYS`, `TOTAL_KEYS`, `MONTHLY_KEYS`, `ELEMENTS`.

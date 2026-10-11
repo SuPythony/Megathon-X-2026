@@ -118,15 +118,25 @@ def _loft_u(mm: int) -> float:
 
 
 def hot_water_fuel(prop: Property) -> str:
-    if prop.heating.hot_water == "electric_immersion":
+    if prop.heating.hot_water in ("electric_immersion", "heat_pump_cylinder"):
         return "electricity"
     return prop.heating.main_fuel
 
 
-def fuel_config(prop_or_params: Property | ExtendedTwinParams) -> FuelConfig:
+def fuel_config(prop_or_params: Property | ExtendedTwinParams, *,
+                hot_water_efficiency: Optional[float] = None) -> FuelConfig:
+    """Static fuel set-up for the physics. From a Property (P2 rule): an independent immersion is 1.0, a heat-pump
+    cylinder needs its own DHW COP passed in; otherwise None (same equipment as space heating)."""
     if isinstance(prop_or_params, ExtendedTwinParams):
-        return FuelConfig(heating_fuel=prop_or_params.heating_fuel, hot_water_fuel=prop_or_params.hot_water_fuel)
-    return FuelConfig(heating_fuel=prop_or_params.heating.main_fuel, hot_water_fuel=hot_water_fuel(prop_or_params))
+        return FuelConfig(heating_fuel=prop_or_params.heating_fuel, hot_water_fuel=prop_or_params.hot_water_fuel,
+                          hot_water_efficiency=hot_water_efficiency)
+    prop = prop_or_params
+    if prop.heating.hot_water == "heat_pump_cylinder" and hot_water_efficiency is None:
+        raise ValueError("A heat-pump cylinder requires an explicit hot_water_efficiency (DHW COP)")
+    if hot_water_efficiency is None and prop.heating.hot_water == "electric_immersion":
+        hot_water_efficiency = 1.0
+    return FuelConfig(heating_fuel=prop.heating.main_fuel, hot_water_fuel=hot_water_fuel(prop),
+                      hot_water_efficiency=hot_water_efficiency)
 
 
 def params_with_sources(
@@ -295,8 +305,10 @@ def params_with_sources(
         setpoint_c=round(behaviour.setpoint_c, 2), heating_hours_per_day=round(behaviour.heating_hours_per_day, 2),
         hot_water_kwh_per_day=hws.main_useful_kwh_per_day, baseload_kwh_per_day=round(baseload, 3),
         lighting_share_of_baseload=round(lighting_share, 3), internal_gains_w=round(internal_gains, 1),
-        pv_kwp=prop.renewables.pv_kwp, pv_azimuth_deg=prop.renewables.pv_azimuth_deg or 180.0,
-        pv_tilt_deg=prop.renewables.pv_tilt_deg or 35.0, battery_kwh=prop.renewables.battery_kwh,
+        pv_kwp=prop.renewables.pv_kwp,  # a recorded 0 degrees is kept (P2 fix): only missing angles default
+        pv_azimuth_deg=180.0 if prop.renewables.pv_azimuth_deg is None else prop.renewables.pv_azimuth_deg,
+        pv_tilt_deg=35.0 if prop.renewables.pv_tilt_deg is None else prop.renewables.pv_tilt_deg,
+        battery_kwh=prop.renewables.battery_kwh,
         hot_water_fuel=hws.fuel, hot_water_efficiency=hws.efficiency,
         hot_water_standing_loss_kwh_per_day=hws.standing_loss_kwh_per_day,
         shower_electric_kwh_per_day=hws.shower_electric_kwh_per_day, occupants=n,

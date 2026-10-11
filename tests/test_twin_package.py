@@ -177,7 +177,7 @@ def test_protocol_and_package_rerun(twin_and_samples):
     base = t.simulate(s, [])
     package = t.simulate(s, [RetrofitAction(retrofit_id="loft_insulation"), RetrofitAction(retrofit_id="draught_proofing")])
     assert package.gas_kwh.mean() < base.gas_kwh.mean()
-    assert t.last_engine in ("physics_stub", "physics")
+    assert t.last_engine in ("physics_stub", "physics_l1")
 
 
 def test_element_heat_loss_and_scene(twin_and_samples):

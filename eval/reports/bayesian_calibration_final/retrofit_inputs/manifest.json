@@ -1,0 +1,14 @@
+{
+  "version": "prepared-ensemble/0.1.0",
+  "property_id": "SH2",
+  "request_hash": "e8384019ea56321cd213bc9e7dd532d4b94617001ff60cd1db607487754b08ff",
+  "n_samples": 128,
+  "seed": 42,
+  "calibration_status": "performed",
+  "files": {
+    "request.json": "6c26e1e3433d52e352627febdfa8c90d11870bf9eb169c0fb5dbb7595634c5a9",
+    "priors.json": "baaad371f9114a9838a469e3a80f327b20fc4b5d4c49115ed985fd707253c239",
+    "inputs.json": "72fa0cd5cbadd2a974fa77f5e125f3556bb44bd8cb3163fc63a5d3f5fbdb5924",
+    "input_samples.npz": "7b6a859b55a9466483e360c5f2c1775dbbd0ae53ffdecf047ceea023cddcc8f2"
+  }
+}

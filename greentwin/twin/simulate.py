@@ -46,9 +46,10 @@ def _input_keys(base: TwinParams) -> list[str]:
 
 
 def prior_samples(base: TwinParams, n_samples: int = 1000, seed: int = 42,
-                  priors: Optional[dict[str, tuple[str, float, float]]] = None) -> PosteriorSamples:
-    """Samples from the prior. ``priors`` maps a key to (kind, a, b): 'lognormal' multiplies the base value by
-    lognormal(a, b); 'normal_add' adds normal(a, b). Defaults to PRIOR."""
+                  priors: Optional[dict[str, tuple]] = None) -> PosteriorSamples:
+    """Samples from the prior. ``priors`` maps a key to (kind, a, b) or (kind, a, b, lower, upper): 'lognormal'
+    multiplies the base value by lognormal(a, b); 'normal_add' adds normal(a, b). Bounds (None = open) are enforced
+    by clipping, so no sample leaves the physical range (e.g. a gas boiler above 100%). Defaults to PRIOR."""
     rng = np.random.default_rng(seed)
     table = PRIOR if priors is None else priors
     params: dict[str, np.ndarray] = {}
@@ -57,10 +58,17 @@ def prior_samples(base: TwinParams, n_samples: int = 1000, seed: int = 42,
         spec = table.get(key)
         if spec is None:
             params[key] = np.full(n_samples, v, dtype=np.float32)
-        elif spec[0] == "lognormal":
-            params[key] = (v * rng.lognormal(spec[1], spec[2], n_samples)).astype(np.float32)
+            continue
+        if spec[0] == "lognormal":
+            x = v * rng.lognormal(spec[1], spec[2], n_samples)
         else:
-            params[key] = (v + rng.normal(spec[1], spec[2], n_samples)).astype(np.float32)
+            x = v + rng.normal(spec[1], spec[2], n_samples)
+        lower, upper = (spec[3], spec[4]) if len(spec) >= 5 else (None, None)
+        if lower is not None or upper is not None:
+            x = np.clip(x, -np.inf if lower is None else lower, np.inf if upper is None else upper)
+        if key == "heating_efficiency" and getattr(base, "heating_fuel", "electricity") != "electricity":
+            x = np.minimum(x, 0.99)  # combustion: never above 100%, whichever prior table is used
+        params[key] = x.astype(np.float32)
     return PosteriorSamples(property_id=base.property_id, n_samples=n_samples, params=params, base=base, seed=seed)
 
 
@@ -77,14 +85,62 @@ def _batched_params(samples: PosteriorSamples, mode: str) -> dict[str, jnp.ndarr
     return out
 
 
+# Standard occupancy for the rating when the physics has no "standard" mode of its own (P2's physics_l1): the wrapper
+# fixes the behaviour (same values the stub uses) and runs it in its normal mode.
+STANDARD_SETPOINT_C, STANDARD_HEATING_HOURS = 19.0, 11.0
+
+
+def _months_from(moy: np.ndarray, start_year: int = 2025) -> list[str]:
+    """Chronological YYYY-MM for a run of month-of-year values (the year rolls over when the month goes back)."""
+    out, year, prev = [], start_year, 0
+    for m in (int(x) for x in moy):
+        if m <= prev:
+            year += 1
+        out.append(f"{year}-{m:02d}")
+        prev = m
+    return out
+
+
+def _needs_electricity_layer(samples: PosteriorSamples) -> bool:
+    for key in ("pv_kwp", "battery_kwh"):
+        if float(getattr(samples.base, key, 0.0) or 0.0) > 0 or np.any(np.asarray(samples.params.get(key, 0.0)) > 0):
+            return True
+    return False
+
+
+def electricity_layer(base: TwinParams, weather: dict[str, np.ndarray]) -> dict:
+    """P2's half-hourly PV/battery inputs, generated in development mode from the monthly weather and the home's PV
+    angles (labelled synthetic, not PVGIS). Prepared once per home and shared by every sample."""
+    from contracts.models import WeatherMonth
+    from greentwin.twin.electricity_inputs import prepare_electricity_inputs
+
+    months = _months_from(np.asarray(weather["month_of_year"]))
+    area = getattr(base, "postcode_district", None) or "UNKNOWN"
+    wm = [WeatherMonth(area_code=area, month=m, hdd_15_5=float(h), mean_temp_c=float(t), ghi_kwh_m2=float(g),
+                       source="synthetic")
+          for m, h, t, g in zip(months, weather["hdd_15_5"], weather["mean_temp_c"], weather["ghi_kwh_m2"])]
+    return prepare_electricity_inputs(base, wm, development=True).numeric_arrays()
+
+
 def simulate(samples: PosteriorSamples, weather: dict[str, np.ndarray], fuel: FuelConfig,
              mode: Literal["calibrated", "standard"] = "calibrated",
              run_physics: Optional[RunPhysics] = None) -> tuple[TwinRun, str]:
-    """Physics on every sample. Returns the ``TwinRun`` and the engine name ('physics' or 'physics_stub')."""
+    """Physics on every sample. Returns the ``TwinRun`` and the engine name ('physics_l1', 'physics_stub' or
+    'custom')."""
     fn, engine = (run_physics, "custom") if run_physics is not None else get_run_physics()
+    params = _batched_params(samples, mode)
     w = {k: jnp.asarray(v) for k, v in weather.items()}
-    batched = jax.jit(jax.vmap(lambda p: fn(p, w, mode, fuel)))
-    out = batched(_batched_params(samples, mode))
+    run_mode = mode
+    if engine not in ("physics_stub", "custom"):
+        if mode == "standard":
+            n = samples.n_samples
+            params["setpoint_c"] = jnp.full(n, STANDARD_SETPOINT_C, dtype=jnp.float32)
+            params["heating_hours_per_day"] = jnp.full(n, STANDARD_HEATING_HOURS, dtype=jnp.float32)
+            run_mode = "calibrated"  # P2 alias for "run these parameters as given"
+        if _needs_electricity_layer(samples):
+            w["electricity_inputs"] = jax.tree_util.tree_map(jnp.asarray, electricity_layer(samples.base, weather))
+    batched = jax.jit(jax.vmap(lambda p: fn(p, w, run_mode, fuel)))
+    out = batched(params)
 
     missing = [k for k in (*TOTAL_KEYS, *MONTHLY_KEYS) if k not in out]
     if missing:

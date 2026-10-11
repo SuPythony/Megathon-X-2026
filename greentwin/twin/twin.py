@@ -58,7 +58,7 @@ ELEMENT_FIELD = {"walls": "wall", "roof": "roof", "floor": "floor", "windows": "
 
 
 def provenance(engine: str, n_samples: int, seed: int = 42, data_version: str = "synthetic-weather") -> Provenance:
-    contract_engine = "physics_l1" if engine == "physics" else "mock"
+    contract_engine = "mock" if engine == "physics_stub" else "physics_l1"  # stand-in results are never real
     return Provenance(engine=contract_engine, model_version=f"{engine}/{MODEL_VERSION}", data_version=data_version,
                       seed=seed, n_samples=n_samples)
 

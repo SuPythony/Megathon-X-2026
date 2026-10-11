@@ -150,7 +150,7 @@ class PhysicsInputs(BaseModel):
     home: dict[str, str | float | int | None]
     params: ExtendedTwinParams
     sources: dict[str, str]
-    fuel: dict[str, str]
+    fuel: dict[str, Optional[str | float]] = Field(description="heating_fuel, hot_water_fuel, hot_water_efficiency")
     fabric: list[Element]
     ventilation: Ventilation
     heating_system: HeatingSystemInfo
@@ -174,7 +174,8 @@ class PhysicsInputs(BaseModel):
 
     # ---- helpers for running the physics from the package
     def fuel_config(self) -> FuelConfig:
-        return FuelConfig(heating_fuel=self.fuel["heating_fuel"], hot_water_fuel=self.fuel["hot_water_fuel"])
+        return FuelConfig(heating_fuel=self.fuel["heating_fuel"], hot_water_fuel=self.fuel["hot_water_fuel"],
+                          hot_water_efficiency=self.fuel.get("hot_water_efficiency"))
 
     def physics_params(self) -> dict[str, float]:
         keys = [*PHYSICS_PARAM_KEYS, *EXTRA_PARAM_KEYS]
@@ -186,8 +187,9 @@ class PhysicsInputs(BaseModel):
         return out
 
     def prior_table(self) -> dict[str, tuple[str, float, float]]:
-        """Priors in the form simulate.prior_samples takes; fixed answers are left out, so they stay at their value."""
-        return {p.param: (p.kind, p.mu, p.sigma) for p in self.priors if p.kind != "fixed"}
+        """Priors in the form simulate.prior_samples takes (with bounds); fixed answers are left out, so they stay at
+        their value."""
+        return {p.param: (p.kind, p.mu, p.sigma, p.lower, p.upper) for p in self.priors if p.kind != "fixed"}
 
 
 def _schedules(months: Sequence[str], summary: Optional[ApplianceSummary]) -> dict[str, list[float]]:
@@ -244,7 +246,9 @@ def _priors(params: ExtendedTwinParams, sources: dict[str, str], household: dict
               rationale=("From the appliance list, width by how complete the customer said it is" if has_appliances
                          else "SAP default") + ("" if lighting_known else "; lighting share not known, wider")),
         Prior(param="heating_efficiency", kind="lognormal", mu=0.0, sigma=0.07, base=params.heating_efficiency,
-              rationale="Tight: confounded with heat_loss_multiplier on gas data alone"),
+              lower=0.3, upper=0.99 if params.heating_fuel != "electricity" else None,
+              rationale="Tight: confounded with heat_loss_multiplier on gas data alone; a combustion system stays "
+                        "below 100%"),
         Prior(param="hot_water_kwh_per_day", kind="lognormal", mu=0.0, sigma=0.2 if occupants_given else 0.35,
               base=params.hot_water_kwh_per_day,
               rationale="SAP demand for " + ("the stated number of occupants (fixed); use per person still varies"
@@ -505,7 +509,7 @@ def build_physics_inputs(
               "floor_area_m2": prop.floor_area_m2, "storeys": prop.storeys,
               "epc_rrn": intake.epc_rrn if intake else None},
         params=params, sources=sources,
-        fuel=fuel_config(params).__dict__,
+        fuel=fuel_config(params, hot_water_efficiency=params.hot_water_efficiency).__dict__,
         fabric=fabric, ventilation=vent,
         heating_system=HeatingSystemInfo(system=prop.heating.main_system.value, fuel=prop.heating.main_fuel,
                                          efficiency=params.heating_efficiency, source=sources["heating_efficiency"]),

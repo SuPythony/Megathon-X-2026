@@ -1,0 +1,191 @@
+{
+  "property_id": "SH2",
+  "property": {
+    "schema_version": "0.4.0",
+    "property_id": "SH2",
+    "customer_id": "C-SH2",
+    "source": "showcase",
+    "split": null,
+    "location": {
+      "postcode_district": "BS16",
+      "lsoa_code": null,
+      "local_authority": "South Gloucestershire",
+      "local_authority_code": "E06000025",
+      "region": "South West",
+      "lat": 51.487,
+      "lon": -2.512,
+      "altitude_m": 60.0
+    },
+    "property_type": "house",
+    "built_form": "semi_detached",
+    "construction_age_band": "1967-1975",
+    "year_built": 1972,
+    "storeys": 2,
+    "floor_area_m2": 95.0,
+    "habitable_rooms": 5,
+    "bedrooms": 3,
+    "tenure": "owner_occupied",
+    "epc": {
+      "current_band": "D",
+      "sap_score": 60,
+      "lodgement_date": "2021-11-02",
+      "potential_band": null,
+      "potential_sap_score": null,
+      "estimated_annual_energy_cost_gbp": null,
+      "energy_consumption_kwh_m2": null
+    },
+    "walls": {
+      "type": "cavity",
+      "insulation": "none",
+      "u_value": null
+    },
+    "roof": {
+      "type": "pitched_loft",
+      "loft_insulation_mm": 100,
+      "u_value": null
+    },
+    "floor": {
+      "type": "solid",
+      "insulated": false,
+      "u_value": null
+    },
+    "glazing": [
+      {
+        "type": "double_pre_2002",
+        "share_pct": 100.0,
+        "window_to_floor_ratio": null
+      }
+    ],
+    "draught_proofed_pct": 70.0,
+    "low_energy_lighting_pct": null,
+    "heating": {
+      "main_system": "gas_boiler_condensing",
+      "main_fuel": "mains_gas",
+      "system_age_years": 13,
+      "seasonal_efficiency": null,
+      "hot_water": "from_main",
+      "cylinder_insulated": null
+    },
+    "renewables": {
+      "pv_kwp": 0.0,
+      "pv_azimuth_deg": null,
+      "pv_tilt_deg": null,
+      "battery_kwh": 0.0,
+      "solar_thermal": false
+    },
+    "controls": [
+      "programmer",
+      "room_thermostat"
+    ],
+    "constraints": {
+      "conservation_area": false,
+      "listed_building": false,
+      "leasehold": false,
+      "has_outdoor_space": true,
+      "roof_access": true,
+      "best_roof_azimuth_deg": 165.0,
+      "off_gas_grid": false,
+      "floor_level": null,
+      "free_text_notes": []
+    },
+    "current_value_estimate_gbp": 325000.0,
+    "value_estimate_date": "2026-09-30",
+    "data_quality": {
+      "missing_fields": [],
+      "imputed_fields": [],
+      "conflicts": [],
+      "months_of_metered_data": 12
+    }
+  },
+  "physics_package": null,
+  "user_inputs": {
+    "occupants": 4,
+    "daytime_occupancy": "part_day",
+    "thermostat_c": 20,
+    "heating_hours_per_day": 8,
+    "heating_efficiency": 0.9,
+    "baseload_kwh_per_day": 7,
+    "hot_water_kwh_per_day": 6,
+    "cooking_fuel": "mains_gas",
+    "gas_cooking_kwh_per_day": 1,
+    "cylinder_present": false,
+    "retained_electric_heat_fraction": 0.85,
+    "baseload_multiplier": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "hot_water_multiplier": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "monthly_temperature_c": [
+      4,
+      5,
+      7,
+      10,
+      13,
+      17,
+      19,
+      18,
+      15,
+      11,
+      7,
+      4
+    ],
+    "monthly_ghi_kwh_m2": [
+      18,
+      30,
+      65,
+      100,
+      135,
+      150,
+      145,
+      120,
+      85,
+      45,
+      22,
+      15
+    ]
+  },
+  "months": [
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10",
+    "2025-11",
+    "2025-12"
+  ],
+  "weather": [],
+  "electricity_series": null,
+  "context": [],
+  "as_of_year": 2026,
+  "seed": 42,
+  "data_version": "bayesian-controlled-example/0.1",
+  "allow_development_weather": true
+}

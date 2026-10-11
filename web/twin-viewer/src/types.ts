@@ -116,7 +116,7 @@ export interface RoomEnergyView {
 }
 
 export interface EnergyOverlay {
-  engine: string // 'physics' or 'physics_stub' (stand-in, never real results)
+  engine: string // 'physics_l1' (P2 physics) or 'physics_stub' (stand-in, never real results)
   calibrated: boolean
   weather_source: string
   rooms: RoomEnergyView[]

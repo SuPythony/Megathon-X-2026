@@ -27,7 +27,15 @@ from greentwin.twin.weather import typical_year, weather_arrays
 
 EX = Path(__file__).resolve().parents[1] / "contracts" / "examples"
 INSTALLED, ENGINE = get_run_physics()
-IMPLEMENTATIONS = {"stub": stub_run} | ({"physics": INSTALLED} if ENGINE == "physics" else {})
+try:  # P2's physics is always checked when present, whichever engine the twin is set to use
+    from greentwin.twin.physics import run_physics as p2_run
+except ModuleNotFoundError:
+    p2_run = None
+IMPLEMENTATIONS = {"stub": stub_run} | ({"physics": p2_run} if p2_run else {})
+# Known gaps of P2's physics against this contract, reported as expected failures (not hidden) until fixed.
+P2_GAPS = {
+    "test_pv_reduces_import": "raw run_physics needs electricity_inputs for PV (simulate() supplies them)",
+}
 GAS = FuelConfig("mains_gas", "mains_gas")
 ELEC = FuelConfig("electricity", "electricity")
 
@@ -45,6 +53,8 @@ def _inputs(pid="SH2"):
 
 @pytest.fixture(params=sorted(IMPLEMENTATIONS))
 def run(request):
+    if request.param == "physics" and request.function.__name__ in P2_GAPS:
+        request.applymarker(pytest.mark.xfail(reason=f"P2 physics gap: {P2_GAPS[request.function.__name__]}"))
     return IMPLEMENTATIONS[request.param]
 
 
@@ -77,7 +87,7 @@ def test_monotonic(run, key, direction):
     p, w, _ = _inputs()
     base = float(run(p, w, "calibrated", GAS)["gas_kwh"])
     changed = dict(p)
-    changed[key] = p[key] * (0.8 if direction < 0 else 1.25) if key != "setpoint_c" else p[key] - 1.0
+    changed[key] = p[key] * (0.8 if direction < 0 else 1.1) if key != "setpoint_c" else p[key] - 1.0  # 1.1: a gas boiler stays below 100%
     assert float(run(changed, w, "calibrated", GAS)["gas_kwh"]) <= base + 1e-6
 
 

@@ -1,0 +1,10 @@
+{
+  "version": "calibration-artifact/0.1.0",
+  "calibration_id": "e7c7d9b664cfa1364579e752fc35cb31b13581b68fbb64371e822a612de486ac",
+  "files": {
+    "calibration.json": "3ad580d8de527364d052abba7c096ada71eb75883503bbe0e83b26c984a0d5e0",
+    "shared_calibration.json": "e1c0b371cb54ff2b96d8c1017a65f575f49bf1bda952e02073eb8eeec8995eca",
+    "posterior_samples.npz": "f3c4c1370f4a8c48086b769ca026a30a8f64c78623ba91a153f5f5a0edde96f1",
+    "nuisance_inputs/manifest.json": "0a762155cdbe1d2d1b65496a8236f2ea2120787b2c9938407d84f4b0e81cdf93"
+  }
+}
