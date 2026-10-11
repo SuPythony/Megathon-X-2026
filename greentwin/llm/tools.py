@@ -133,14 +133,53 @@ def get_energy_prior(property_id: str, include_meter_update: bool) -> dict:
     return out
 
 
+def _num(d) -> dict | None:
+    """A Distribution as the numbers the LLM may quote: median, 90% range, unit, and the chance of an increase."""
+    if d is None:
+        return None
+    ci = d.interval(0.9)
+    out = {"unit": d.unit, "median": round(d.median, 1), "range_90": [round(ci.lo, 1), round(ci.hi, 1)]}
+    for t in d.tail_probabilities or []:
+        out.setdefault("tail_probabilities", {})[t.label] = round(t.probability, 2)
+    return out
+
+
 def run_scenario(property_id: str, retrofit_ids: list[str]) -> dict:
-    p = _prop(property_id)
+    """Rerun the calibrated twin on the whole package (ONE run, never summed) via the orchestrator."""
+    from greentwin.api import orchestrator
+
+    try:
+        p = orchestrator.load_property(property_id)  # showcase examples first, then the knowledge base
+    except KeyError as e:
+        return {"status": "unavailable", "reason": str(e)}
     feas = {f.retrofit_id: f for f in assess(p).items}
-    return {"status": "unavailable",
-            "reason": "The physics scenario engine (digital twin) is not connected yet, so savings, bills and carbon "
-                      "for this package cannot be computed. No estimate is given instead.",
-            "feasibility": {r: {"status": feas[r].status, "reasons": feas[r].reasons} if r in feas
-                            else {"status": "unknown retrofit_id"} for r in retrofit_ids}}
+    feasibility = {r: {"status": feas[r].status, "reasons": feas[r].reasons} if r in feas
+                   else {"status": "unknown retrofit_id"} for r in retrofit_ids}
+    try:
+        res = orchestrator.default().run_scenario(orchestrator.spec_for(property_id, retrofit_ids, requested_by="llm",
+                                                                         include_pareto=False))
+    except Exception as e:  # noqa: BLE001 - never guess a number instead
+        return {"status": "unavailable", "reason": f"The physics scenario engine could not run this package: {e}. "
+                                                   "No estimate is given instead.", "feasibility": feasibility}
+    if res.provenance.engine == "mock":
+        return {"status": "unavailable", "reason": "Only the stand-in physics is available; its numbers are not shown.",
+                "feasibility": feasibility}
+    return {
+        "status": "ok", "scenario_id": res.scenario_id, "engine": res.provenance.engine,
+        "package": retrofit_ids, "feasibility": feasibility,
+        "electricity_saving_kwh_per_yr": _num(res.electricity_saving_kwh), "gas_saving_kwh_per_yr": _num(res.gas_saving_kwh),
+        "purchased_energy_saving_kwh_per_yr": _num(res.purchased_energy_saving_kwh),
+        "bill_saving_gbp_per_yr": _num(res.bill_saving_gbp), "carbon_saving_kgco2e_per_yr": _num(res.carbon_saving_kgco2e),
+        "carbon_unavailable_reason": res.carbon_unavailable_reason,
+        "score_before": res.score_before.score, "score_after_projected": res.score_after.score,
+        "rating_after": ({"sap": _num(res.rating_after.sap), "band": res.rating_after.band,
+                          "label": "estimated rating, not an EPC"} if res.rating_after else None),
+        "value": {"uplift_pct": _num(res.value.uplift_pct), "wording": res.value.wording,
+                  "unavailable_reason": res.value.unavailable_reason},
+        "notes": ["Savings are baseline minus after, per fuel; negative means that fuel's use rises.",
+                  "The package is one rerun of the twin, so interactions between measures are included."],
+        "warnings": res.warnings[:8],
+    }
 
 
 def rank_recommendations(property_id: str, customer_id: str | None) -> dict:

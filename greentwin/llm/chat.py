@@ -119,7 +119,7 @@ def template_answer(req: ChatRequest) -> tuple[str, list, list]:
     if rk.get("recommendations"):
         top = ", ".join(r["name"] for r in rk["recommendations"][:3])
         lines.append(f"- Recommended first steps (fabric first, feasible for this home): {top}.")
-    lines.append("- Savings for specific packages need the physics scenario engine, which is not connected yet.")
+    lines.append("- Savings for a specific package: ask a what-if; each one reruns the calibrated physics twin (run_scenario).")
     return "\n".join(lines), ev, calls
 
 

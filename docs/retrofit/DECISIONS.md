@@ -29,6 +29,13 @@ Branch: `p2/retrofit-engine` (from `main`). Design source: `LLD.pdf` §4.2 (`del
 | R-19 | After main gained P2's physics + calibration: `run_packages` delegates to the twin's own `simulate` (standard mode, PV/battery layer, per-sample weather) instead of re-implementing it; showcase uses `GreenDigitalTwin.calibrate` (SVI) | Decided (11 Oct 2026) |
 | R-20 | Twin fixes found on the calibrated posterior: retrofits never make a draw worse (U = min(draw, new); draught proofing cuts each draw's air changes); fixed draw values copied into `base` | Fixed (Part 1 files; tell the owner) |
 | R-21 | Twin fix: `simulate` splits draws by PV orientation, one electricity layer per roof face (SH1's posterior has two faces, and every PV run was NaN) | Fixed (Part 1 file; tell the owner) |
+| R-22 | Staging: DP over done-sets, year by year; yearly budget + (optionally) reinvested bill savings; `depends_on` within the package respected; minimise savings lost while waiting | Decided (11 Oct 2026) |
+| R-23 | Pareto reference-point mode: hard targets met with P ≥ 0.5 over paired samples; best goal saving, then cheapest; nothing relaxed; closest package reported when none qualifies | Decided |
+| R-24 | Memory re-rank: orders the packages with P(on front) > 0 by weighted normalised objectives (weights from memory goals) + 0.3 × (acceptance − 0.5); never adds/removes a package | Decided |
+| R-25 | Baselines: greedy bill-per-£ and CO2-only (max median carbon in budget); hypervolume of the in-budget median front vs each baseline (Monte Carlo, normalised 4-D box) | Decided |
+| R-26 | Relevance: one EBM per measure on real EPC certificates + assessor recommendations (2025, hashed 2% sample); rules-only baseline; ranks, never vetoes | Decided |
+| R-27 | Orchestrator `greentwin/api/orchestrator.py`: `run_scenario` assembles `ScenarioResult` from the parts; `plan()` adds staging, Pareto modes, baselines, relevance; cached in memory + `cache/scenarios` | Decided |
+| R-28 | Ranking check: synthetic city homes, prior-draw truth, noisy meters → calibrate → potential; Spearman/NDCG vs generator-rule labels, baseline "rank by total kWh"; `p_top_decile` from the posterior | Decided |
 
 ---
 
@@ -157,6 +164,59 @@ The fixes:
 
 **R-21 PV orientation.** SH1's posterior samples its PV roof face per draw (186°/29° or 241°/47°). `simulate` built one shared PV layer from `base`, and `physics_l1` fails closed on a geometry mismatch, so every PV run on SH1 was NaN. `simulate` now splits draws by orientation, builds a layer per face and merges the runs back in draw order.
 
+## R-22 Staging by dependencies and cash flow
+`greentwin/optimise/staging.py`. The ladder gives the steps (recommended and optional, with a sourced cost); the household sets aside a budget each year, and bill savings from finished work go back into the pot when `reinvest` is on.
+- **State:** the set of steps already done. Each year any subset of the rest can be installed if the pot covers its median net cost and every `depends_on` step in the package is done or installed that year.
+- **Objective:** savings lost while waiting = Σ over years of the annual saving of the steps not yet installed. Tie-break: more cash left.
+- **Exactness:** labels (lost, cash) are kept only when not dominated, so the search is exact for this objective. A stage's saving is the sum of ladder marginals: exact in ladder order, an approximation when the plan reorders steps (stated in every result). The package itself is still one twin run.
+- **Left out, with a reason:** `needs_survey`, `not_worth_adding`, unsourced cost (can't be cash-planned).
+- **Proof:** `tests/test_retrofit_plan.py`: every stage's cost ≤ its pot; heat pump never before the fabric it depends on; reinvesting is never slower.
+
+## R-23 – R-25 Pareto modes and baselines
+- **Reference point (R-23):** e.g. "≥ 2 t CO2, ≤ £10k". Each package's P(meets every target) uses the same paired cost/saving samples as P(on front). Qualifying packages (P ≥ 0.5) are ranked by median goal saving, then cost. If none qualifies, the closest package and its probability are returned; targets are never relaxed.
+- **Memory re-rank (R-24):** customer-memory goals (`bills`, `carbon`, …) raise the weight of the matching objective; acceptance scores (the memory service's Beta posterior) nudge by at most ±0.15. Only packages that can be on the front are ordered, so the hard constraints and the front itself don't change.
+- **Baselines (R-25):** greedy bill-saving-per-£ (existing) and a CO2-only optimiser (largest median carbon cut in budget). Hypervolume: share of the normalised box [0, budget] × [0, max saving]³ dominated by the median points, 200k Monte Carlo points, seed 42. The front's hypervolume is ≥ any single baseline package by construction; the report shows how much more.
+
+## R-26 Relevance model (assessor recommendations)
+`greentwin/models/relevance.py`, `scripts/epc_recs_extract.py`, `scripts/train_relevance.py`.
+- **Data:** the EPC bulk zip read over HTTP Range; certificates-2025 and recommendations-2025 filtered on the same certificate-number hash (2%), so each kept certificate has all its recommendations.
+- **Labels:** `improvement_summary_text` → catalogue ids by documented regexes ("internal or external wall insulation" labels both IWI and EWI). Unmapped texts are counted in `metrics.json`.
+- **Features:** only what the certificate records (element sub-scores parsed by `greentwin/score/epc_features`, heating, glazing, controls, lighting, PV, SAP, form, age, floor area). No `potential_*` fields.
+- **Split:** by property (UPRN, else certificate) hash, 70/10/20.
+- **Baseline:** rules only (element in a poor state → recommend), same metrics: AUC, Brier, precision@3 per home.
+- **Use:** `plan()` shows P(an assessor would recommend it) with the top EBM contributions, for feasible items only. It never vetoes and never produces savings.
+
+**Results** (`artifacts/relevance/v1/metrics.json`; 35,065 certificates from 2025, 89,195 recommendation rows; test = 6,944 held-out properties):
+
+| Measure | Train positives | EBM AUC | Rules AUC |
+| --- | --- | --- | --- |
+| Loft / flat roof / room-in-roof insulation | 3,638 | 0.904 | 0.771 |
+| Cavity wall insulation | 3,294 | 0.977 | 0.841 |
+| Internal or external wall insulation | 5,864 | 0.964 | 0.911 |
+| Floor insulation | 12,910 | 0.973 | 0.906 |
+| Draught proofing | 851 | 0.925 | 0.718 |
+| Double / replacement glazing | 1,437 | 0.971 | 0.829 |
+| Heating controls | 1,739 | 0.986 | 0.871 |
+| Air-source heat pump | 44 | 0.995 | 0.836 |
+| HHR storage heaters | 1,414 | 0.996 | 0.669 |
+| Solar PV | 14,575 | 1.000 | 0.841 |
+| Low-energy lighting | 3,246 | 0.999 | 0.920 |
+| **Mean** | | **0.971** | **0.835** |
+
+Precision@3 per home: **EBM 0.725 vs rules 0.529**. Secondary glazing has 2 positives and isn't trained.
+
+Read with care:
+- EPC recommendations are generated by the RdSAP software from the recorded fields, so a near-perfect AUC (PV, lighting) means the EBM has learnt that software's rules. That is what this label measures: "an assessor's report would list it". It is not evidence that the measure pays.
+- The heat pump has only 44 training positives; its AUC is unstable.
+- IWI and EWI share one EPC label ("internal or external wall insulation").
+- Showcase check: SH2 cavity fill 0.99, SH1 IWI/EWI 0.97 (EWI is vetoed by rules anyway), SH3 HHR storage heaters 0.66.
+
+## R-27 Orchestrator
+`GreenTwinOrchestrator.run_scenario(spec)`: calibrate (cached per home) → rules feasibility → baseline and package (one run, meter-anchored) → per-fuel savings, bills, carbon → ladder → improvement potential → rating after → score before/after → value (Part 4) → element heat loss → Pareto. Ruled-out items in a requested package still run but carry a warning. Results are cached by hash(spec + versions); `mock` results are never written to disk. Exposed as `POST /api/scenario`, `GET /api/plan/{pid}` and the LLM tool `run_scenario` (which used to return "unavailable").
+
+## R-28 Ranking check
+`scripts/eval_retrofit_ranking.py` → `eval/reports/retrofit_ranking/`. Each synthetic city home's truth is one prior draw; its meters are that draw's months plus 2.5% noise (the generator's `meter_noise_relative`). Label = the generator's rule `all_feasible_one_run_null_if_zero_or_unsupported`, applied to the truth draw with the engine's all-feasible package. Prediction = the engine's potential after SVI calibration on the noisy meters. Baselines: rank by total metered kWh, and by kWh/m². Caveat: truth and prediction share the physics, so this measures identifiability from meters, not physics error on real homes.
+
 ## Worked example, first version (stand-in physics, prior samples, meter-anchored)
 **To regenerate:** `artifacts/retrofit/v1/` and this table still come from the stand-in physics (provenance `mock`, so they never reach the demo). Rerun `uv run python scripts/retrofit_showcase.py` on P2's physics with calibrated posteriors. It takes more than 10 minutes, because Pareto recompiles per package group.
 Reproduce with `uv run python scripts/retrofit_showcase.py`; the full tables are printed and written to `artifacts/retrofit/v1/`. These numbers come from engine `mock` (stand-in physics). They show the method, not results.
@@ -180,6 +240,8 @@ These satisfy the Block 4 checks:
 - p_gain uses the goal metric (bills or carbon) rather than the LLD's "3% of purchased energy or Δscore ≥ 2". Agree with the team.
 - Triple glazing stays feasible on SH3 (`R_GLAZING_DONE` blocks double and secondary only); it ranks "optional" with no cost.
 - HHR storage heaters change almost nothing in the stand-in physics: same efficiency, and controllability is modelled as heating hours, which standard mode ignores.
-- `p_top_decile` (improvement potential) needs a batch over many homes and isn't filled.
+- `p_top_decile` is computed in the ranking batch (R-28, `eval/reports/retrofit_ranking/homes.json`), not per request: it needs the population.
+- Feasibility layer 2 (Jev / OpenAI fallback) isn't wired into the engine yet; only layer 1 (rules) runs.
+- Staging sums ladder marginals when it reorders steps (R-22): exact only in ladder order.
 - PV export isn't credited in bills or the rating (no sourced export tariff), so PV is understated.
-- `ScenarioResult` assembly belongs to the orchestrator (`greentwin/api`); the engine supplies every Part 2 field.
+- `ScenarioResult` assembly: done in `greentwin/api/orchestrator.py` (R-27). Weather scenarios other than `typical` need Part 0's `load_weather`.

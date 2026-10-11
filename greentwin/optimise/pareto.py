@@ -14,7 +14,9 @@
    furthest above the straight line from the cheapest to the biggest-benefit package (both axes scaled to
    [0, 1]), i.e. where extra spend stops buying much. With 4 objectives almost everything is on the front, so a
    4-D distance-to-ideal knee just picked the largest package.
-Value is never an objective. Baseline for evaluation: greedy kWh-per-GBP under the same budget.
+Value is never an objective. Baselines for evaluation: greedy kWh-per-GBP and a CO2-only optimiser under the same
+budget, compared by hypervolume (R-25). Modes: budget filter, reference point with hard targets (R-23), and a
+memory-learned re-ranking that orders front packages without adding or removing any (R-24).
 """
 
 from __future__ import annotations
@@ -71,6 +73,7 @@ class ParetoResult:
     excluded: dict[str, str] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     knees: dict[str, Optional[tuple[str, ...]]] = field(default_factory=dict)  # goal -> knee package
+    samples: Optional[tuple[np.ndarray, np.ndarray, np.ndarray]] = None  # (cost, carbon, bill), each (packages, n)
 
 
 def pareto(prop: Property, samples: PosteriorSamples, feasibility: FeasibilityReport, meter: Optional[Meter] = None,
@@ -160,7 +163,7 @@ def pareto(prop: Property, samples: PosteriorSamples, feasibility: FeasibilityRe
             bill_saving_gbp=summarise(bill[i], "GBP/yr", tails=[("bill rises", 0.0, "below")]),
             score_gain=sg, p_on_front=round(float(p_on[i]), 4), is_knee=(i == knee)))
     warnings = [f"{cat.get(r).name}: {why}" for r, why in excluded.items()]
-    return ParetoResult(points, packages, med, p_on, excluded, warnings, knees)
+    return ParetoResult(points, packages, med, p_on, excluded, warnings, knees, (cost, carbon, bill))
 
 
 def _knee(med: np.ndarray, idx: np.ndarray, goal: Goal) -> Optional[int]:
@@ -204,3 +207,122 @@ def greedy_baseline(result: ParetoResult, budget_gbp: float) -> tuple[tuple[str,
     dominated = bool(np.any((within[:, 0] <= g[0]) & (within[:, 1:] >= g[1:]).all(1)
                             & ((within[:, 0] < g[0]) | (within[:, 1:] > g[1:]).any(1))))
     return tuple(chosen), dominated
+
+
+# --------------------------------------------------------------------------- modes and baselines (R-23 .. R-25)
+OBJECTIVES = ("net_cost_gbp", "carbon_saving_kgco2e", "bill_saving_gbp", "score_gain")
+
+
+def reference_point(result: ParetoResult, min_carbon_kg: Optional[float] = None, max_cost_gbp: Optional[float] = None,
+                    min_bill_gbp: Optional[float] = None, min_score_gain: Optional[float] = None,
+                    goal: Goal = "bills", p_min: float = 0.5) -> dict:
+    """Reference-point mode, e.g. ">= 2 t CO2, <= GBP 10k". A package qualifies when P(meets every target) >= p_min
+    across posterior samples (cost and savings from the same paired samples); of those, the one with the best median
+    goal saving, then the cheapest. Targets are hard: nothing is relaxed. Needs `result.samples`."""
+    if result.samples is None or not result.packages:
+        return {"package": None, "p_meets": None, "reason": "No package samples"}
+    cost, carbon, bill = result.samples
+    ok = np.ones_like(cost, bool)
+    if max_cost_gbp is not None:
+        ok &= cost <= max_cost_gbp
+    if min_carbon_kg is not None:
+        ok &= carbon >= min_carbon_kg
+    if min_bill_gbp is not None:
+        ok &= bill >= min_bill_gbp
+    if min_score_gain is not None:
+        ok &= (result.medians[:, 3] >= min_score_gain)[:, None]
+    p = ok.mean(1)
+    cand = np.flatnonzero(p >= p_min)
+    targets = {"min_carbon_kg": min_carbon_kg, "max_cost_gbp": max_cost_gbp, "min_bill_gbp": min_bill_gbp,
+               "min_score_gain": min_score_gain, "p_min": p_min}
+    if len(cand) == 0:
+        best = int(np.argmax(p))
+        return {"package": None, "p_meets": None, "targets": targets,
+                "closest": {"package": list(result.packages[best]), "p_meets": round(float(p[best]), 4)},
+                "reason": f"No package meets every target with probability >= {p_min:.0%}"}
+    col = 2 if goal == "bills" else 1
+    k = int(min(cand, key=lambda i: (-result.medians[i, col], result.medians[i, 0])))
+    return {"package": list(result.packages[k]), "p_meets": round(float(p[k]), 4), "targets": targets,
+            "n_qualifying": int(len(cand)), "medians": dict(zip(OBJECTIVES, map(float, result.medians[k])))}
+
+
+def preference_rerank(result: ParetoResult, weights: dict[str, float],
+                      acceptance: Optional[dict[str, float]] = None, lam: float = 0.3) -> list[dict]:
+    """Memory-learned re-ranking of the packages that can be on the front (P(on front) > 0). It only ORDERS them:
+    no package is added or removed, budget and feasibility are untouched. utility = sum_k w_k * normalised objective
+    (cost inverted) + lam * (mean acceptance of the package's items - 0.5); acceptance is the memory score (0-1)."""
+    idx = [i for i in range(len(result.packages)) if result.p_on_front[i] > 0 and result.packages[i]]
+    if not idx:
+        return []
+    M = result.medians[idx].astype(float)
+    lo, span = M.min(0), np.maximum(np.ptp(M, 0), 1e-9)
+    Z = (M - lo) / span
+    Z[:, 0] = 1 - Z[:, 0]
+    w = np.array([max(0.0, float(weights.get(k, 0.0))) for k in OBJECTIVES])
+    w = w / w.sum() if w.sum() > 0 else np.full(4, 0.25)
+    rows = []
+    for j, i in enumerate(idx):
+        acc = [acceptance.get(r, 0.5) for r in result.packages[i]] if acceptance else []
+        m = float(np.mean(acc)) if acc else 0.5
+        u = float(Z[j] @ w) + lam * (m - 0.5)
+        rows.append({"package": list(result.packages[i]), "utility": round(u, 4), "memory_score": round(m, 3),
+                     "p_on_front": round(float(result.p_on_front[i]), 4),
+                     "medians": dict(zip(OBJECTIVES, map(lambda x: round(float(x), 2), M[j])))})
+    rows.sort(key=lambda r: -r["utility"])
+    for k, r in enumerate(rows, 1):
+        r["rank"] = k
+    return rows
+
+
+def weights_from_memory(confirmed: Sequence[dict]) -> dict[str, float]:
+    """Goal items in customer memory -> objective weights. Unknown goals leave the even default."""
+    w = {k: 1.0 for k in OBJECTIVES}
+    for it in confirmed:
+        if it.get("kind") != "goal":
+            continue
+        v = f"{it.get('key', '')} {it.get('value', '')}".lower()
+        if "carbon" in v or "co2" in v or "climate" in v:
+            w["carbon_saving_kgco2e"] += 2
+        if "bill" in v or "money" in v or "cost" in v:
+            w["bill_saving_gbp"] += 2
+        if "cheap" in v or "budget" in v or "low cost" in v:
+            w["net_cost_gbp"] += 2
+        if "score" in v or "rating" in v or "epc" in v or "value" in v:
+            w["score_gain"] += 2
+    return w
+
+
+def co2_only_baseline(result: ParetoResult, budget_gbp: float) -> tuple[tuple[str, ...], bool]:
+    """CO2-only optimiser: the package with the largest median carbon saving within budget (ignores bills/score).
+    Returns it and whether another in-budget package dominates it on all four medians."""
+    within = [i for i in range(len(result.packages)) if result.medians[i, 0] <= budget_gbp]
+    if not within:
+        return (), False
+    k = max(within, key=lambda i: (result.medians[i, 1], -result.medians[i, 0]))
+    return result.packages[k], _dominated(result, k, budget_gbp)
+
+
+def _dominated(result: ParetoResult, k: int, budget_gbp: float) -> bool:
+    g = result.medians[k]
+    others = np.delete(result.medians, k, axis=0)
+    within = others[others[:, 0] <= budget_gbp]
+    return bool(np.any((within[:, 0] <= g[0]) & (within[:, 1:] >= g[1:]).all(1)
+                       & ((within[:, 0] < g[0]) | (within[:, 1:] > g[1:]).any(1))))
+
+
+def hypervolume(result: ParetoResult, rows: Sequence[int], budget_gbp: Optional[float] = None,
+                n: int = 200_000, seed: int = 42) -> float:
+    """Share of the normalised 4-D objective box dominated by the given packages' medians (Monte Carlo, fixed seed).
+    Box: cost in [0, budget or max cost], each saving/gain in [0, its max over all packages]. 0 = nothing, 1 = ideal."""
+    M = result.medians
+    hi_cost = budget_gbp if budget_gbp is not None else max(float(M[:, 0].max()), 1.0)
+    hi = np.maximum(M[:, 1:].max(0), 1e-9)
+    P = np.column_stack([1 - M[rows, 0] / hi_cost, np.clip(M[rows, 1:], 0, None) / hi])  # all maximised in [0, 1]
+    P = P[(M[rows, 0] <= hi_cost)]
+    if len(P) == 0:
+        return 0.0
+    U = np.random.default_rng(seed).random((n, 4))
+    dom = np.zeros(n, bool)
+    for p in P:
+        dom |= (U <= p).all(1)
+    return float(dom.mean())

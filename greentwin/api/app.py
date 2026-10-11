@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
-from contracts.models import ChatRequest, ChatTurn, EnergyUsageMonth
+from contracts.models import ChatRequest, ChatTurn, EnergyUsageMonth, ScenarioSpec
 from greentwin.api.energy_prior import router as m04_router
 from greentwin.kb.store import q
 from greentwin.llm import client as llm
@@ -89,6 +89,39 @@ def home(pid: str):
 @app.get("/api/recommendations")
 def recommendations(property_id: str, customer_id: Optional[str] = None):
     return mem.rank(_home(property_id), _customer(customer_id))
+
+
+def _known(pid: str) -> None:
+    """Showcase homes from contracts/examples, others from the knowledge base."""
+    from greentwin.api.orchestrator import load_property
+    try:
+        load_property(pid)
+    except Exception as e:  # noqa: BLE001 - unknown id or no store
+        raise HTTPException(404, "unknown property") from e
+
+
+@app.post("/api/scenario")
+def scenario(spec: ScenarioSpec):
+    """run_scenario: calibrated twin -> package (one run) -> ladder, potential, rating, score, value (ScenarioResult)."""
+    from greentwin.api.orchestrator import default
+    _known(spec.property_id)
+    try:
+        return default().run_scenario(spec).model_dump(mode="json")
+    except (ValueError, NotImplementedError) as e:
+        raise HTTPException(422, str(e)) from e
+
+
+@app.get("/api/plan/{pid}")
+def plan(pid: str, goal: str = "bills", budget_gbp: Optional[float] = None, annual_budget_gbp: float = 5000,
+         reinvest: bool = True, customer_id: Optional[str] = None, min_carbon_kg: Optional[float] = None,
+         max_cost_gbp: Optional[float] = None):
+    """Ladder + staging by year + Pareto (knee, P(on front), budget, reference point, memory re-rank, baselines)."""
+    from greentwin.api.orchestrator import default
+    if goal not in ("bills", "carbon"):
+        raise HTTPException(422, "goal must be bills or carbon")
+    _known(pid)
+    return default().plan(pid, goal, budget_gbp, annual_budget_gbp, reinvest, _customer(customer_id),
+                          min_carbon_kg, max_cost_gbp)
 
 
 @app.get("/api/memory/{cid}")

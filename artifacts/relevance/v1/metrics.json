@@ -1,0 +1,278 @@
+{
+ "seed": 42,
+ "data_version": "EPC domestic bulk (data/interim/epc_recs), certificates + recommendations, hashed sample",
+ "n_certificates": 35065,
+ "split_counts": {
+  "train": 24619,
+  "test": 6944,
+  "val": 3502
+ },
+ "per_measure": {
+  "air_source_heat_pump": {
+   "n_pos_train": 44,
+   "prevalence_test": 0.0029,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9946,
+    "brier": 0.0023
+   },
+   "rules": {
+    "auc": 0.8357,
+    "brier": 0.2283
+   }
+  },
+  "cavity_wall_insulation": {
+   "n_pos_train": 3294,
+   "prevalence_test": 0.1339,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9765,
+    "brier": 0.0228
+   },
+   "rules": {
+    "auc": 0.8411,
+    "brier": 0.0445
+   }
+  },
+  "double_glazing": {
+   "n_pos_train": 1437,
+   "prevalence_test": 0.066,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9714,
+    "brier": 0.02
+   },
+   "rules": {
+    "auc": 0.8288,
+    "brier": 0.0393
+   }
+  },
+  "draught_proofing": {
+   "n_pos_train": 851,
+   "prevalence_test": 0.036,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9245,
+    "brier": 0.0206
+   },
+   "rules": {
+    "auc": 0.7178,
+    "brier": 0.3065
+   }
+  },
+  "external_wall_insulation": {
+   "n_pos_train": 5864,
+   "prevalence_test": 0.2422,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9639,
+    "brier": 0.0356
+   },
+   "rules": {
+    "auc": 0.9112,
+    "brier": 0.0565
+   }
+  },
+  "floor_insulation": {
+   "n_pos_train": 12910,
+   "prevalence_test": 0.5225,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9726,
+    "brier": 0.0576
+   },
+   "rules": {
+    "auc": 0.906,
+    "brier": 0.0906
+   }
+  },
+  "hhr_storage_heaters": {
+   "n_pos_train": 1414,
+   "prevalence_test": 0.0621,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9956,
+    "brier": 0.0092
+   },
+   "rules": {
+    "auc": 0.6687,
+    "brier": 0.0606
+   }
+  },
+  "internal_wall_insulation": {
+   "n_pos_train": 5864,
+   "prevalence_test": 0.2422,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9639,
+    "brier": 0.0356
+   },
+   "rules": {
+    "auc": 0.9112,
+    "brier": 0.0565
+   }
+  },
+  "led_lighting": {
+   "n_pos_train": 3246,
+   "prevalence_test": 0.1309,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9991,
+    "brier": 0.0067
+   },
+   "rules": {
+    "auc": 0.9202,
+    "brier": 0.1362
+   }
+  },
+  "loft_insulation": {
+   "n_pos_train": 3638,
+   "prevalence_test": 0.146,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9044,
+    "brier": 0.0749
+   },
+   "rules": {
+    "auc": 0.7709,
+    "brier": 0.2244
+   }
+  },
+  "secondary_glazing": {
+   "n_pos_train": 2,
+   "trained": false,
+   "reason": "fewer than 40 positives or one class in test"
+  },
+  "smart_thermostat": {
+   "n_pos_train": 1739,
+   "prevalence_test": 0.0791,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9858,
+    "brier": 0.0245
+   },
+   "rules": {
+    "auc": 0.8713,
+    "brier": 0.2262
+   }
+  },
+  "solar_pv": {
+   "n_pos_train": 14575,
+   "prevalence_test": 0.5817,
+   "trained": true,
+   "ebm": {
+    "auc": 0.9998,
+    "brier": 0.0036
+   },
+   "rules": {
+    "auc": 0.8406,
+    "brier": 0.1426
+   }
+  }
+ },
+ "precision_at_3": {
+  "ebm": 0.7252829752829753,
+  "rules": 0.529048279048279
+ },
+ "mean_auc": {
+  "ebm": 0.9710083333333334,
+  "rules": 0.8352916666666667
+ },
+ "unmapped_summaries_top": {
+  "Solar water heating": 12124,
+  "Replace boiler with new condensing boiler": 1867,
+  "Heat recovery system for mixer showers": 787,
+  "Add additional 80 mm jacket to hot water cylinder": 745,
+  "Increase hot water cylinder insulation": 621,
+  "Hot water cylinder thermostat": 613,
+  "High performance external doors": 547,
+  "Wind turbine": 520,
+  "Change heating to gas condensing boiler": 217,
+  "Insulate hot water cylinder with 80 mm jacket": 110,
+  "Change room heaters to condensing boiler": 98,
+  "Replacement warm air unit": 58,
+  "Add PV battery": 54,
+  "Flue gas heat recovery in conjunction with boiler": 35,
+  "Install condensing boiler": 29
+ },
+ "mapping": [
+  {
+   "pattern": "loft insulation|insulate.*loft|room-in-roof insulation|flat roof|sloping ceiling insulation",
+   "ids": [
+    "loft_insulation"
+   ]
+  },
+  {
+   "pattern": "cavity wall insulation",
+   "ids": [
+    "cavity_wall_insulation"
+   ]
+  },
+  {
+   "pattern": "internal or external wall|solid wall insulation|wall insulation",
+   "ids": [
+    "internal_wall_insulation",
+    "external_wall_insulation"
+   ]
+  },
+  {
+   "pattern": "floor insulation",
+   "ids": [
+    "floor_insulation"
+   ]
+  },
+  {
+   "pattern": "draught proof",
+   "ids": [
+    "draught_proofing"
+   ]
+  },
+  {
+   "pattern": "secondary glazing",
+   "ids": [
+    "secondary_glazing"
+   ]
+  },
+  {
+   "pattern": "double glaz|glazed windows|replace .*windows|replacement glazing|triple glaz",
+   "ids": [
+    "double_glazing"
+   ]
+  },
+  {
+   "pattern": "heating controls|room thermostat|thermostatic radiator|programmer|time and temperature zone",
+   "ids": [
+    "smart_thermostat"
+   ]
+  },
+  {
+   "pattern": "air source heat pump|air or ground source heat pump",
+   "ids": [
+    "air_source_heat_pump"
+   ]
+  },
+  {
+   "pattern": "high heat retention storage",
+   "ids": [
+    "hhr_storage_heaters"
+   ]
+  },
+  {
+   "pattern": "photovoltaic|solar pv",
+   "ids": [
+    "solar_pv"
+   ]
+  },
+  {
+   "pattern": "low energy lighting|led",
+   "ids": [
+    "led_lighting"
+   ]
+  }
+ ],
+ "seconds": 67.8,
+ "notes": [
+  "Rules-only baseline is 0/1, so its AUC is the balanced accuracy of the rule.",
+  "The model ranks feasible options only; rule vetoes always win (zero infeasible items can be recommended because the engine filters on feasibility first)."
+ ]
+}

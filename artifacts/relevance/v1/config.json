@@ -1,0 +1,44 @@
+{
+ "features": [
+  "tfa",
+  "sap",
+  "age_start",
+  "s_walls",
+  "s_roof",
+  "s_floor",
+  "roof_absent",
+  "floor_absent",
+  "s_windows_glazing",
+  "pv_kwp_est",
+  "controls_level",
+  "low_energy_lighting_pct",
+  "mains_gas",
+  "is_heat_pump",
+  "is_storage",
+  "is_gas_boiler",
+  "s_heating_system",
+  "property_type",
+  "built_form"
+ ],
+ "targets": [
+  "air_source_heat_pump",
+  "cavity_wall_insulation",
+  "double_glazing",
+  "draught_proofing",
+  "external_wall_insulation",
+  "floor_insulation",
+  "hhr_storage_heaters",
+  "internal_wall_insulation",
+  "led_lighting",
+  "loft_insulation",
+  "secondary_glazing",
+  "smart_thermostat",
+  "solar_pv"
+ ],
+ "min_pos": 40,
+ "ebm": {
+  "interactions": 0,
+  "max_bins": 64,
+  "outer_bags": 4
+ }
+}

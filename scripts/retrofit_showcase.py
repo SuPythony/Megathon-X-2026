@@ -16,10 +16,15 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from contracts.models import EnergyUsageMonth, Property, RetrofitAction  # noqa: E402
-from greentwin.optimise.pareto import greedy_baseline, pareto  # noqa: E402
+from greentwin.optimise.pareto import (  # noqa: E402
+    co2_only_baseline, greedy_baseline, hypervolume, non_dominated, pareto, reference_point,
+)
+from greentwin.optimise.staging import stage  # noqa: E402
 from greentwin.retrofit.engine import RetrofitEngine  # noqa: E402
 from greentwin.retrofit.rules import assess  # noqa: E402
 from greentwin.score import GreenHomeScorer  # noqa: E402
@@ -28,6 +33,7 @@ from greentwin.twin.twin import GreenDigitalTwin  # noqa: E402
 EX = ROOT / "contracts" / "examples"
 OUT = ROOT / "artifacts" / "retrofit" / "v1"
 BUDGET = 10_000
+ANNUAL_BUDGET = 3_000  # staging: GBP set aside per year, bill savings reinvested
 
 
 def rng(d) -> str:
@@ -63,6 +69,18 @@ def main() -> None:
         pkg, dominated = greedy_baseline(res, BUDGET)
         greedy = {"budget_gbp": BUDGET, "greedy_package": list(pkg), "dominated_by_another_package": dominated,
                   "n_packages": len(res.packages), "n_points_p_on_front_gt_0": len(res.points)}
+        c_pkg, c_dom = co2_only_baseline(res, BUDGET)
+        within = [i for i in range(len(res.packages)) if res.medians[i, 0] <= BUDGET]
+        F = np.column_stack([res.medians[within, 0], -res.medians[within, 1], -res.medians[within, 2], -res.medians[within, 3]])
+        front_idx = [within[j] for j in np.flatnonzero(non_dominated(F))]
+        idx = {q: i for i, q in enumerate(res.packages)}
+        hv = {"front": hypervolume(res, front_idx, BUDGET),
+              "greedy": hypervolume(res, [idx[pkg]], BUDGET) if pkg in idx else None,
+              "co2_only": hypervolume(res, [idx[c_pkg]], BUDGET) if c_pkg in idx else None}
+        baselines = {"co2_only_package": list(c_pkg), "co2_only_dominated": c_dom, "hypervolume": hv,
+                     "n_front_in_budget": len(front_idx)}
+        refpt = reference_point(res, min_carbon_kg=2000, max_cost_gbp=BUDGET, goal="carbon")
+        plan = stage(steps, ANNUAL_BUDGET).as_dict()
         front = [pt.model_dump(mode="json") for pt in res.points if pt.p_on_front >= 0.5 or pt.is_knee]
         knees = {g: list(k) if k is not None else None for g, k in res.knees.items()}
         out = {
@@ -72,10 +90,14 @@ def main() -> None:
             "improvement_potential": pot.model_dump(mode="json"),
             "recommended_package": [a.retrofit_id for a in rec],
             "rating_after_recommended": rating.model_dump(mode="json") if rating else None,
-            "pareto": {"points": front, "knee_by_goal": knees, "excluded": res.excluded}, "warnings": engine.warnings.get(pid, []),
+            "pareto": {"points": front, "knee_by_goal": knees, "excluded": res.excluded, "baselines": baselines,
+                       "reference_point_2t_10k": refpt},
+            "staging": plan, "warnings": engine.warnings.get(pid, []),
         }
         (OUT / f"{pid}_retrofit.json").write_text(json.dumps(out), encoding="utf-8")
         metrics["homes"][pid] = {"calibration": calib.method, "n_samples": s.n_samples, "seconds": round(time.time() - t0, 1), "pareto_vs_greedy": greedy,
+                                 "pareto_baselines": baselines, "reference_point_2t_10k": refpt.get("package"),
+                                 "staging_years": len(plan["stages"]),
                                  "improvement_potential_median_pct": pot.pct.median if pot.pct else None}
 
         print(f"\n### {pid}: {prop.property_type.value}, {prop.construction_age_band}, SAP {prop.epc.sap_score}\n")
@@ -101,6 +123,11 @@ def main() -> None:
                 print(f"Pareto knee ({goal}): {k}, net cost £{c:,.0f}, bill £{bill:,.0f}/yr, CO2e {co2:,.0f} kg/yr, "
                       f"score +{sg:.0f}, P(on front) {res.p_on_front[i]:.2f}")
         print(f"Greedy £/kWh at £{BUDGET:,}: {greedy['greedy_package']}, dominated: {greedy['dominated_by_another_package']}")
+        print(f"CO2-only at £{BUDGET:,}: {list(c_pkg)}; hypervolume front {hv['front']:.3f} vs greedy {hv['greedy']} "
+              f"vs CO2-only {hv['co2_only']}")
+        print(f"Reference point >= 2 t CO2e, <= £{BUDGET:,}: {refpt.get('package')} (P {refpt.get('p_meets')})")
+        print("Staging at £{:,}/yr: ".format(ANNUAL_BUDGET) + "; ".join(f"year {st['year']}: {', '.join(st['retrofit_ids'])}"
+                                                                     for st in plan["stages"]))
         print(f"_{time.time() - t0:.1f} s; engine {out['provenance']['engine']}_")
 
     (OUT / "metrics.json").write_text(json.dumps(metrics, indent=1), encoding="utf-8")

@@ -58,4 +58,10 @@ Green_Home_Ideas.pdf
 
 # git worktrees (isolated per-task checkouts)
 .worktrees/
+
+# Claude Code local state (session worktrees under .claude/worktrees, local settings)
+.claude/
 artifacts/**/monitor.log
+
+# orchestrator scenario cache (regenerated on demand)
+cache/scenarios/
