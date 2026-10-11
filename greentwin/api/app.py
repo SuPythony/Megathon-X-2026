@@ -13,6 +13,7 @@ import os
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from contracts.models import ChatRequest, ChatTurn, EnergyUsageMonth, ScenarioSpec
@@ -26,6 +27,20 @@ from greentwin.memory import service as mem
 STATIC = Path(__file__).parent / "static"
 app = FastAPI(title="GreenTwin assistant")
 app.include_router(m04_router)
+
+
+def _include_twin_routes() -> None:
+    """The 3D viewer's live re-simulation endpoints (/api/twin/*, scripts/twin_server.py) on this same origin."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("twin_server", Path(__file__).resolve().parents[2] / "scripts" / "twin_server.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    app.router.routes.extend(r for r in mod.app.router.routes if getattr(r, "path", "").startswith("/api/twin"))
+
+
+_include_twin_routes()
+if (STATIC / "twin").exists():  # built by `cd web/twin-viewer && npm run build`
+    app.mount("/twin", StaticFiles(directory=STATIC / "twin", html=True), name="twin")
 API_TOKEN = os.environ.get("GREENTWIN_API_TOKEN")  # optional; demo runs on localhost without it
 
 

@@ -113,16 +113,26 @@ details summary { cursor: pointer; font-size: 12.5px; color: var(--fg-2); }
 dialog { border: 1px solid var(--line); border-radius: 12px; max-width: 640px; width: 92vw; background: var(--surface); color: var(--fg); padding: 18px; }
 dialog::backdrop { background: rgb(0 0 0 / .35); }
 @media (max-width: 1150px) { main { grid-template-columns: 1fr; height: auto; } aside.left, aside.right { border: 0; } section.chat { min-height: 70vh; } }
+/* View tabs: assistant | 3D twin (web/twin-viewer build, served at /twin) */
+.tabs { display: flex; gap: 4px; }
+.tabs button { background: transparent; color: var(--fg); border: 1px solid var(--line); padding: 4px 12px; border-radius: 999px; cursor: pointer; font: inherit; }
+.tabs button.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+#twin-view { display: none; height: calc(100% - 57px); }
+#twin-view iframe { width: 100%; height: 100%; border: 0; display: block; }
+body.twin main { display: none; }
+body.twin #twin-view { display: block; }
 </style>
 </head>
 <body>
 <header>
   <h1>Green<span>Twin</span> Assistant</h1>
+  <nav class="tabs"><button id="tab-assistant" class="on">Assistant</button><button id="tab-twin">3D twin</button></nav>
   <span class="pill" id="st-model">…</span>
   <span class="pill" id="st-kb">…</span>
   <span class="grow"></span>
   <span class="note">Every number comes from our models' tools and is checked before you see it.</span>
 </header>
+<section id="twin-view"><iframe id="twin-frame" title="3D digital twin" data-src="/twin/index.html"></iframe></section>
 <main>
   <aside class="left">
     <div class="card"><div class="label">Home</div><div class="homes" id="homes"></div></div>
@@ -446,6 +456,20 @@ document.addEventListener("click", e => {
 $("composer").onsubmit = e => { e.preventDefault(); ask(); };
 $("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } });
 boot();
+</script>
+<script>
+// 3D twin tab: the viewer loads on first open (heavy WebGL), then keeps its state while you switch back and forth.
+(() => {
+  const a = document.getElementById('tab-assistant'), t = document.getElementById('tab-twin');
+  const f = document.getElementById('twin-frame');
+  const show = (twin) => {
+    document.body.classList.toggle('twin', twin); a.classList.toggle('on', !twin); t.classList.toggle('on', twin);
+    if (twin && !f.src) f.src = f.dataset.src;
+    if (location.hash !== (twin ? '#twin' : '')) history.replaceState(null, '', twin ? '#twin' : location.pathname + location.search);
+  };
+  a.onclick = () => show(false); t.onclick = () => show(true);
+  if (location.hash === '#twin') show(true);
+})();
 </script>
 </body>
 </html>

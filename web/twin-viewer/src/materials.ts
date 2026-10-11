@@ -38,8 +38,8 @@ function repeat(textures: THREE.Texture | THREE.Texture[], srgb: boolean) {
 const asColour = (t: THREE.Texture | THREE.Texture[]) => repeat(t, true)
 const asData = (t: THREE.Texture | THREE.Texture[]) => repeat(t, false)
 const KEYS = Object.keys(TEXTURES) as TextureKey[]
-const DIFFUSE = KEYS.map((k) => `/textures/${k}_diff.jpg`)
-const NORMAL = KEYS.map((k) => `/textures/${k}_nor.jpg`)
+const DIFFUSE = KEYS.map((k) => `${import.meta.env.BASE_URL}textures/${k}_diff.jpg`)
+const NORMAL = KEYS.map((k) => `${import.meta.env.BASE_URL}textures/${k}_nor.jpg`)
 
 /** All textures, loaded once (suspends until ready, so nothing pops in mid-frame). Colour maps are sRGB, normal maps
  * linear. */
