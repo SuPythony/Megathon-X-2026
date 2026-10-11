@@ -61,3 +61,6 @@ line-length = 110
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Temp dirs inside the repo: P2's writers only allow outputs inside the repo (a safety guard), so tests that write
+# to tmp_path need it here. pytest empties this folder at the start of each run; it is git-ignored.
+addopts = "--basetemp=.pytest_tmp"
