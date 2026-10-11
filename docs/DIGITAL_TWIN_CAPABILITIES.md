@@ -20,7 +20,7 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 | Capability | Status | Where |
 |---|---|---|
 | **Intake form:** postcode (only the district is kept, reduced in the browser), EPC certificate number (validated, normalised), floor plan and fuse box photos with consent | ✅ | `greentwin/twin/intake.py`, viewer "New home" |
-| **Household questions:** occupants, daytime presence, thermostat setting, heating schedule | ✅ | `intake.py`, `household.py` |
+| **Household questions:** occupants, daytime presence, thermostat setting, heating schedule (presets or custom periods, validated); each allows "not sure", which means typical UK values with wider priors | ✅ | `intake.py`, `household.py`, viewer "New home" form |
 | **Heating as the user knows it:** heating system, fuel, hot-water source. Overrides a stale EPC; conflicts flagged (EPC vs answer, bills vs fuel) | ✅ | `household.apply_user_heating`, `meter_fuel_conflicts` |
 | **Monthly meter readings:** missing months stay missing, never 0; estimated reads flagged | ✅ | `intake.MeterReading` |
 | **Internal walls "solid or hollow?"** (thermal mass) | ✅ | `intake.internal_walls` |

@@ -245,7 +245,19 @@ button:disabled { cursor: default; opacity: 0.45; }
 .modal-actions button { height: 38px; padding: 0 16px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-weight: 600; }
 .modal-actions .primary { background: var(--green); color: #fff; border-color: var(--green); }
 
+.group { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px 14px; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.group legend { font-weight: 700; font-size: 14px; padding: 0 6px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.inline { display: flex; align-items: center; gap: 8px; }
+.inline input { width: 110px; }
+.unit { color: var(--muted); font-size: 13px; }
+.chip { height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font-size: 12px; font-weight: 600; }
+.periods { display: flex; flex-direction: column; gap: 6px; }
+.period { display: flex; align-items: center; gap: 8px; }
+.period select { height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; background: #fff; }
+
 @media (max-width: 900px) {
+  .row2 { grid-template-columns: 1fr; }
   .topbar { right: 16px; flex-wrap: wrap; }
   .scene-select { min-width: 140px; flex: 1; }
   .brand div { display: none; }

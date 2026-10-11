@@ -34,7 +34,40 @@ export interface TwinIntake {
   heating_system: string | null
   hot_water_source: string | null
   internal_walls: 'solid' | 'hollow' | null
+  // Household (greentwin/twin/household.py): null / [] = not sure, so typical UK values with wider uncertainty are used
+  occupants: number | null
+  daytime_occupancy: Presence | null
+  thermostat_c: number | null
+  heating_periods: [number, number][]
   warnings: string[]
+}
+
+export type Presence = 'out_all_day' | 'part_day' | 'home_all_day'
+export const PRESENCE_OPTIONS: [Presence, string][] = [
+  ['out_all_day', 'Usually out during the day'],
+  ['part_day', 'Sometimes home during the day'],
+  ['home_all_day', 'Usually home during the day'],
+]
+
+export type SchedulePreset = 'morning_evening' | 'all_day' | 'custom'
+export const SCHEDULE_PRESETS: Record<Exclude<SchedulePreset, 'custom'>, { label: string; periods: [number, number][] }> = {
+  morning_evening: { label: 'Mornings and evenings (6–9am, 5–10pm)', periods: [[6, 9], [17, 22]] },
+  all_day: { label: 'All day (6am–10pm)', periods: [[6, 22]] },
+}
+
+export const THERMOSTAT_RANGE: [number, number] = [10, 28] // matches TwinIntake.thermostat_c in intake.py
+export const MAX_OCCUPANTS = 12
+
+/** Problems with custom heating periods (hours 0-24, start before end, no overlaps); empty when fine. */
+export function periodErrors(periods: [number, number][]): string[] {
+  const out: string[] = []
+  periods.forEach(([s, e], i) => {
+    if (!(s >= 0 && s <= 23 && e >= 1 && e <= 24)) out.push(`Period ${i + 1}: hours must be between 0 and 24`)
+    else if (s >= e) out.push(`Period ${i + 1}: the heating must go on before it goes off`)
+  })
+  const sorted = [...periods].sort((a, b) => a[0] - b[0])
+  for (let i = 1; i < sorted.length; i++) if (sorted[i][0] < sorted[i - 1][1]) { out.push('Periods overlap'); break }
+  return out
 }
 
 // Heating as the user knows it today; overrides the EPC (greentwin/twin/household.py apply_user_heating).
@@ -66,5 +99,7 @@ export function intakeWarnings(i: Omit<TwinIntake, 'warnings'>): string[] {
   if (!i.epc_rrn) out.push('No EPC number: the twin starts from the closest house type and the floor plan only')
   if ((i.floor_plan_image || i.fuse_box_image) && !i.photo_consent)
     out.push('Photos supplied without consent; they will not be processed')
+  if (i.occupants == null || i.thermostat_c == null || !i.heating_periods.length)
+    out.push('Some household answers are "not sure": the twin uses typical UK values with wider uncertainty')
   return out
 }
