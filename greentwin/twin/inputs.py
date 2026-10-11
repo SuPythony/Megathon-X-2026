@@ -6,6 +6,10 @@ efficiency), occupancy and heating behaviour, appliance consumption schedules an
 weather aligned to the meter months, monthly meter readings (missing months marked, never zero), priors for the
 calibrated parameters, a suggested observation model and a calibration-readiness check. Every value carries its source.
 
+Customers are asked only what they can know; technical quantities (U-values, ventilation, efficiency/COP, weather,
+solar irradiation, load profiles, battery losses) are generated or sourced and listed in ``technical_inputs``. A
+customer's explicit answer is fixed (prior kind ``fixed``); a "not sure" becomes an uncertain input with a wider prior.
+
     inputs = build_physics_inputs(prop, layout=layout, appliances=placements, intake=intake)
     inputs.model_dump_json(indent=2)           # hand this to the physics / calibration team
     run_physics(inputs.physics_params(), inputs.physics_timeseries(), mode, inputs.fuel_config())
@@ -24,8 +28,12 @@ from greentwin.twin.appliances import DAYS, ApplianceSummary, summarise_applianc
 from greentwin.twin.archetypes import TwinLayout
 from greentwin.twin.geometry import GeometryConfirmation, apply_geometry, from_layout
 from greentwin.twin.household import (
+    DEFAULT_HEATER_HOURS,
+    HEATER_HOURS,
+    FollowUp,
     HotWaterSystem,
     apply_user_heating,
+    follow_up_questions,
     heating_behaviour,
     hot_water_system,
     meter_fuel_conflicts,
@@ -67,10 +75,11 @@ class HeatingSystemInfo(BaseModel):
 
 
 class Prior(BaseModel):
-    """Prior for one calibrated parameter. kind: lognormal -> value = base x exp(N(mu, sigma)); normal -> base + N."""
+    """Prior for one parameter. kind: lognormal -> value = base x exp(N(mu, sigma)); normal_add -> base + N(mu, sigma);
+    fixed -> the customer's explicit answer, held at base (not sampled, not calibrated)."""
 
     param: str
-    kind: Literal["lognormal", "normal_add"]
+    kind: Literal["lognormal", "normal_add", "fixed"]
     mu: float
     sigma: float
     base: float
@@ -116,6 +125,22 @@ class Weather(BaseModel):
     filled: list[str]
 
 
+class TechnicalInput(BaseModel):
+    """A technical quantity the twin generates or sources itself; never asked of the customer."""
+
+    quantity: str
+    value: Optional[float] = None
+    unit: str
+    source: str
+    status: str = Field(description="Provenance status (measured, recorded, estimated, to_verify, assumption, ...)")
+    replace_with: str = Field(description="What would make it better, and who provides it")
+
+
+class FollowUpAnswer(BaseModel):
+    question: FollowUp
+    answer: Optional[str] = Field(None, description="None = not sure")
+
+
 class PhysicsInputs(BaseModel):
     inputs_version: str = INPUTS_VERSION
     property_id: str
@@ -132,6 +157,8 @@ class PhysicsInputs(BaseModel):
     geometry: GeometryConfirmation = Field(description="The geometry used, and whether the user confirmed it")
     input_provenance: list[InputProvenance]
     provenance_summary: ProvenanceSummary
+    technical_inputs: list[TechnicalInput] = Field(description="Generated or sourced, never asked of the customer")
+    follow_ups: list[FollowUpAnswer] = Field(default_factory=list, description="Optional questions asked for this home")
     occupancy: dict[str, str | float]
     heating_behaviour: dict[str, object]
     appliances: ApplianceSummary | None
@@ -157,8 +184,8 @@ class PhysicsInputs(BaseModel):
         return out
 
     def prior_table(self) -> dict[str, tuple[str, float, float]]:
-        """Priors in the form simulate.prior_samples takes."""
-        return {p.param: (p.kind, p.mu, p.sigma) for p in self.priors}
+        """Priors in the form simulate.prior_samples takes; fixed answers are left out, so they stay at their value."""
+        return {p.param: (p.kind, p.mu, p.sigma) for p in self.priors if p.kind != "fixed"}
 
 
 def _schedules(months: Sequence[str], summary: Optional[ApplianceSummary]) -> dict[str, list[float]]:
@@ -190,28 +217,48 @@ def heat_loss_prior_sigma(params: ExtendedTwinParams, prov: list[InputProvenance
     return round(0.10 + 0.15 * unknown_u + (0.0 if geometry_confirmed else 0.05), 3)
 
 
+def _behaviour_prior(param: str, base: float, sd: float, source: str, lower: float, upper: float) -> Prior:
+    if sd == 0:
+        return Prior(param=param, kind="fixed", mu=0.0, sigma=0.0, base=base, rationale=f"Customer answer, fixed: {source}")
+    return Prior(param=param, kind="normal_add", mu=0.0, sigma=sd, base=base, lower=lower, upper=upper,
+                 rationale=f"Not given, so uncertain: {source}")
+
+
 def _priors(params: ExtendedTwinParams, sources: dict[str, str], household: dict, has_appliances: bool,
             hl_sigma: float = 0.25) -> list[Prior]:
-    user_stat = "user" in sources.get("setpoint_c", "")
-    return [
+    """Explicit customer answers are fixed; missing ones widen the priors of what they feed."""
+    occupants_given = "user answer" in sources.get("occupants", "")
+    lighting_known = not sources.get("low_energy_lighting_pct", "").startswith("assumption")
+    heater = sources.get("secondary_heating_scale", "")
+    priors = [
         Prior(param="heat_loss_multiplier", kind="lognormal", mu=0.0, sigma=hl_sigma, base=params.heat_loss_multiplier,
               lower=0.4, upper=2.0, rationale="Scales the fabric + ventilation loss; width set by input provenance "
               "(unverified U-values and unconfirmed geometry widen it)"),
-        Prior(param="setpoint_c", kind="normal_add", mu=0.0, sigma=household["setpoint_sd"], base=params.setpoint_c,
-              lower=14.0, upper=24.0, rationale="Mean internal temperature: " + ("user thermostat" if user_stat else "default")),
-        Prior(param="baseload_kwh_per_day", kind="lognormal", mu=0.0, sigma=0.2 if has_appliances else 0.3,
-              base=params.baseload_kwh_per_day, rationale="From the appliance list" if has_appliances else "SAP default"),
+        _behaviour_prior("setpoint_c", params.setpoint_c, household["setpoint_sd"], sources["setpoint_c"], 14.0, 24.0),
+        Prior(param="baseload_kwh_per_day", kind="lognormal", mu=0.0,
+              sigma=(0.2 if has_appliances else 0.3) + (0.0 if lighting_known else 0.05),
+              base=params.baseload_kwh_per_day,
+              rationale=("From the appliance list" if has_appliances else "SAP default")
+              + ("" if lighting_known else "; lighting share not known, wider")),
         Prior(param="heating_efficiency", kind="lognormal", mu=0.0, sigma=0.07, base=params.heating_efficiency,
               rationale="Tight: confounded with heat_loss_multiplier on gas data alone"),
-        Prior(param="hot_water_kwh_per_day", kind="lognormal", mu=0.0, sigma=0.3, base=params.hot_water_kwh_per_day,
-              rationale="SAP occupancy-based demand; identified by summer gas/electricity"),
-        Prior(param="heating_hours_per_day", kind="normal_add", mu=0.0, sigma=household["hours_sd"],
-              base=params.heating_hours_per_day, lower=2.0, upper=24.0,
-              rationale="Optional: weakly identified with monthly data; fix unless the user gave a schedule"),
+        Prior(param="hot_water_kwh_per_day", kind="lognormal", mu=0.0, sigma=0.2 if occupants_given else 0.35,
+              base=params.hot_water_kwh_per_day,
+              rationale="SAP demand for " + ("the stated number of occupants (fixed); use per person still varies"
+                                             if occupants_given else "occupants estimated from floor area (not given)")),
+        _behaviour_prior("heating_hours_per_day", params.heating_hours_per_day, household["hours_sd"],
+                         sources["heating_hours_per_day"], 2.0, 24.0),
         Prior(param="heat_capacity_kj_per_k", kind="lognormal", mu=0.0, sigma=0.3, base=params.heat_capacity_kj_per_k,
               rationale="Thermal mass from construction (to_verify kappa); weakly identified from monthly bills: "
                         "propagate as uncertainty, don't calibrate"),
     ]
+    if "user answer" in heater:
+        priors.append(Prior(param="secondary_heating_scale", kind="fixed", mu=0.0, sigma=0.0, base=1.0,
+                            rationale=f"Customer answer, fixed: {heater}"))
+    elif "uncertain" in heater:
+        priors.append(Prior(param="secondary_heating_scale", kind="lognormal", mu=0.0, sigma=0.5, base=1.0,
+                            rationale=f"Not given, so uncertain: {heater}"))
+    return priors
 
 
 def _readiness(meter: Optional[Meter], prop: Property) -> Readiness:
@@ -227,7 +274,8 @@ def _readiness(meter: Optional[Meter], prop: Property) -> Readiness:
     heat_meter = gas_n if prop.heating.main_fuel == "mains_gas" else elec_n
     ident, weak, notes = [], [], []
     if winter >= 2 and summer >= 1 and heat_meter >= 6:
-        ident += ["heat_loss_multiplier (with efficiency fixed by its prior)", "setpoint_c (partly, via the winter slope)"]
+        ident += ["heat_loss_multiplier (with efficiency fixed by its prior)",
+                  "setpoint_c (partly, via the winter slope; not if the customer gave the thermostat)"]
     else:
         notes.append("Need winter and summer months on the heating fuel to separate heating from hot water")
     if summer >= 1:
@@ -258,6 +306,53 @@ def _band(prop: Property) -> int:
     return age_band_index(prop.construction_age_band, prop.year_built)
 
 
+def technical_inputs(params: ExtendedTwinParams, sources: dict[str, str], prov: list[InputProvenance],
+                     weather: Weather, summary: Optional[ApplianceSummary]) -> list[TechnicalInput]:
+    """The technical quantities the twin generates or sources itself, each with its source and how to improve it."""
+    status = {p.field: p.status for p in prov}
+    epc_or_tables = "EPC measured U-value, else verified RdSAP 10 tables (Part 0 / data team)"
+    heat_pump = params.heating_efficiency > 1.5
+    weather_status = "synthetic" if weather.source == "synthetic" else "recorded"
+    real_weather = "DataLayer.load_weather(district, months): Met Office HadUK-Grid (Part 0)"
+    ghi = weather.arrays.get("ghi_kwh_m2", [])
+    rows = [
+        *(TechnicalInput(quantity=f"{name} U-value", value=getattr(params, key), unit="W/m2K", source=sources[key],
+                         status=status.get(key, "default"), replace_with=epc_or_tables)
+          for name, key in (("Wall", "wall_u"), ("Roof", "roof_u"), ("Floor", "floor_u"), ("Window", "window_u"),
+                            ("Door", "door_u"))),
+        TechnicalInput(quantity="Ventilation rate", value=params.air_changes_per_hour, unit="air changes/h",
+                       source=sources["air_changes_per_hour"], status=status.get("air_changes_per_hour", "assumption"),
+                       replace_with="SAP 2012 section 2 ventilation from chimneys, fans and draught proofing; "
+                                    "an air-tightness test if available"),
+        TechnicalInput(quantity="Heating seasonal COP" if heat_pump else "Heating seasonal efficiency",
+                       value=params.heating_efficiency, unit="COP" if heat_pump else "fraction",
+                       source=sources["heating_efficiency"], status=status.get("heating_efficiency", "default"),
+                       replace_with="EPC seasonal efficiency or PCDB product record; MCS design SCOP for heat pumps"),
+        TechnicalInput(quantity="Hot-water efficiency", value=params.hot_water_efficiency, unit="fraction",
+                       source=sources["hot_water_efficiency"], status=status.get("hot_water_efficiency", "assumption"),
+                       replace_with="SAP 2012 Table 4a/4b by system"),
+        TechnicalInput(quantity="Outdoor temperature and degree days", value=None, unit="deg C, K day",
+                       source=f"weather source: {weather.source}", status=weather_status, replace_with=real_weather),
+        TechnicalInput(quantity="Solar irradiation (horizontal)", value=round(sum(ghi), 1) if ghi else None,
+                       unit="kWh/m2 over the months", source=f"weather source: {weather.source}", status=weather_status,
+                       replace_with=real_weather + "; PVGIS for tilted panels"),
+        TechnicalInput(quantity="PV performance ratio", value=0.85, unit="fraction",
+                       source="assumption: typical UK system losses (inverter, temperature, soiling)",
+                       status="assumption", replace_with="PVGIS system-loss estimate or the installer's MCS figure"),
+        TechnicalInput(quantity="Appliance load profile", value=round(sum(summary.hourly_profile_kw), 2) if summary else None,
+                       unit="kWh/day over 24 hourly steps",
+                       source="appliance_energy.json daily and monthly profiles" if summary
+                       else "sap_2012 appendix L monthly only (no appliance list)",
+                       status="estimated" if summary else "default",
+                       replace_with="half-hourly shapes from London smart-meter data (planned); the customer's smart meter"),
+        TechnicalInput(quantity="Battery round-trip efficiency", value=params.battery_round_trip_efficiency,
+                       unit="fraction", source=sources["battery_round_trip_efficiency"],
+                       status=status.get("battery_round_trip_efficiency", "assumption"),
+                       replace_with="the installed battery's datasheet"),
+    ]
+    return rows
+
+
 def build_physics_inputs(
     prop: Property,
     layout: Optional[TwinLayout] = None,
@@ -278,15 +373,33 @@ def build_physics_inputs(
     presence = intake.daytime_occupancy if intake else None
     n_guess = float(occupants) if occupants else sap_occupancy(prop.floor_area_m2)
     placements = list(appliances) if appliances is not None else (list(intake.appliances) if intake and intake.appliances else [])
-    summary = summarise_appliances(placements, n_guess) if placements else None
+
+    # Optional follow-ups: only the relevant ones count as asked; None = not sure
+    asked = follow_up_questions(prop, intake.heating_system if intake else None, [p.type for p in placements]) if intake else []
+    answers = {"plug_in_heater_use": intake.plug_in_heater_use, "led_lighting": intake.led_lighting} if intake else {}
+    asked_keys = {q.key for q in asked}
+    heater_use = answers.get("plug_in_heater_use") if "plug_in_heater_use" in asked_keys else None
+    led = answers.get("led_lighting") if "led_lighting" in asked_keys else None
+    heater_hours = HEATER_HOURS[heater_use] if heater_use else None
+    has_heater = any(p.type == "electric_heater" for p in placements)
+    if heater_hours and not has_heater:  # heaters in use but none placed: one typical 2 kW heater, not in a room
+        placements.append(AppliancePlacement(appliance_id="plug_in_heater_stated", type="electric_heater", room_id=None,
+                                             label="Plug-in heater (stated)", answers={"rating_kw": "2"}))
+        has_heater = True
+    summary = summarise_appliances(placements, n_guess, heater_hours) if placements else None
 
     params, sources = params_with_sources(
         prop, layout=layout, appliances=summary, occupants=occupants, presence=presence,
         thermostat_c=intake.thermostat_c if intake else None,
         heating_periods=intake.heating_periods if intake and intake.heating_periods else None,
         internal_walls=intake.internal_walls if intake else None,
+        led_lighting=led,
     )
     sources.update({f"user_{k}": v for k, v in heating_sources.items()})
+    if heater_use:
+        sources["secondary_heating_scale"] = f"user answer: plug-in heaters {heater_use.replace('_', ' ')} ({heater_hours:g} h/day) (fixed)"
+    elif has_heater:
+        sources["secondary_heating_scale"] = f"default {DEFAULT_HEATER_HOURS:g} h/day per plug-in heater (uncertain)"
     occ = occupancy(prop, occupants, presence, sap_occupancy(prop.floor_area_m2))
     behaviour = heating_behaviour(intake.thermostat_c if intake else None,
                                   intake.heating_periods if intake and intake.heating_periods else None, occ.presence)
@@ -347,8 +460,16 @@ def build_physics_inputs(
         refs["intake"] = f"intake:{intake.intake_id}"
         if intake.epc_rrn:
             refs["epc"] = f"epc:{intake.epc_rrn}"
+    answered = {"occupants": bool(intake and intake.occupants), "daytime_occupancy": bool(intake and intake.daytime_occupancy),
+                "setpoint_c": bool(intake and intake.thermostat_c is not None),
+                "heating_hours_per_day": bool(intake and intake.heating_periods),
+                "low_energy_lighting_pct": led is not None, "secondary_heating_scale": heater_use is not None}
+    questions = {"occupants", "daytime_occupancy", "setpoint_c", "heating_hours_per_day"} if intake else set()
+    questions |= {"low_energy_lighting_pct"} if "led_lighting" in asked_keys else set()
+    questions |= {"secondary_heating_scale"} if "plug_in_heater_use" in asked_keys else set()
+    customer = {f: ("given" if answered[f] else "not_sure") for f in questions}
     prov = build_provenance(params.model_dump(), sources, geometry_source, refs, weather.source,
-                            meter.source if meter else None)
+                            meter.source if meter else None, customer)
     geometry = intake.geometry if intake and intake.geometry else from_layout(used_layout)
     hl_sigma = heat_loss_prior_sigma(params, prov, geometry.confirmed_by_user)
     return PhysicsInputs(
@@ -368,6 +489,8 @@ def build_physics_inputs(
         geometry=geometry,
         input_provenance=prov,
         provenance_summary=provenance_summary(prov, params.model_dump(), geometry_source),
+        technical_inputs=technical_inputs(params, sources, prov, weather, summary),
+        follow_ups=[FollowUpAnswer(question=q, answer=answers.get(q.key)) for q in asked],
         occupancy=occ.model_dump(),
         heating_behaviour=behaviour.model_dump(),
         appliances=summary,

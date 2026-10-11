@@ -991,21 +991,21 @@
           "unit": "kWh/yr"
         },
         "appliance_kwh": {
-          "headline": 140.6,
-          "lo": 98.4,
-          "hi": 191.8,
+          "headline": 141.6,
+          "lo": 90.6,
+          "hi": 205.2,
           "unit": "kWh/yr"
         },
         "lighting_kwh": {
-          "headline": 131.8,
-          "lo": 93.7,
-          "hi": 182.7,
+          "headline": 132.2,
+          "lo": 86.3,
+          "hi": 198.8,
           "unit": "kWh/yr"
         },
         "running_cost_gbp": {
-          "headline": 209.0,
+          "headline": 210.9,
           "lo": 120.3,
-          "hi": 382.0,
+          "hi": 384.5,
           "unit": "GBP/yr"
         },
         "other_kwh": {}
@@ -1026,21 +1026,21 @@
           "unit": "kWh/yr"
         },
         "appliance_kwh": {
-          "headline": 726.3,
-          "lo": 508.2,
-          "hi": 990.6,
+          "headline": 731.3,
+          "lo": 468.0,
+          "hi": 1059.9,
           "unit": "kWh/yr"
         },
         "lighting_kwh": {
-          "headline": 102.6,
-          "lo": 72.9,
-          "hi": 142.2,
+          "headline": 102.8,
+          "lo": 67.2,
+          "hi": 154.7,
           "unit": "kWh/yr"
         },
         "running_cost_gbp": {
-          "headline": 313.9,
-          "lo": 226.6,
-          "hi": 447.3,
+          "headline": 314.5,
+          "lo": 218.1,
+          "hi": 454.6,
           "unit": "GBP/yr"
         },
         "other_kwh": {}
@@ -1067,15 +1067,15 @@
           "unit": "kWh/yr"
         },
         "lighting_kwh": {
-          "headline": 89.7,
-          "lo": 63.8,
-          "hi": 124.4,
+          "headline": 90.0,
+          "lo": 58.8,
+          "hi": 135.3,
           "unit": "kWh/yr"
         },
         "running_cost_gbp": {
           "headline": 359.1,
-          "lo": 296.4,
-          "hi": 479.2,
+          "lo": 296.5,
+          "hi": 479.5,
           "unit": "GBP/yr"
         },
         "other_kwh": {
@@ -1105,14 +1105,14 @@
         },
         "lighting_kwh": {
           "headline": 25.7,
-          "lo": 18.2,
-          "hi": 35.6,
+          "lo": 16.8,
+          "hi": 38.7,
           "unit": "kWh/yr"
         },
         "running_cost_gbp": {
-          "headline": 65.3,
-          "lo": 26.8,
-          "hi": 139.8,
+          "headline": 65.5,
+          "lo": 26.9,
+          "hi": 139.7,
           "unit": "GBP/yr"
         },
         "other_kwh": {}
@@ -1139,15 +1139,15 @@
           "unit": "kWh/yr"
         },
         "lighting_kwh": {
-          "headline": 38.4,
-          "lo": 27.3,
-          "hi": 53.2,
+          "headline": 38.5,
+          "lo": 25.2,
+          "hi": 57.9,
           "unit": "kWh/yr"
         },
         "running_cost_gbp": {
           "headline": 48.8,
-          "lo": 23.5,
-          "hi": 97.2,
+          "lo": 23.6,
+          "hi": 97.3,
           "unit": "GBP/yr"
         },
         "other_kwh": {}
@@ -1174,15 +1174,15 @@
           "unit": "kWh/yr"
         },
         "lighting_kwh": {
-          "headline": 51.2,
-          "lo": 36.4,
-          "hi": 71.0,
+          "headline": 51.4,
+          "lo": 33.6,
+          "hi": 77.3,
           "unit": "kWh/yr"
         },
         "running_cost_gbp": {
-          "headline": 71.7,
-          "lo": 33.7,
-          "hi": 144.4,
+          "headline": 71.8,
+          "lo": 33.8,
+          "hi": 144.6,
           "unit": "GBP/yr"
         },
         "other_kwh": {}
@@ -1191,7 +1191,7 @@
     "unaccounted_electricity_kwh": {
       "headline": 0.0,
       "lo": 0.0,
-      "hi": 0.0,
+      "hi": 21.3,
       "unit": "kWh/yr"
     },
     "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -1464,12 +1464,12 @@
   "input_quality": {
     "geometry_source": "epc_fitted",
     "counts_by_status": {
-      "assumption": 2,
-      "stated": 3,
+      "assumption": 4,
+      "stated": 4,
       "recorded": 12,
       "estimated": 7,
       "to_verify": 6,
-      "default": 8,
+      "default": 9,
       "synthetic": 1
     },
     "heat_loss_share_by_status": {
@@ -1495,21 +1495,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -1521,21 +1521,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -1586,21 +1586,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 209.0,
+              "headline": 210.9,
               "lo": 120.3,
-              "hi": 382.0,
+              "hi": 384.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -1621,21 +1621,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 313.9,
-              "lo": 226.6,
-              "hi": 447.3,
+              "headline": 314.5,
+              "lo": 218.1,
+              "hi": 454.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -1662,15 +1662,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 359.1,
-              "lo": 296.4,
-              "hi": 479.2,
+              "lo": 296.5,
+              "hi": 479.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -1700,14 +1700,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 65.3,
-              "lo": 26.8,
-              "hi": 139.8,
+              "headline": 65.5,
+              "lo": 26.9,
+              "hi": 139.7,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -1734,15 +1734,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 48.8,
-              "lo": 23.5,
-              "hi": 97.2,
+              "lo": 23.6,
+              "hi": 97.3,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -1769,15 +1769,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 71.7,
-              "lo": 33.7,
-              "hi": 144.4,
+              "headline": 71.8,
+              "lo": 33.8,
+              "hi": 144.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -1786,7 +1786,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -1809,21 +1809,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -1835,21 +1835,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4647.9,
-          "lo": 3377.0,
-          "hi": 6786.2,
+          "headline": 4649.6,
+          "lo": 3411.5,
+          "hi": 6833.6,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1223.3,
-          "lo": 888.8,
-          "hi": 1786.1,
+          "headline": 1223.8,
+          "lo": 897.9,
+          "hi": 1798.6,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 908.8,
-          "lo": 660.3,
-          "hi": 1326.9,
+          "headline": 909.1,
+          "lo": 667.0,
+          "hi": 1336.2,
           "unit": "kgCO2e/yr"
         }
       },
@@ -1900,21 +1900,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 187.6,
-              "lo": 109.7,
-              "hi": 338.4,
+              "headline": 188.3,
+              "lo": 108.2,
+              "hi": 339.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -1935,21 +1935,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 296.4,
-              "lo": 216.1,
-              "hi": 418.0,
+              "headline": 298.6,
+              "lo": 205.1,
+              "hi": 426.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -1976,15 +1976,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 343.4,
-              "lo": 289.0,
-              "hi": 450.0,
+              "headline": 343.6,
+              "lo": 289.7,
+              "hi": 450.8,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -2014,14 +2014,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 58.6,
-              "lo": 23.5,
-              "hi": 128.3,
+              "headline": 58.8,
+              "lo": 23.6,
+              "hi": 128.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2048,15 +2048,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 42.3,
-              "lo": 20.7,
-              "hi": 85.0,
+              "headline": 42.4,
+              "lo": 20.8,
+              "hi": 85.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2083,15 +2083,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 62.5,
-              "lo": 29.5,
-              "hi": 127.4,
+              "headline": 62.6,
+              "lo": 29.7,
+              "hi": 128.0,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2100,7 +2100,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -2123,21 +2123,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -2149,21 +2149,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4819.4,
-          "lo": 3480.6,
-          "hi": 7129.4,
+          "headline": 4832.9,
+          "lo": 3497.2,
+          "hi": 7140.0,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1268.5,
-          "lo": 916.1,
-          "hi": 1876.5,
+          "headline": 1272.0,
+          "lo": 920.5,
+          "hi": 1879.2,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 942.3,
-          "lo": 680.6,
-          "hi": 1394.0,
+          "headline": 945.0,
+          "lo": 683.8,
+          "hi": 1396.1,
           "unit": "kgCO2e/yr"
         }
       },
@@ -2214,21 +2214,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 200.8,
-              "lo": 116.2,
-              "hi": 365.9,
+              "headline": 202.3,
+              "lo": 115.6,
+              "hi": 367.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2249,21 +2249,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 307.1,
-              "lo": 221.8,
-              "hi": 434.7,
+              "headline": 306.7,
+              "lo": 212.3,
+              "hi": 441.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2290,15 +2290,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 352.6,
-              "lo": 293.3,
-              "hi": 466.4,
+              "lo": 293.5,
+              "hi": 467.3,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -2328,14 +2328,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 63.1,
+              "headline": 63.4,
               "lo": 25.7,
-              "hi": 136.3,
+              "hi": 136.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2362,15 +2362,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 46.0,
-              "lo": 22.3,
-              "hi": 91.6,
+              "lo": 22.4,
+              "hi": 92.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2397,15 +2397,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 68.0,
+              "headline": 68.1,
               "lo": 32.1,
-              "hi": 137.3,
+              "hi": 137.7,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2414,7 +2414,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -2437,21 +2437,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -2463,21 +2463,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4844.7,
-          "lo": 3496.2,
-          "hi": 7182.7,
+          "headline": 4860.8,
+          "lo": 3510.1,
+          "hi": 7185.0,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1275.1,
-          "lo": 920.2,
-          "hi": 1890.5,
+          "headline": 1279.3,
+          "lo": 923.9,
+          "hi": 1891.1,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 947.3,
-          "lo": 683.6,
-          "hi": 1404.4,
+          "headline": 950.4,
+          "lo": 686.3,
+          "hi": 1404.9,
           "unit": "kgCO2e/yr"
         }
       },
@@ -2528,21 +2528,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 202.8,
-              "lo": 117.2,
-              "hi": 369.6,
+              "headline": 204.3,
+              "lo": 116.7,
+              "hi": 371.0,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2563,21 +2563,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 308.5,
-              "lo": 222.9,
-              "hi": 436.6,
+              "headline": 308.7,
+              "lo": 213.5,
+              "hi": 444.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2604,15 +2604,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 354.0,
-              "lo": 293.9,
-              "hi": 469.1,
+              "lo": 294.1,
+              "hi": 469.8,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -2642,14 +2642,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 63.7,
+              "headline": 64.0,
               "lo": 26.0,
-              "hi": 137.4,
+              "hi": 137.2,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2676,15 +2676,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 46.6,
-              "lo": 22.5,
-              "hi": 92.8,
+              "lo": 22.7,
+              "hi": 93.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2711,15 +2711,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 68.8,
+              "headline": 68.9,
               "lo": 32.5,
-              "hi": 138.9,
+              "hi": 139.2,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2728,7 +2728,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -2751,21 +2751,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -2777,21 +2777,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4669.4,
-          "lo": 3390.0,
-          "hi": 6829.5,
+          "headline": 4673.6,
+          "lo": 3422.1,
+          "hi": 6880.2,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1229.0,
-          "lo": 892.2,
-          "hi": 1797.5,
+          "headline": 1230.1,
+          "lo": 900.7,
+          "hi": 1810.9,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 913.0,
-          "lo": 662.8,
-          "hi": 1335.4,
+          "headline": 913.8,
+          "lo": 669.1,
+          "hi": 1345.3,
           "unit": "kgCO2e/yr"
         }
       },
@@ -2842,21 +2842,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 186.5,
-              "lo": 109.6,
-              "hi": 335.3,
+              "headline": 187.0,
+              "lo": 108.1,
+              "hi": 336.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2877,21 +2877,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 300.4,
-              "lo": 217.7,
-              "hi": 424.6,
+              "headline": 301.1,
+              "lo": 207.4,
+              "hi": 433.2,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2918,15 +2918,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 343.9,
-              "lo": 289.3,
-              "hi": 450.5,
+              "headline": 344.1,
+              "lo": 289.9,
+              "hi": 451.4,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -2956,14 +2956,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 61.5,
-              "lo": 24.5,
-              "hi": 134.7,
+              "headline": 61.8,
+              "lo": 24.6,
+              "hi": 134.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -2990,15 +2990,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 43.4,
-              "lo": 21.1,
-              "hi": 87.4,
+              "headline": 43.5,
+              "lo": 21.3,
+              "hi": 87.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3025,15 +3025,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 61.6,
-              "lo": 29.2,
-              "hi": 124.8,
+              "lo": 29.5,
+              "hi": 125.4,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3042,7 +3042,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -3065,21 +3065,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -3091,21 +3091,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4408.6,
-          "lo": 3255.1,
-          "hi": 6387.4,
+          "headline": 4399.4,
+          "lo": 3281.5,
+          "hi": 6359.7,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1160.3,
-          "lo": 856.7,
-          "hi": 1681.2,
+          "headline": 1157.9,
+          "lo": 863.7,
+          "hi": 1673.9,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 862.0,
-          "lo": 636.5,
-          "hi": 1248.9,
+          "headline": 860.2,
+          "lo": 641.6,
+          "hi": 1243.5,
           "unit": "kgCO2e/yr"
         }
       },
@@ -3156,21 +3156,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 163.7,
-              "lo": 98.6,
-              "hi": 289.4,
+              "headline": 164.9,
+              "lo": 96.6,
+              "hi": 290.2,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3191,21 +3191,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 286.8,
-              "lo": 208.2,
-              "hi": 405.7,
+              "headline": 289.4,
+              "lo": 196.1,
+              "hi": 412.0,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3232,15 +3232,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 329.2,
-              "lo": 283.4,
-              "hi": 421.7,
+              "headline": 329.5,
+              "lo": 284.0,
+              "hi": 421.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -3270,14 +3270,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 57.2,
-              "lo": 21.9,
-              "hi": 128.7,
+              "headline": 57.4,
+              "lo": 22.1,
+              "hi": 128.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3304,15 +3304,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 38.1,
-              "lo": 18.8,
-              "hi": 77.3,
+              "headline": 38.3,
+              "lo": 19.0,
+              "hi": 77.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3339,15 +3339,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 51.9,
-              "lo": 25.3,
-              "hi": 105.4,
+              "headline": 52.0,
+              "lo": 25.7,
+              "hi": 105.3,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3356,7 +3356,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -3379,21 +3379,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -3405,21 +3405,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 5146.3,
-          "lo": 3644.5,
-          "hi": 7711.4,
+          "headline": 5146.0,
+          "lo": 3681.2,
+          "hi": 7675.0,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1354.5,
-          "lo": 959.2,
-          "hi": 2029.6,
+          "headline": 1354.4,
+          "lo": 968.9,
+          "hi": 2020.1,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 1006.3,
-          "lo": 712.6,
-          "hi": 1507.8,
+          "headline": 1006.2,
+          "lo": 719.8,
+          "hi": 1500.7,
           "unit": "kgCO2e/yr"
         }
       },
@@ -3470,21 +3470,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 225.2,
-              "lo": 127.3,
-              "hi": 413.8,
+              "headline": 227.1,
+              "lo": 127.8,
+              "hi": 415.7,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3505,21 +3505,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 322.6,
-              "lo": 232.9,
-              "hi": 463.3,
+              "headline": 323.4,
+              "lo": 224.0,
+              "hi": 469.2,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3546,15 +3546,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 369.2,
-              "lo": 300.5,
-              "hi": 499.1,
+              "headline": 369.3,
+              "lo": 301.2,
+              "hi": 499.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -3584,14 +3584,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 67.6,
+              "headline": 67.9,
               "lo": 28.3,
-              "hi": 142.9,
+              "hi": 142.7,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3618,15 +3618,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 52.4,
-              "lo": 25.3,
-              "hi": 104.0,
+              "headline": 52.6,
+              "lo": 25.4,
+              "hi": 104.2,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3653,15 +3653,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 78.6,
-              "lo": 36.6,
-              "hi": 158.1,
+              "lo": 36.9,
+              "hi": 158.3,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3670,7 +3670,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -3693,21 +3693,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -3719,21 +3719,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4786.7,
-          "lo": 3550.3,
-          "hi": 7085.4,
+          "headline": 4801.5,
+          "lo": 3588.4,
+          "hi": 6972.9,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1259.9,
-          "lo": 934.4,
-          "hi": 1864.9,
+          "headline": 1263.7,
+          "lo": 944.5,
+          "hi": 1835.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 935.9,
-          "lo": 694.2,
-          "hi": 1385.4,
+          "headline": 938.8,
+          "lo": 701.6,
+          "hi": 1363.4,
           "unit": "kgCO2e/yr"
         }
       },
@@ -3784,20 +3784,20 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 202.0,
-              "lo": 121.9,
+              "headline": 202.9,
+              "lo": 120.0,
               "hi": 347.8,
               "unit": "GBP/yr"
             },
@@ -3819,21 +3819,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 309.5,
-              "lo": 224.4,
-              "hi": 425.9,
+              "headline": 312.2,
+              "lo": 215.1,
+              "hi": 433.8,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3860,15 +3860,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 355.0,
-              "lo": 298.3,
-              "hi": 454.7,
+              "headline": 355.1,
+              "lo": 298.6,
+              "hi": 455.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -3898,14 +3898,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 63.0,
-              "lo": 27.7,
-              "hi": 124.1,
+              "headline": 63.1,
+              "lo": 27.8,
+              "hi": 124.8,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3932,15 +3932,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 47.3,
-              "lo": 24.3,
-              "hi": 87.4,
+              "headline": 47.2,
+              "lo": 24.5,
+              "hi": 87.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3967,15 +3967,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 69.2,
-              "lo": 34.8,
-              "hi": 129.7,
+              "headline": 69.4,
+              "lo": 35.1,
+              "hi": 129.8,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -3984,7 +3984,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -4007,21 +4007,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -4033,21 +4033,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 2730.7,
-          "lo": 2082.7,
-          "hi": 3690.9,
+          "headline": 2722.5,
+          "lo": 2065.3,
+          "hi": 3735.9,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 718.7,
-          "lo": 548.2,
-          "hi": 971.4,
+          "headline": 716.6,
+          "lo": 543.6,
+          "hi": 983.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 533.9,
-          "lo": 407.2,
-          "hi": 721.7,
+          "headline": 532.3,
+          "lo": 403.8,
+          "hi": 730.5,
           "unit": "kgCO2e/yr"
         }
       },
@@ -4059,21 +4059,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 2200.2,
-          "lo": 1338.3,
-          "hi": 3871.6,
+          "headline": 2175.6,
+          "lo": 1386.8,
+          "hi": 3842.3,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 579.1,
-          "lo": 352.2,
-          "hi": 1019.0,
+          "headline": 572.6,
+          "lo": 365.0,
+          "hi": 1011.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 430.2,
-          "lo": 261.7,
-          "hi": 757.0,
+          "headline": 425.4,
+          "lo": 271.2,
+          "hi": 751.3,
           "unit": "kgCO2e/yr"
         }
       },
@@ -4098,21 +4098,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 120.3,
-              "lo": 82.8,
-              "hi": 180.9,
+              "headline": 120.8,
+              "lo": 80.4,
+              "hi": 183.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4133,21 +4133,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 254.5,
-              "lo": 183.2,
-              "hi": 339.1,
+              "headline": 256.2,
+              "lo": 172.2,
+              "hi": 353.7,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4174,15 +4174,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 296.5,
-              "lo": 274.4,
-              "hi": 338.0,
+              "headline": 297.0,
+              "lo": 273.8,
+              "hi": 338.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -4212,14 +4212,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 27.0,
-              "lo": 13.8,
-              "hi": 52.5,
+              "headline": 27.1,
+              "lo": 14.0,
+              "hi": 52.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4246,15 +4246,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 23.6,
-              "lo": 14.7,
-              "hi": 40.3,
+              "headline": 23.9,
+              "lo": 14.3,
+              "hi": 40.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4281,15 +4281,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 33.8,
-              "lo": 20.5,
-              "hi": 59.1,
+              "headline": 34.0,
+              "lo": 20.3,
+              "hi": 59.3,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4298,7 +4298,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -4321,21 +4321,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -4347,21 +4347,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4911.6,
-          "lo": 3540.0,
-          "hi": 7278.6,
+          "headline": 4929.3,
+          "lo": 3554.6,
+          "hi": 7303.5,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1292.7,
-          "lo": 931.7,
-          "hi": 1915.7,
+          "headline": 1297.4,
+          "lo": 935.6,
+          "hi": 1922.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 960.4,
-          "lo": 692.2,
-          "hi": 1423.2,
+          "headline": 963.8,
+          "lo": 695.0,
+          "hi": 1428.0,
           "unit": "kgCO2e/yr"
         }
       },
@@ -4412,21 +4412,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 207.2,
+              "headline": 208.9,
               "lo": 119.7,
-              "hi": 376.5,
+              "hi": 380.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4447,21 +4447,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 312.5,
-              "lo": 226.0,
-              "hi": 443.3,
+              "headline": 313.1,
+              "lo": 216.9,
+              "hi": 450.2,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4488,15 +4488,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 357.6,
-              "lo": 295.8,
-              "hi": 477.1,
+              "headline": 357.9,
+              "lo": 296.2,
+              "hi": 477.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -4526,14 +4526,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 64.6,
+              "headline": 64.8,
               "lo": 26.7,
-              "hi": 137.7,
+              "hi": 138.1,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4560,15 +4560,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 48.2,
-              "lo": 23.3,
-              "hi": 96.4,
+              "headline": 48.3,
+              "lo": 23.5,
+              "hi": 96.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4595,15 +4595,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 70.9,
-              "lo": 33.5,
-              "hi": 143.2,
+              "headline": 71.0,
+              "lo": 33.6,
+              "hi": 143.4,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4612,7 +4612,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -4635,21 +4635,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -4661,21 +4661,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -4726,21 +4726,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 209.0,
+              "headline": 210.9,
               "lo": 120.3,
-              "hi": 382.0,
+              "hi": 384.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4761,21 +4761,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 313.9,
-              "lo": 226.6,
-              "hi": 447.3,
+              "headline": 314.5,
+              "lo": 218.1,
+              "hi": 454.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4802,15 +4802,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 359.1,
-              "lo": 296.4,
-              "hi": 479.2,
+              "lo": 296.5,
+              "hi": 479.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -4840,14 +4840,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 65.3,
-              "lo": 26.8,
-              "hi": 139.8,
+              "headline": 65.5,
+              "lo": 26.9,
+              "hi": 139.7,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4874,15 +4874,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 48.8,
-              "lo": 23.5,
-              "hi": 97.2,
+              "lo": 23.6,
+              "hi": 97.3,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4909,15 +4909,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 71.7,
-              "lo": 33.7,
-              "hi": 144.4,
+              "headline": 71.8,
+              "lo": 33.8,
+              "hi": 144.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -4926,7 +4926,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -4949,21 +4949,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -4975,21 +4975,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4611.4,
-          "lo": 3253.3,
-          "hi": 7019.2,
+          "headline": 4610.3,
+          "lo": 3287.1,
+          "hi": 7003.4,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1213.7,
-          "lo": 856.3,
-          "hi": 1847.5,
+          "headline": 1213.4,
+          "lo": 865.2,
+          "hi": 1843.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 901.7,
-          "lo": 636.1,
-          "hi": 1372.5,
+          "headline": 901.5,
+          "lo": 642.7,
+          "hi": 1369.4,
           "unit": "kgCO2e/yr"
         }
       },
@@ -5001,21 +5001,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 329.6,
-          "lo": 234.4,
-          "hi": 456.8,
+          "headline": 330.5,
+          "lo": 215.8,
+          "hi": 497.0,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 86.7,
-          "lo": 61.7,
-          "hi": 120.2,
+          "headline": 87.0,
+          "lo": 56.8,
+          "hi": 130.8,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 64.4,
-          "lo": 45.8,
-          "hi": 89.3,
+          "headline": 64.6,
+          "lo": 42.2,
+          "hi": 97.2,
           "unit": "kgCO2e/yr"
         }
       },
@@ -5040,21 +5040,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
               "headline": 33.0,
-              "lo": 23.4,
-              "hi": 45.7,
+              "lo": 21.6,
+              "hi": 49.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 182.5,
-              "lo": 92.7,
-              "hi": 355.3,
+              "headline": 182.6,
+              "lo": 93.8,
+              "hi": 356.2,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -5075,21 +5075,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 25.6,
-              "lo": 18.2,
-              "hi": 35.5,
+              "headline": 25.7,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 293.3,
-              "lo": 210.9,
-              "hi": 421.1,
+              "headline": 293.9,
+              "lo": 202.2,
+              "hi": 427.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -5116,14 +5116,14 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 22.4,
-              "lo": 16.0,
-              "hi": 31.1,
+              "headline": 22.5,
+              "lo": 14.7,
+              "hi": 33.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 340.7,
-              "lo": 277.7,
+              "lo": 278.1,
               "hi": 463.1,
               "unit": "GBP/yr"
             },
@@ -5154,8 +5154,8 @@
             },
             "lighting_kwh": {
               "headline": 6.4,
-              "lo": 4.6,
-              "hi": 8.9,
+              "lo": 4.2,
+              "hi": 9.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
@@ -5189,13 +5189,13 @@
             },
             "lighting_kwh": {
               "headline": 9.6,
-              "lo": 6.8,
-              "hi": 13.3,
+              "lo": 6.3,
+              "hi": 14.5,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 41.0,
-              "lo": 15.6,
+              "lo": 15.8,
               "hi": 90.2,
               "unit": "GBP/yr"
             },
@@ -5224,13 +5224,13 @@
             },
             "lighting_kwh": {
               "headline": 12.8,
-              "lo": 9.1,
-              "hi": 17.8,
+              "lo": 8.4,
+              "hi": 19.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 61.2,
-              "lo": 23.0,
+              "lo": 23.2,
               "hi": 135.4,
               "unit": "GBP/yr"
             },
@@ -5240,7 +5240,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"
@@ -5263,21 +5263,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -5289,21 +5289,21 @@
           "unit": "kWh/yr"
         },
         "electricity_kwh": {
-          "headline": 4942.4,
-          "lo": 3553.2,
-          "hi": 7363.4,
+          "headline": 4956.0,
+          "lo": 3568.3,
+          "hi": 7337.8,
           "unit": "kWh/yr"
         },
         "cost_gbp": {
-          "headline": 1300.8,
-          "lo": 935.2,
-          "hi": 1938.0,
+          "headline": 1304.4,
+          "lo": 939.2,
+          "hi": 1931.3,
           "unit": "GBP/yr"
         },
         "carbon_kg": {
-          "headline": 966.4,
-          "lo": 694.8,
-          "hi": 1439.8,
+          "headline": 969.0,
+          "lo": 697.7,
+          "hi": 1434.8,
           "unit": "kgCO2e/yr"
         }
       },
@@ -5354,21 +5354,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 140.6,
-              "lo": 98.4,
-              "hi": 191.8,
+              "headline": 141.6,
+              "lo": 90.6,
+              "hi": 205.2,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 131.8,
-              "lo": 93.7,
-              "hi": 182.7,
+              "headline": 132.2,
+              "lo": 86.3,
+              "hi": 198.8,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 209.0,
+              "headline": 210.9,
               "lo": 120.3,
-              "hi": 382.0,
+              "hi": 384.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -5389,21 +5389,21 @@
               "unit": "kWh/yr"
             },
             "appliance_kwh": {
-              "headline": 726.3,
-              "lo": 508.2,
-              "hi": 990.6,
+              "headline": 731.3,
+              "lo": 468.0,
+              "hi": 1059.9,
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 102.6,
-              "lo": 72.9,
-              "hi": 142.2,
+              "headline": 102.8,
+              "lo": 67.2,
+              "hi": 154.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 313.9,
-              "lo": 226.6,
-              "hi": 447.3,
+              "headline": 314.5,
+              "lo": 218.1,
+              "hi": 454.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -5430,15 +5430,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 89.7,
-              "lo": 63.8,
-              "hi": 124.4,
+              "headline": 90.0,
+              "lo": 58.8,
+              "hi": 135.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 359.1,
-              "lo": 296.4,
-              "hi": 479.2,
+              "lo": 296.5,
+              "hi": 479.5,
               "unit": "GBP/yr"
             },
             "other_kwh": {
@@ -5468,14 +5468,14 @@
             },
             "lighting_kwh": {
               "headline": 25.7,
-              "lo": 18.2,
-              "hi": 35.6,
+              "lo": 16.8,
+              "hi": 38.7,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 65.3,
-              "lo": 26.8,
-              "hi": 139.8,
+              "headline": 65.5,
+              "lo": 26.9,
+              "hi": 139.7,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -5502,15 +5502,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 38.4,
-              "lo": 27.3,
-              "hi": 53.2,
+              "headline": 38.5,
+              "lo": 25.2,
+              "hi": 57.9,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
               "headline": 48.8,
-              "lo": 23.5,
-              "hi": 97.2,
+              "lo": 23.6,
+              "hi": 97.3,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -5537,15 +5537,15 @@
               "unit": "kWh/yr"
             },
             "lighting_kwh": {
-              "headline": 51.2,
-              "lo": 36.4,
-              "hi": 71.0,
+              "headline": 51.4,
+              "lo": 33.6,
+              "hi": 77.3,
               "unit": "kWh/yr"
             },
             "running_cost_gbp": {
-              "headline": 71.7,
-              "lo": 33.7,
-              "hi": 144.4,
+              "headline": 71.8,
+              "lo": 33.8,
+              "hi": 144.6,
               "unit": "GBP/yr"
             },
             "other_kwh": {}
@@ -5554,7 +5554,7 @@
         "unaccounted_electricity_kwh": {
           "headline": 0.0,
           "lo": 0.0,
-          "hi": 0.0,
+          "hi": 21.3,
           "unit": "kWh/yr"
         },
         "basis": "Estimated: each room's share of the calibrated whole-house heat loss comes from its outside walls, windows, roof and floor in the fitted layout; appliance energy from your appliance list, scaled to the whole house"

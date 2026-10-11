@@ -28,10 +28,12 @@ class Occupancy(BaseModel):
 
 class HeatingBehaviour(BaseModel):
     setpoint_c: float
-    setpoint_sd: float = Field(description="Prior standard deviation, K")
+    setpoint_sd: float = Field(description="Prior standard deviation, K; 0 = the customer answered, so fixed")
     heating_hours_per_day: float
-    hours_sd: float
+    hours_sd: float = Field(description="Prior standard deviation, h; 0 = the customer gave a schedule, so fixed")
     periods: list[tuple[int, int]] = Field(default_factory=list, description="Heating periods (start, end hour)")
+    setpoint_source: str
+    hours_source: str
     source: str
 
 
@@ -53,25 +55,73 @@ def occupancy(prop: Property, occupants: Optional[float], presence: Optional[Pre
     n = float(occupants) if occupants else sap_n
     pres = presence or "part_day"
     frac = PRESENCE_FRACTION[pres]
-    src = ("user" if occupants else "sap_2012 table 1b (from floor area)") + (", presence user" if presence else ", presence assumed")
+    src = "user answer: occupants (fixed)" if occupants else "sap_2012 table 1b from floor area (uncertain)"
     return Occupancy(occupants=round(n, 2), presence=pres, presence_fraction=frac,
                      metabolic_gains_w=round(60 * n * frac, 1), source=src)
 
 
 def heating_behaviour(thermostat_c: Optional[float], periods: Optional[Sequence[tuple[int, int]]],
                       presence: Presence) -> HeatingBehaviour:
+    # A customer's explicit answer is fixed (sd 0); a missing one becomes an uncertain input with a wider prior.
     if periods:
         hours = float(sum((end - start) % 24 or 24 for start, end in periods))
-        hours_sd, hsrc = 1.0, "user schedule"
+        hours_sd, hsrc = 0.0, "user answer: heating schedule (fixed)"
     else:
         hours = {"out_all_day": 8.0, "part_day": 9.0, "home_all_day": 12.0}[presence]
-        hours_sd, hsrc = 2.5, "sap-style default by presence"
+        hours_sd, hsrc = 2.5, "default by daytime presence (uncertain)"
     if thermostat_c is not None:
-        sp, sp_sd, ssrc = thermostat_c - 1.0, 1.0, "user thermostat less 1 K (rooms away from the stat run cooler)"
+        sp, sp_sd, ssrc = thermostat_c - 1.0, 0.0, "user answer: thermostat less 1 K, rooms away from the stat run cooler (fixed)"
     else:
-        sp, sp_sd, ssrc = 19.5, 1.5, "default 19.5 C"
+        sp, sp_sd, ssrc = 19.5, 1.5, "default 19.5 C (uncertain)"
     return HeatingBehaviour(setpoint_c=sp, setpoint_sd=sp_sd, heating_hours_per_day=min(hours, 24.0), hours_sd=hours_sd,
-                            periods=list(periods or []), source=f"setpoint: {ssrc}; hours: {hsrc}")
+                            periods=list(periods or []), setpoint_source=ssrc, hours_source=hsrc,
+                            source=f"setpoint: {ssrc}; hours: {hsrc}")
+
+
+# --------------------------------------------------------------------------- optional follow-up questions
+# Asked only when relevant; None = "not sure" (or not asked), which keeps a default with a wider prior.
+PlugInHeaterUse = Literal["never", "rarely", "some_evenings", "most_days"]
+LedLighting = Literal["all", "most", "about_half", "few"]
+# Hours a day per plug-in heater over the heating season. Working assumption.
+HEATER_HOURS: dict[str, float] = {"never": 0.0, "rarely": 0.5, "some_evenings": 2.0, "most_days": 5.0}
+DEFAULT_HEATER_HOURS = 2.0  # appliance_energy.json electric_heater hours_per_day
+# Share of low-energy (LED/CFL) lighting, %, for SAP 2012 Appendix L.
+LED_PCT: dict[str, float] = {"all": 100.0, "most": 80.0, "about_half": 50.0, "few": 15.0}
+DEFAULT_LED_PCT = 50.0
+
+# Homes where plug-in heaters commonly top up the main heating (storage heaters run out in the evening; solid-fuel
+# room heaters warm one room). Intake heating answer values and EPC systems.
+_TOP_UP_USER = {"electric_storage", "electric_storage_hhr", "solid_fuel"}
+_TOP_UP_EPC = {HeatingSystem.electric_storage, HeatingSystem.electric_storage_hhr, HeatingSystem.solid_fuel}
+
+
+class FollowUp(BaseModel):
+    key: Literal["plug_in_heater_use", "led_lighting"]
+    question: str
+    options: list[tuple[str, str]]
+    reason: str = Field(description="Why it is asked for this home")
+
+
+def follow_up_questions(prop: Optional[Property], heating_system: Optional[str],
+                        appliance_types: Sequence[str]) -> list[FollowUp]:
+    """The optional follow-ups worth asking this home. Plug-in heaters: one is listed, or the heating is storage or
+    solid-fuel room heaters. Lighting: no EPC, the EPC doesn't record it, or it records less than all low-energy."""
+    out: list[FollowUp] = []
+    listed = "electric_heater" in appliance_types
+    top_up = heating_system in _TOP_UP_USER if heating_system else bool(prop and prop.heating.main_system in _TOP_UP_EPC)
+    if listed or top_up:
+        out.append(FollowUp(
+            key="plug_in_heater_use", question="How often are plug-in heaters used in winter?",
+            options=[("never", "Never"), ("rarely", "Rarely"), ("some_evenings", "Some evenings"),
+                     ("most_days", "Most days")],
+            reason="a plug-in heater is listed" if listed else "storage or room heaters are often topped up"))
+    pct = prop.low_energy_lighting_pct if prop else None
+    if pct is None or pct < 100:
+        out.append(FollowUp(
+            key="led_lighting", question="How much of the lighting is LED?",
+            options=[("all", "All"), ("most", "Most"), ("about_half", "About half"), ("few", "Few or none")],
+            reason="no EPC lighting record" if pct is None else f"EPC records {pct:.0f}% low-energy lighting"))
+    return out
 
 
 _BOILERS = {HeatingSystem.gas_boiler_condensing, HeatingSystem.gas_boiler_non_condensing, HeatingSystem.oil_boiler,

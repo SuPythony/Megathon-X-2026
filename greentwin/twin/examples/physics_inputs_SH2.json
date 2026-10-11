@@ -49,7 +49,10 @@
     "occupants": 4.0,
     "postcode_district": "BS16",
     "heat_capacity_kj_per_k": 24400.0,
-    "thermal_mass_kj_per_m2k": 256.8
+    "thermal_mass_kj_per_m2k": 256.8,
+    "low_energy_lighting_pct": 50.0,
+    "secondary_heating_scale": 1.0,
+    "battery_round_trip_efficiency": 0.9
   },
   "sources": {
     "wall_area_m2": "layout:interwar_semi_3bed (floor plan)",
@@ -67,9 +70,11 @@
     "thermal_bridging_y": "twinparams_default",
     "air_changes_per_hour": "assumption by age band, less draught proofing",
     "heating_efficiency": "rdsap_default by system (to_verify)",
-    "occupants": "user, presence user",
-    "setpoint_c": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule (calibrated)",
-    "heating_hours_per_day": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule",
+    "occupants": "user answer: occupants (fixed)",
+    "daytime_occupancy": "user answer (fixed)",
+    "setpoint_c": "user answer: thermostat less 1 K, rooms away from the stat run cooler (fixed)",
+    "heating_hours_per_day": "user answer: heating schedule (fixed)",
+    "low_energy_lighting_pct": "assumption: 50% low-energy lighting (uncertain)",
     "baseload_kwh_per_day": "appliance list (typical_estimate) + sap_2012 lighting",
     "internal_gains_w": "metabolic (occupancy) + appliance schedules + sap lighting, less evaporation",
     "lighting_share_of_baseload": "sap_2012 appendix L",
@@ -88,7 +93,9 @@
     "pv_tilt_deg": "epc or 35",
     "battery_kwh": "epc",
     "heating_fuel": "epc",
-    "tariff": "default standard"
+    "tariff": "default standard",
+    "secondary_heating_scale": "no plug-in heaters listed",
+    "battery_round_trip_efficiency": "assumption: typical lithium-ion AC round trip 90% (generated, not asked)"
   },
   "fuel": {
     "heating_fuel": "mains_gas",
@@ -209,7 +216,8 @@
       "status": "assumption",
       "confirmed": false,
       "detail": "assumption by age band, less draught proofing",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "baseload_kwh_per_day",
@@ -218,7 +226,8 @@
       "status": "stated",
       "confirmed": false,
       "detail": "appliance list (typical_estimate) + sap_2012 lighting",
-      "ref": "intake:example-SH2"
+      "ref": "intake:example-SH2",
+      "customer_answer": null
     },
     {
       "field": "battery_kwh",
@@ -227,7 +236,28 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "epc",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
+    },
+    {
+      "field": "battery_round_trip_efficiency",
+      "value": 0.9,
+      "source": "assumption",
+      "status": "assumption",
+      "confirmed": false,
+      "detail": "assumption: typical lithium-ion AC round trip 90% (generated, not asked)",
+      "ref": null,
+      "customer_answer": null
+    },
+    {
+      "field": "daytime_occupancy",
+      "value": null,
+      "source": "user_stated",
+      "status": "stated",
+      "confirmed": false,
+      "detail": "user answer (fixed)",
+      "ref": "intake:example-SH2",
+      "customer_answer": "given"
     },
     {
       "field": "door_area_m2",
@@ -236,7 +266,8 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "layout:interwar_semi_3bed (floor plan)",
-      "ref": "house_type:interwar_semi_3bed"
+      "ref": "house_type:interwar_semi_3bed",
+      "customer_answer": null
     },
     {
       "field": "door_u",
@@ -245,7 +276,8 @@
       "status": "to_verify",
       "confirmed": false,
       "detail": "rdsap_default (to_verify)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "floor_area_m2",
@@ -254,7 +286,8 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "layout:interwar_semi_3bed (floor plan)",
-      "ref": "house_type:interwar_semi_3bed"
+      "ref": "house_type:interwar_semi_3bed",
+      "customer_answer": null
     },
     {
       "field": "floor_u",
@@ -263,7 +296,8 @@
       "status": "to_verify",
       "confirmed": false,
       "detail": "iso13370 (to_verify)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "heat_capacity_kj_per_k",
@@ -272,7 +306,8 @@
       "status": "to_verify",
       "confirmed": false,
       "detail": "construction x layout areas, kappa from rdsap_defaults.json (to_verify); partitions: assumption by age (pre-1950 masonry, later plasterboard)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "heat_loss_multiplier",
@@ -281,7 +316,8 @@
       "status": "default",
       "confirmed": false,
       "detail": "default 1.0 (calibrated)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "heating_efficiency",
@@ -290,7 +326,8 @@
       "status": "to_verify",
       "confirmed": false,
       "detail": "rdsap_default by system (to_verify)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "heating_fuel",
@@ -299,7 +336,8 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "epc",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "heating_hours_per_day",
@@ -307,8 +345,9 @@
       "source": "user_stated",
       "status": "stated",
       "confirmed": false,
-      "detail": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule",
-      "ref": "intake:example-SH2"
+      "detail": "user answer: heating schedule (fixed)",
+      "ref": "intake:example-SH2",
+      "customer_answer": "given"
     },
     {
       "field": "hot_water_efficiency",
@@ -317,7 +356,8 @@
       "status": "assumption",
       "confirmed": false,
       "detail": "assumption from main system (boiler summer penalty 0.9; heat pump cylinder 2.0; electric 1.0)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "hot_water_fuel",
@@ -326,7 +366,8 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "epc heating.hot_water",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "hot_water_kwh_per_day",
@@ -335,7 +376,8 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "sap_2012 appendix J demand less electric shower use (floor 40%)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "hot_water_standing_loss_kwh_per_day",
@@ -344,7 +386,8 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "epc cylinder_insulated (assumption: 1.0 / 3.0 kWh/day)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "internal_gains_w",
@@ -353,7 +396,8 @@
       "status": "default",
       "confirmed": false,
       "detail": "metabolic (occupancy) + appliance schedules + sap lighting, less evaporation",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "lighting_share_of_baseload",
@@ -362,7 +406,18 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "sap_2012 appendix L",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
+    },
+    {
+      "field": "low_energy_lighting_pct",
+      "value": 50.0,
+      "source": "assumption",
+      "status": "assumption",
+      "confirmed": false,
+      "detail": "assumption: 50% low-energy lighting (uncertain)",
+      "ref": null,
+      "customer_answer": "not_sure"
     },
     {
       "field": "occupants",
@@ -370,8 +425,9 @@
       "source": "user_stated",
       "status": "stated",
       "confirmed": false,
-      "detail": "user, presence user",
-      "ref": "intake:example-SH2"
+      "detail": "user answer: occupants (fixed)",
+      "ref": "intake:example-SH2",
+      "customer_answer": "given"
     },
     {
       "field": "party_wall_area_m2",
@@ -380,7 +436,8 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "layout:interwar_semi_3bed (floor plan)",
-      "ref": "house_type:interwar_semi_3bed"
+      "ref": "house_type:interwar_semi_3bed",
+      "customer_answer": null
     },
     {
       "field": "postcode_district",
@@ -389,7 +446,8 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "epc / intake",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "pv_azimuth_deg",
@@ -398,7 +456,8 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "epc or 180",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "pv_kwp",
@@ -407,7 +466,8 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "epc",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "pv_tilt_deg",
@@ -416,7 +476,8 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "epc or 35",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "roof_area_m2",
@@ -425,7 +486,8 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "layout:interwar_semi_3bed (floor plan)",
-      "ref": "house_type:interwar_semi_3bed"
+      "ref": "house_type:interwar_semi_3bed",
+      "customer_answer": null
     },
     {
       "field": "roof_u",
@@ -434,7 +496,18 @@
       "status": "to_verify",
       "confirmed": false,
       "detail": "rdsap_default loft table (to_verify)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
+    },
+    {
+      "field": "secondary_heating_scale",
+      "value": 1.0,
+      "source": "default",
+      "status": "default",
+      "confirmed": false,
+      "detail": "no plug-in heaters listed",
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "setpoint_c",
@@ -442,8 +515,9 @@
       "source": "user_stated",
       "status": "stated",
       "confirmed": false,
-      "detail": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule (calibrated)",
-      "ref": "intake:example-SH2"
+      "detail": "user answer: thermostat less 1 K, rooms away from the stat run cooler (fixed)",
+      "ref": "intake:example-SH2",
+      "customer_answer": "given"
     },
     {
       "field": "shower_electric_kwh_per_day",
@@ -452,7 +526,8 @@
       "status": "default",
       "confirmed": false,
       "detail": "none listed",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "solar_gain_factor",
@@ -461,7 +536,8 @@
       "status": "default",
       "confirmed": false,
       "detail": "twinparams_default",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "tariff",
@@ -470,7 +546,8 @@
       "status": "default",
       "confirmed": false,
       "detail": "default standard",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "thermal_bridging_y",
@@ -479,7 +556,8 @@
       "status": "default",
       "confirmed": false,
       "detail": "twinparams_default",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "thermal_mass_kj_per_m2k",
@@ -488,7 +566,8 @@
       "status": "to_verify",
       "confirmed": false,
       "detail": "construction x layout areas, kappa from rdsap_defaults.json (to_verify); partitions: assumption by age (pre-1950 masonry, later plasterboard)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "volume_m3",
@@ -497,7 +576,8 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "layout:interwar_semi_3bed (floor plan)",
-      "ref": "house_type:interwar_semi_3bed"
+      "ref": "house_type:interwar_semi_3bed",
+      "customer_answer": null
     },
     {
       "field": "wall_area_m2",
@@ -506,7 +586,8 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "layout:interwar_semi_3bed (floor plan)",
-      "ref": "house_type:interwar_semi_3bed"
+      "ref": "house_type:interwar_semi_3bed",
+      "customer_answer": null
     },
     {
       "field": "wall_u",
@@ -515,7 +596,8 @@
       "status": "to_verify",
       "confirmed": false,
       "detail": "rdsap_default (to_verify)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "window_area_m2",
@@ -524,7 +606,8 @@
       "status": "estimated",
       "confirmed": false,
       "detail": "layout:interwar_semi_3bed (floor plan)",
-      "ref": "house_type:interwar_semi_3bed"
+      "ref": "house_type:interwar_semi_3bed",
+      "customer_answer": null
     },
     {
       "field": "window_u",
@@ -533,7 +616,8 @@
       "status": "to_verify",
       "confirmed": false,
       "detail": "rdsap_default glazing (to_verify)",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "weather",
@@ -542,7 +626,8 @@
       "status": "synthetic",
       "confirmed": false,
       "detail": "weather source: synthetic",
-      "ref": null
+      "ref": null,
+      "customer_answer": null
     },
     {
       "field": "meter_readings",
@@ -551,18 +636,19 @@
       "status": "recorded",
       "confirmed": false,
       "detail": "usage records",
-      "ref": "intake:example-SH2"
+      "ref": "intake:example-SH2",
+      "customer_answer": null
     }
   ],
   "provenance_summary": {
     "geometry_source": "epc_fitted",
     "counts_by_status": {
-      "assumption": 2,
-      "stated": 4,
+      "assumption": 4,
+      "stated": 5,
       "recorded": 9,
       "estimated": 9,
       "to_verify": 8,
-      "default": 6,
+      "default": 7,
       "synthetic": 1
     },
     "heat_loss_share_by_status": {
@@ -572,18 +658,152 @@
     "confirmed_or_recorded_heat_loss_pct": 0.0,
     "default_or_unverified_heat_loss_pct": 100.0
   },
+  "technical_inputs": [
+    {
+      "quantity": "Wall U-value",
+      "value": 1.5,
+      "unit": "W/m2K",
+      "source": "rdsap_default (to_verify)",
+      "status": "to_verify",
+      "replace_with": "EPC measured U-value, else verified RdSAP 10 tables (Part 0 / data team)"
+    },
+    {
+      "quantity": "Roof U-value",
+      "value": 0.4,
+      "unit": "W/m2K",
+      "source": "rdsap_default loft table (to_verify)",
+      "status": "to_verify",
+      "replace_with": "EPC measured U-value, else verified RdSAP 10 tables (Part 0 / data team)"
+    },
+    {
+      "quantity": "Floor U-value",
+      "value": 0.632,
+      "unit": "W/m2K",
+      "source": "iso13370 (to_verify)",
+      "status": "to_verify",
+      "replace_with": "EPC measured U-value, else verified RdSAP 10 tables (Part 0 / data team)"
+    },
+    {
+      "quantity": "Window U-value",
+      "value": 2.8,
+      "unit": "W/m2K",
+      "source": "rdsap_default glazing (to_verify)",
+      "status": "to_verify",
+      "replace_with": "EPC measured U-value, else verified RdSAP 10 tables (Part 0 / data team)"
+    },
+    {
+      "quantity": "Door U-value",
+      "value": 3.0,
+      "unit": "W/m2K",
+      "source": "rdsap_default (to_verify)",
+      "status": "to_verify",
+      "replace_with": "EPC measured U-value, else verified RdSAP 10 tables (Part 0 / data team)"
+    },
+    {
+      "quantity": "Ventilation rate",
+      "value": 0.66,
+      "unit": "air changes/h",
+      "source": "assumption by age band, less draught proofing",
+      "status": "assumption",
+      "replace_with": "SAP 2012 section 2 ventilation from chimneys, fans and draught proofing; an air-tightness test if available"
+    },
+    {
+      "quantity": "Heating seasonal efficiency",
+      "value": 0.84,
+      "unit": "fraction",
+      "source": "rdsap_default by system (to_verify)",
+      "status": "to_verify",
+      "replace_with": "EPC seasonal efficiency or PCDB product record; MCS design SCOP for heat pumps"
+    },
+    {
+      "quantity": "Hot-water efficiency",
+      "value": 0.756,
+      "unit": "fraction",
+      "source": "assumption from main system (boiler summer penalty 0.9; heat pump cylinder 2.0; electric 1.0)",
+      "status": "assumption",
+      "replace_with": "SAP 2012 Table 4a/4b by system"
+    },
+    {
+      "quantity": "Outdoor temperature and degree days",
+      "value": null,
+      "unit": "deg C, K day",
+      "source": "weather source: synthetic",
+      "status": "synthetic",
+      "replace_with": "DataLayer.load_weather(district, months): Met Office HadUK-Grid (Part 0)"
+    },
+    {
+      "quantity": "Solar irradiation (horizontal)",
+      "value": 980.0,
+      "unit": "kWh/m2 over the months",
+      "source": "weather source: synthetic",
+      "status": "synthetic",
+      "replace_with": "DataLayer.load_weather(district, months): Met Office HadUK-Grid (Part 0); PVGIS for tilted panels"
+    },
+    {
+      "quantity": "PV performance ratio",
+      "value": 0.85,
+      "unit": "fraction",
+      "source": "assumption: typical UK system losses (inverter, temperature, soiling)",
+      "status": "assumption",
+      "replace_with": "PVGIS system-loss estimate or the installer's MCS figure"
+    },
+    {
+      "quantity": "Appliance load profile",
+      "value": 7.33,
+      "unit": "kWh/day over 24 hourly steps",
+      "source": "appliance_energy.json daily and monthly profiles",
+      "status": "estimated",
+      "replace_with": "half-hourly shapes from London smart-meter data (planned); the customer's smart meter"
+    },
+    {
+      "quantity": "Battery round-trip efficiency",
+      "value": 0.9,
+      "unit": "fraction",
+      "source": "assumption: typical lithium-ion AC round trip 90% (generated, not asked)",
+      "status": "assumption",
+      "replace_with": "the installed battery's datasheet"
+    }
+  ],
+  "follow_ups": [
+    {
+      "question": {
+        "key": "led_lighting",
+        "question": "How much of the lighting is LED?",
+        "options": [
+          [
+            "all",
+            "All"
+          ],
+          [
+            "most",
+            "Most"
+          ],
+          [
+            "about_half",
+            "About half"
+          ],
+          [
+            "few",
+            "Few or none"
+          ]
+        ],
+        "reason": "no EPC lighting record"
+      },
+      "answer": null
+    }
+  ],
   "occupancy": {
     "occupants": 4.0,
     "presence": "part_day",
     "presence_fraction": 0.7,
     "metabolic_gains_w": 168.0,
-    "source": "user, presence user"
+    "source": "user answer: occupants (fixed)"
   },
   "heating_behaviour": {
     "setpoint_c": 20.0,
-    "setpoint_sd": 1.0,
+    "setpoint_sd": 0.0,
     "heating_hours_per_day": 9.0,
-    "hours_sd": 1.0,
+    "hours_sd": 0.0,
     "periods": [
       [
         6,
@@ -594,7 +814,9 @@
         22
       ]
     ],
-    "source": "setpoint: user thermostat less 1 K (rooms away from the stat run cooler); hours: user schedule"
+    "setpoint_source": "user answer: thermostat less 1 K, rooms away from the stat run cooler (fixed)",
+    "hours_source": "user answer: heating schedule (fixed)",
+    "source": "setpoint: user answer: thermostat less 1 K, rooms away from the stat run cooler (fixed); hours: user answer: heating schedule (fixed)"
   },
   "appliances": {
     "occupants": 4.0,
@@ -1347,23 +1569,23 @@
     },
     {
       "param": "setpoint_c",
-      "kind": "normal_add",
+      "kind": "fixed",
       "mu": 0.0,
-      "sigma": 1.0,
+      "sigma": 0.0,
       "base": 20.0,
-      "lower": 14.0,
-      "upper": 24.0,
-      "rationale": "Mean internal temperature: user thermostat"
+      "lower": null,
+      "upper": null,
+      "rationale": "Customer answer, fixed: user answer: thermostat less 1 K, rooms away from the stat run cooler (fixed)"
     },
     {
       "param": "baseload_kwh_per_day",
       "kind": "lognormal",
       "mu": 0.0,
-      "sigma": 0.2,
+      "sigma": 0.25,
       "base": 9.347,
       "lower": null,
       "upper": null,
-      "rationale": "From the appliance list"
+      "rationale": "From the appliance list; lighting share not known, wider"
     },
     {
       "param": "heating_efficiency",
@@ -1379,21 +1601,21 @@
       "param": "hot_water_kwh_per_day",
       "kind": "lognormal",
       "mu": 0.0,
-      "sigma": 0.3,
+      "sigma": 0.2,
       "base": 5.857,
       "lower": null,
       "upper": null,
-      "rationale": "SAP occupancy-based demand; identified by summer gas/electricity"
+      "rationale": "SAP demand for the stated number of occupants (fixed); use per person still varies"
     },
     {
       "param": "heating_hours_per_day",
-      "kind": "normal_add",
+      "kind": "fixed",
       "mu": 0.0,
-      "sigma": 1.0,
+      "sigma": 0.0,
       "base": 9.0,
-      "lower": 2.0,
-      "upper": 24.0,
-      "rationale": "Optional: weakly identified with monthly data; fix unless the user gave a schedule"
+      "lower": null,
+      "upper": null,
+      "rationale": "Customer answer, fixed: user answer: heating schedule (fixed)"
     },
     {
       "param": "heat_capacity_kj_per_k",
@@ -1429,7 +1651,7 @@
     "estimated_months": 0,
     "identifiable": [
       "heat_loss_multiplier (with efficiency fixed by its prior)",
-      "setpoint_c (partly, via the winter slope)",
+      "setpoint_c (partly, via the winter slope; not if the customer gave the thermostat)",
       "hot_water_kwh_per_day (summer heating-fuel use)",
       "baseload_kwh_per_day (electricity)"
     ],
@@ -1453,12 +1675,14 @@
     ],
     "assumptions_or_defaults": [
       "air_changes_per_hour",
+      "battery_round_trip_efficiency",
       "door_u",
       "heat_capacity_kj_per_k",
       "heat_loss_multiplier",
       "heating_efficiency",
       "hot_water_efficiency",
       "hot_water_standing_loss_kwh_per_day",
+      "low_energy_lighting_pct",
       "roof_u",
       "solar_gain_factor",
       "tariff",

@@ -46,6 +46,8 @@ EXTRA_PARAM_KEYS: tuple[str, ...] = (
     "hot_water_standing_loss_kwh_per_day",  # [0] cylinder loss, extra useful heat the DHW system must supply
     "shower_electric_kwh_per_day",          # [0] electric showers: electricity at efficiency 1
     "heat_capacity_kj_per_k",               # [250 x volume / 2.5] thermal mass; time constant = C / (3.6 x HLC) h
+    "secondary_heating_scale",              # [1] multiplies secondary_heating_kwh_monthly (plug-in heater use)
+    "battery_round_trip_efficiency",        # [0.9] PV energy shifted through the battery loses (1 - this)
 )
 
 # Behaviour fields: in "standard" mode the wrapper passes the home's uncalibrated SAP-based values for these,

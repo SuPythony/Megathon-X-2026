@@ -22,7 +22,9 @@ from pydantic import Field
 from contracts.models import BuiltForm, FloorType, Property, PropertyType, RoofType, TwinParams
 from greentwin.twin.appliances import ApplianceSummary
 from greentwin.twin.archetypes import TwinLayout, build_layout
-from greentwin.twin.household import Presence, heating_behaviour, hot_water_system, occupancy
+from greentwin.twin.household import (
+    DEFAULT_LED_PCT, LED_PCT, LedLighting, Presence, heating_behaviour, hot_water_system, occupancy,
+)
 from greentwin.twin.physics_api import FuelConfig, FuelName
 from greentwin.twin.thermal import PartitionAnswer, thermal_mass
 
@@ -39,6 +41,10 @@ class ExtendedTwinParams(TwinParams):
     postcode_district: str
     heat_capacity_kj_per_k: float = Field(description="Thermal mass: heat stored per K (construction x layout areas)")
     thermal_mass_kj_per_m2k: float = Field(description="SAP thermal mass parameter (heat capacity / floor area)")
+    low_energy_lighting_pct: float = Field(50.0, description="Share of low-energy lighting, % (SAP Appendix L)")
+    secondary_heating_scale: float = Field(1.0, description="Multiplies the plug-in heater schedule; uncertain when "
+                                                             "the customer wasn't sure how often heaters are used")
+    battery_round_trip_efficiency: float = Field(0.9, description="Battery AC round trip; generated, never asked")
 
 HERE = Path(__file__).resolve().parent
 
@@ -131,6 +137,7 @@ def params_with_sources(
     thermostat_c: Optional[float] = None,
     heating_periods: Optional[Sequence[tuple[int, int]]] = None,
     internal_walls: Optional[PartitionAnswer] = None,
+    led_lighting: Optional[LedLighting] = None,
 ) -> tuple[ExtendedTwinParams, dict[str, str]]:
     """Parameters for one home plus, per field, where the value came from. Household answers (occupants, presence,
     thermostat, heating periods) and the appliance list replace SAP defaults when given."""
@@ -217,13 +224,20 @@ def params_with_sources(
     n = occ.occupants
     behaviour = heating_behaviour(thermostat_c, heating_periods, occ.presence)
     src["occupants"] = occ.source
-    src["setpoint_c"] = behaviour.source + " (calibrated)"
-    src["heating_hours_per_day"] = behaviour.source
+    src["daytime_occupancy"] = "user answer (fixed)" if presence else "assumption: part of the day (uncertain)"
+    src["setpoint_c"] = behaviour.setpoint_source
+    src["heating_hours_per_day"] = behaviour.hours_source
 
     # Demands (SAP 2012 Appendix J and L, with the household's occupants)
     hot_water_useful = (25 * n + 36) * 4.19 * 37 / 3600  # litres/day x specific heat x 37 K mean rise -> kWh/day
     e_appliances = 207.8 * (tfa * n) ** 0.4714
-    low_energy = (prop.low_energy_lighting_pct if prop.low_energy_lighting_pct is not None else 50) / 100
+    if led_lighting:
+        led_pct, src["low_energy_lighting_pct"] = LED_PCT[led_lighting], f"user answer: {led_lighting} LED (fixed)"
+    elif prop.low_energy_lighting_pct is not None:
+        led_pct, src["low_energy_lighting_pct"] = prop.low_energy_lighting_pct, "epc low_energy_lighting"
+    else:
+        led_pct, src["low_energy_lighting_pct"] = DEFAULT_LED_PCT, "assumption: 50% low-energy lighting (uncertain)"
+    low_energy = led_pct / 100
     e_lighting = 59.73 * (tfa * n) ** 0.4714 * (1 - 0.5 * low_energy)
     e_cooking = (35 + 7 * n) * 8.76
     lighting_gains_w = 0.85 * e_lighting * 1000 / 8760
@@ -255,7 +269,9 @@ def params_with_sources(
     src.update({"heat_loss_multiplier": "default 1.0 (calibrated)", "solar_gain_factor": "twinparams_default",
                 "postcode_district": "epc / intake",
                 "pv_kwp": "epc", "pv_azimuth_deg": "epc or 180", "pv_tilt_deg": "epc or 35", "battery_kwh": "epc",
-                "heating_fuel": "epc", "tariff": "default standard"})
+                "heating_fuel": "epc", "tariff": "default standard",
+                "secondary_heating_scale": "no plug-in heaters listed",
+                "battery_round_trip_efficiency": "assumption: typical lithium-ion AC round trip 90% (generated, not asked)"})
 
     params = ExtendedTwinParams(
         property_id=prop.property_id,
@@ -275,6 +291,7 @@ def params_with_sources(
         shower_electric_kwh_per_day=hws.shower_electric_kwh_per_day, occupants=n,
         postcode_district=prop.location.postcode_district,
         heat_capacity_kj_per_k=mass.heat_capacity_kj_per_k, thermal_mass_kj_per_m2k=mass.tmp_kj_per_m2k,
+        low_energy_lighting_pct=led_pct,
     )
     return params, src
 

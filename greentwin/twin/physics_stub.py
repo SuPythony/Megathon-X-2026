@@ -23,7 +23,7 @@ STUB_ASSUMPTIONS = (
     "Gain utilisation from SAP 2012 Table 9a: eta = (1 - g^a) / (1 - g^(a+1)), a = 1 + tau / 15, g = gains / losses.",
     "Party walls lose no heat (U = 0) until a party-wall U-value is agreed.",
     "Solar gains = window area x GHI x 0.5 (vertical/horizontal) x 0.63 (g-value) x 0.7 (frame, shading).",
-    "PV yield = kWp x GHI x 0.85; self-consumption 30%, rising to 65% with a large battery.",
+    "PV yield = kWp x GHI x 0.85; self-consumption 30%, plus up to 35% more through a battery at its round-trip efficiency.",
     "Hot water: its own efficiency (hot_water_efficiency) and fuel; cylinder standing loss added to the demand.",
     "Electric showers add electricity at efficiency 1; plug-in heaters add electricity and displace main heating.",
     "Standard mode: setpoint 19.0 C and 11 heating hours/day (SAP-style), other behaviour from the caller.",
@@ -60,7 +60,7 @@ def run_physics(params: dict, weather: dict, mode: str, fuel: FuelConfig) -> dic
     ones, zeros = jnp.ones_like(days), jnp.zeros_like(days)
     appliance_factor = weather.get("appliance_month_factor", ones)
     gains_factor = weather.get("gains_month_factor", ones)
-    secondary = weather.get("secondary_heating_kwh_monthly", zeros)
+    secondary = weather.get("secondary_heating_kwh_monthly", zeros) * p.get("secondary_heating_scale", 1.0)
     extra_elec = weather.get("extra_electricity_kwh_monthly", zeros)
     extra_gas = weather.get("extra_gas_kwh_monthly", zeros)
 
@@ -112,11 +112,14 @@ def run_physics(params: dict, weather: dict, mode: str, fuel: FuelConfig) -> dic
     add(fuel.hot_water_fuel, dhw_fuel)
 
     pv = p["pv_kwp"] * ghi * 0.85
-    self_share = 0.30 + 0.35 * (1.0 - jnp.exp(-p["battery_kwh"] / 5.0))
     demand_elec = (p["baseload_kwh_per_day"] * days * appliance_factor + by_fuel["electricity"] + shower + secondary
                    + extra_elec)
-    self_used = jnp.minimum(self_share * pv, demand_elec)
-    export = pv - self_used
+    # 30% of PV is used as it is made; a battery stores up to 35% more for later, losing (1 - round trip) of it.
+    rte = p.get("battery_round_trip_efficiency", 0.9)
+    direct = jnp.minimum(0.30 * pv, demand_elec)
+    stored = jnp.minimum(0.35 * (1.0 - jnp.exp(-p["battery_kwh"] / 5.0)) * pv, (demand_elec - direct) / rte)
+    self_used = direct + stored * rte
+    export = pv - direct - stored
     monthly_elec = demand_elec - self_used
     monthly_gas = by_fuel["mains_gas"] + extra_gas
 

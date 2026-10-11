@@ -33,6 +33,8 @@ class InputProvenance(BaseModel):
     confirmed: bool = Field(description="The user confirmed this exact value")
     detail: str = Field(description="Human-readable note of how the value was made")
     ref: Optional[str] = Field(None, description="e.g. 'epc:0390-...', 'intake:abc', 'house_type:interwar_semi_3bed'")
+    customer_answer: Optional[Literal["given", "not_sure"]] = Field(
+        None, description="For inputs asked of the customer: answered (held fixed) or not sure (uncertain prior)")
 
 
 class ProvenanceSummary(BaseModel):
@@ -73,7 +75,10 @@ def classify(field: str, detail: str, geometry_source: str) -> tuple[Source, Sta
 
 
 def build_provenance(params: dict, sources: dict[str, str], geometry_source: str, refs: dict[str, str],
-                     weather_source: str, meter_source: Optional[str]) -> list[InputProvenance]:
+                     weather_source: str, meter_source: Optional[str],
+                     customer: Optional[dict[str, str]] = None) -> list[InputProvenance]:
+    """``customer`` maps the inputs asked of the customer to 'given' or 'not_sure'."""
+    customer = customer or {}
     out = []
     for field, detail in sorted(sources.items()):
         src, status, confirmed = classify(field, detail, geometry_source)
@@ -82,7 +87,8 @@ def build_provenance(params: dict, sources: dict[str, str], geometry_source: str
             else refs.get("house_type") if src.startswith("layout") or src == "vision_draft" else None
         value = params.get(field)
         out.append(InputProvenance(field=field, value=value if isinstance(value, (int, float, str)) else None,
-                                   source=src, status=status, confirmed=confirmed, detail=detail, ref=ref))
+                                   source=src, status=status, confirmed=confirmed, detail=detail, ref=ref,
+                                   customer_answer=customer.get(field)))
     out.append(InputProvenance(field="weather", source="synthetic" if weather_source == "synthetic" else "derived",
                                status="synthetic" if weather_source == "synthetic" else "recorded", confirmed=False,
                                detail=f"weather source: {weather_source}"))

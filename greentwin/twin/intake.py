@@ -86,6 +86,9 @@ class TwinIntake(BaseModel):
     heating_periods: list[tuple[int, int]] = Field(default_factory=list,
                                                    description="Heating on periods, e.g. [(6, 9), (17, 22)]")
     meter_readings: list[MeterReading] = Field(default_factory=list, description="Monthly bills, ideally 12+ months")
+    # Optional follow-ups, asked only when relevant (household.follow_up_questions); None = not sure / not asked.
+    plug_in_heater_use: Optional[Literal["never", "rarely", "some_evenings", "most_days"]] = None
+    led_lighting: Optional[Literal["all", "most", "about_half", "few"]] = None
     # Heating, as the user knows it today: overrides the EPC, which can be years old.
     heating_system: Optional[Literal[
         "gas_boiler_combi", "gas_boiler_regular", "oil_boiler", "lpg_boiler", "air_source_heat_pump",

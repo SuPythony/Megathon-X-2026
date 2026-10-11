@@ -121,7 +121,7 @@ def _lookup(table: dict, answers: dict[str, str], default: float) -> float:
     return default
 
 
-def appliance_energy(p: AppliancePlacement, occupants: float) -> ApplianceEnergy:
+def appliance_energy(p: AppliancePlacement, occupants: float, heater_hours: Optional[float] = None) -> ApplianceEnergy:
     cat = catalogue()
     if p.type not in cat["types"]:
         raise ValueError(f"no energy data for appliance type {p.type!r}")
@@ -143,7 +143,8 @@ def appliance_energy(p: AppliancePlacement, occupants: float) -> ApplianceEnergy
         watts = _lookup(m.get("watts_by", {}), answers, m.get("base_watts", 0.0))
         annual = watts * m["hours_per_day"] / 1000 * weight_days
     elif m["type"] == "power_kw":
-        annual = float(answers[m["kw_question"]]) * m["hours_per_day"] * weight_days
+        hours = heater_hours if heater_hours is not None and spec["category"] == "secondary_heating" else m["hours_per_day"]
+        annual = float(answers[m["kw_question"]]) * hours * weight_days
     elif m["type"] == "shower":
         annual = float(answers["rating_kw"]) * m["minutes_per_person_per_day"] / 60 * occupants * 365
     elif m["type"] == "ev":
@@ -183,8 +184,10 @@ def appliance_energy(p: AppliancePlacement, occupants: float) -> ApplianceEnergy
     )
 
 
-def summarise_appliances(placements: Sequence[AppliancePlacement], occupants: float) -> ApplianceSummary:
-    items = [appliance_energy(p, occupants) for p in placements]
+def summarise_appliances(placements: Sequence[AppliancePlacement], occupants: float,
+                         heater_hours: Optional[float] = None) -> ApplianceSummary:
+    """``heater_hours``: the customer's plug-in heater use (hours a day in the heating season); None = default."""
+    items = [appliance_energy(p, occupants, heater_hours) for p in placements]
     zero = [0.0] * 12
 
     def monthly(pred) -> list[float]:

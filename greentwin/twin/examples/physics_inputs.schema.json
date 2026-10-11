@@ -490,6 +490,24 @@
           "description": "SAP thermal mass parameter (heat capacity / floor area)",
           "title": "Thermal Mass Kj Per M2K",
           "type": "number"
+        },
+        "low_energy_lighting_pct": {
+          "default": 50.0,
+          "description": "Share of low-energy lighting, % (SAP Appendix L)",
+          "title": "Low Energy Lighting Pct",
+          "type": "number"
+        },
+        "secondary_heating_scale": {
+          "default": 1.0,
+          "description": "Multiplies the plug-in heater schedule; uncertain when the customer wasn't sure how often heaters are used",
+          "title": "Secondary Heating Scale",
+          "type": "number"
+        },
+        "battery_round_trip_efficiency": {
+          "default": 0.9,
+          "description": "Battery AC round trip; generated, never asked",
+          "title": "Battery Round Trip Efficiency",
+          "type": "number"
         }
       },
       "required": [
@@ -516,6 +534,77 @@
         "thermal_mass_kj_per_m2k"
       ],
       "title": "ExtendedTwinParams",
+      "type": "object"
+    },
+    "FollowUp": {
+      "properties": {
+        "key": {
+          "enum": [
+            "plug_in_heater_use",
+            "led_lighting"
+          ],
+          "title": "Key",
+          "type": "string"
+        },
+        "question": {
+          "title": "Question",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Options",
+          "type": "array"
+        },
+        "reason": {
+          "description": "Why it is asked for this home",
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "question",
+        "options",
+        "reason"
+      ],
+      "title": "FollowUp",
+      "type": "object"
+    },
+    "FollowUpAnswer": {
+      "properties": {
+        "question": {
+          "$ref": "#/$defs/FollowUp"
+        },
+        "answer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "None = not sure",
+          "title": "Answer"
+        }
+      },
+      "required": [
+        "question"
+      ],
+      "title": "FollowUpAnswer",
       "type": "object"
     },
     "GeometryConfirmation": {
@@ -783,6 +872,23 @@
           "default": null,
           "description": "e.g. 'epc:0390-...', 'intake:abc', 'house_type:interwar_semi_3bed'",
           "title": "Ref"
+        },
+        "customer_answer": {
+          "anyOf": [
+            {
+              "enum": [
+                "given",
+                "not_sure"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For inputs asked of the customer: answered (held fixed) or not sure (uncertain prior)",
+          "title": "Customer Answer"
         }
       },
       "required": [
@@ -886,7 +992,7 @@
       "type": "object"
     },
     "Prior": {
-      "description": "Prior for one calibrated parameter. kind: lognormal -> value = base x exp(N(mu, sigma)); normal -> base + N.",
+      "description": "Prior for one parameter. kind: lognormal -> value = base x exp(N(mu, sigma)); normal_add -> base + N(mu, sigma);\nfixed -> the customer's explicit answer, held at base (not sampled, not calibrated).",
       "properties": {
         "param": {
           "title": "Param",
@@ -895,7 +1001,8 @@
         "kind": {
           "enum": [
             "lognormal",
-            "normal_add"
+            "normal_add",
+            "fixed"
           ],
           "title": "Kind",
           "type": "string"
@@ -1062,6 +1169,54 @@
         "notes"
       ],
       "title": "Readiness",
+      "type": "object"
+    },
+    "TechnicalInput": {
+      "description": "A technical quantity the twin generates or sources itself; never asked of the customer.",
+      "properties": {
+        "quantity": {
+          "title": "Quantity",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "status": {
+          "description": "Provenance status (measured, recorded, estimated, to_verify, assumption, ...)",
+          "title": "Status",
+          "type": "string"
+        },
+        "replace_with": {
+          "description": "What would make it better, and who provides it",
+          "title": "Replace With",
+          "type": "string"
+        }
+      },
+      "required": [
+        "quantity",
+        "unit",
+        "source",
+        "status",
+        "replace_with"
+      ],
+      "title": "TechnicalInput",
       "type": "object"
     },
     "ThermalMass": {
@@ -1266,6 +1421,22 @@
     "provenance_summary": {
       "$ref": "#/$defs/ProvenanceSummary"
     },
+    "technical_inputs": {
+      "description": "Generated or sourced, never asked of the customer",
+      "items": {
+        "$ref": "#/$defs/TechnicalInput"
+      },
+      "title": "Technical Inputs",
+      "type": "array"
+    },
+    "follow_ups": {
+      "description": "Optional questions asked for this home",
+      "items": {
+        "$ref": "#/$defs/FollowUpAnswer"
+      },
+      "title": "Follow Ups",
+      "type": "array"
+    },
     "occupancy": {
       "additionalProperties": {
         "anyOf": [
@@ -1358,6 +1529,7 @@
     "geometry",
     "input_provenance",
     "provenance_summary",
+    "technical_inputs",
     "occupancy",
     "heating_behaviour",
     "appliances",
