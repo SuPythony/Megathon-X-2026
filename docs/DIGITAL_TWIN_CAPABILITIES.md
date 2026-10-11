@@ -22,7 +22,7 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 | **Intake form:** postcode (only the district is kept, reduced in the browser), EPC certificate number (validated, normalised), floor plan and fuse box photos with consent | ✅ | `greentwin/twin/intake.py`, viewer "New home" |
 | **Household questions:** occupants, daytime presence, thermostat setting, heating schedule (presets or custom periods, validated); each allows "not sure", which means typical UK values with wider priors | ✅ | `intake.py`, `household.py`, viewer "New home" form |
 | **Heating as the user knows it:** heating system, fuel, hot-water source. Overrides a stale EPC; conflicts flagged (EPC vs answer, bills vs fuel) | ✅ | `household.apply_user_heating`, `meter_fuel_conflicts` |
-| **Monthly meter readings:** missing months stay missing, never 0; estimated reads flagged | ✅ | `intake.MeterReading` |
+| **Monthly meter readings:** 12-month table or paste from a spreadsheet; missing months stay missing, never 0; estimated reads flagged; "no gas supply"; live check of whether there is enough for calibration (12+ months, 3 winter, 2 summer) | ✅ | `intake.MeterReading`, viewer "New home" form |
 | **Internal walls "solid or hollow?"** (thermal mass) | ✅ | `intake.internal_walls` |
 | **EPC lookup by certificate number** | ⏳ Part 0 | seam `intake.EPCLookup` (`NoEPCLookup` today) |
 

@@ -51,3 +51,9 @@ def test_intake_rejects_bad_input():
 
 def test_no_lookup_returns_none():
     assert NoEPCLookup().by_rrn("0390-2954-3640-2196-6705", "M14") is None
+
+
+def test_intake_from_browser_json_keeps_warnings_once():
+    first = TwinIntake(intake_id="b", postcode_district="M14")
+    again = TwinIntake.model_validate_json(first.model_dump_json())  # browser JSON carries warnings already
+    assert again.warnings == first.warnings and len(set(again.warnings)) == len(again.warnings)

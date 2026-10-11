@@ -4,6 +4,7 @@ import {
   THERMOSTAT_RANGE, type TwinIntake, intakeWarnings, normaliseRrn, periodErrors, postcodeDistrict,
 } from '../intake'
 import { exportPlacements, useViewer } from '../store'
+import { MeterReadings, type MeterRow, emptyMeterRows, meterErrors, toReadings } from './MeterReadings'
 
 const FIND_EPC_URL = 'https://find-energy-certificate.service.gov.uk/'
 
@@ -32,6 +33,8 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
   const [thermostat, setThermostat] = useState('')
   const [schedule, setSchedule] = useState<'' | SchedulePreset>('')
   const [custom, setCustom] = useState<[number, number][]>([[6, 9], [17, 22]])
+  const [meterRows, setMeterRows] = useState<MeterRow[]>(emptyMeterRows)
+  const [noGas, setNoGas] = useState(false)
   const [done, setDone] = useState<TwinIntake | null>(null)
 
   const district = postcode.trim() ? postcodeDistrict(postcode) : null
@@ -46,6 +49,7 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
   const scheduleErrors = schedule === 'custom' ? periodErrors(custom) : []
   const heatingHours = periods.reduce((h, [a, b]) => h + Math.max(0, b - a), 0)
   const canSubmit = !!district && (noEpc || !!rrn) && !photosNeedConsent && !statError && !scheduleErrors.length
+    && !meterErrors(meterRows).length
 
   const submit = () => {
     if (!district) return
@@ -64,6 +68,7 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
       daytime_occupancy: presence || null,
       thermostat_c: stat,
       heating_periods: periods,
+      meter_readings: toReadings(meterRows, noGas),
     }
     const intake: TwinIntake = { ...base, warnings: intakeWarnings(base) }
     download(`${intake.intake_id}.json`, intake)
@@ -90,6 +95,7 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
               <dt>Thermostat</dt><dd>{done.thermostat_c != null ? `${done.thermostat_c} °C` : 'not sure'}</dd>
               <dt>Heating on</dt><dd>{done.heating_periods.length
                 ? done.heating_periods.map(([a, b]) => `${a}:00–${b}:00`).join(', ') : 'not sure'}</dd>
+              <dt>Bills</dt><dd>{done.meter_readings.length ? `${done.meter_readings.length} months` : 'none'}</dd>
               <dt>Appliances</dt><dd>{done.appliances.length}</dd>
             </dl>
             {done.warnings.map((w) => <p key={w} className="warn">{w}</p>)}
@@ -185,6 +191,8 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
               )}
               {periods.length > 0 && !scheduleErrors.length && <small className="ok">About {heatingHours} hours of heating a day.</small>}
             </fieldset>
+
+            <MeterReadings rows={meterRows} setRows={setMeterRows} noGas={noGas} setNoGas={setNoGas} />
 
             <label className="field">
               <span>Heating system</span>

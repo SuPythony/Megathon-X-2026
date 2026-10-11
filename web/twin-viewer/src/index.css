@@ -256,6 +256,21 @@ button:disabled { cursor: default; opacity: 0.45; }
 .period { display: flex; align-items: center; gap: 8px; }
 .period select { height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; background: #fff; }
 
+.bills > summary { display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 700; font-size: 14px; list-style: none; }
+.bills > summary::-webkit-details-marker { display: none; }
+.bills > summary .badge { margin: 0; }
+.bills[open] > summary { margin-bottom: 4px; }
+.meter-table { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+.meter-head, .meter-row { display: grid; grid-template-columns: 90px 1fr 1fr 34px; gap: 8px; align-items: center; }
+.meter-head { font-size: 11px; color: var(--muted); font-weight: 600; position: sticky; top: 0; background: #fff; padding: 2px 0; }
+.meter-row span { font-size: 13px; }
+.meter-row input:not([type=checkbox]) { height: 32px; padding: 0 8px; border: 1px solid rgba(23, 36, 43, 0.18); border-radius: 8px; min-width: 0; text-align: right; }
+.meter-row input:disabled { background: #f3f5f6; }
+.meter-row input[type=checkbox] { accent-color: var(--green); justify-self: center; }
+.meter-row.hi input { border-color: #d9a400; }
+.paste summary { cursor: pointer; font-size: 13px; color: var(--blue); font-weight: 600; }
+.paste textarea { width: 100%; margin: 8px 0; border: 1px solid rgba(23, 36, 43, 0.18); border-radius: 10px; padding: 8px; font: 12px/1.4 ui-monospace, monospace; }
+
 @media (max-width: 900px) {
   .row2 { grid-template-columns: 1fr; }
   .topbar { right: 16px; flex-wrap: wrap; }
