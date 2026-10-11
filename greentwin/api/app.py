@@ -128,6 +128,22 @@ def scenario(spec: ScenarioSpec):
         raise HTTPException(422, str(e)) from e
 
 
+class SummaryIn(BaseModel):
+    property_id: str
+    retrofit_ids: list[str] = Field(default_factory=list)
+
+
+@app.post("/api/scenario/summary")
+def scenario_summary(body: SummaryIn):
+    """Calibrated whole-house numbers for the 3D viewer: per fuel, full bill, carbon, net cost, score, rating, value."""
+    from greentwin.api.orchestrator import default, house_summary
+    _known(body.property_id)
+    try:
+        return house_summary(default(), body.property_id, body.retrofit_ids)
+    except (ValueError, NotImplementedError) as e:
+        raise HTTPException(422, str(e)) from e
+
+
 @app.get("/api/plan/{pid}")
 def plan(pid: str, goal: str = "bills", budget_gbp: Optional[float] = None, annual_budget_gbp: float = 5000,
          reinvest: bool = True, customer_id: Optional[str] = None, min_carbon_kg: Optional[float] = None,

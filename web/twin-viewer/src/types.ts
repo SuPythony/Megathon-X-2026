@@ -244,3 +244,24 @@ export interface AppliancePlacement {
   rotation_deg: number
   answers?: Record<string, string>
 }
+
+/** Calibrated whole-house numbers from the main app (POST /api/scenario/summary, greentwin/api/orchestrator.py). */
+export interface HouseRow { before: Range; after: Range; saving: Range }
+export interface HouseSummary {
+  property_id: string
+  retrofit_ids: string[]
+  key: string
+  n_samples: number
+  engine: string
+  calibration: string | null
+  rows: { gas_kwh: HouseRow; electricity_kwh: HouseRow; bill_gbp: HouseRow; carbon_kg: HouseRow | null }
+  net_cost_gbp: Range | null
+  cost_note: string | null
+  grants_applied: string[]
+  payback_years: Range | null
+  score: { before: number; after: number; band_before: string; band_after: string }
+  rating_after: { band: string; sap: Range; label: string } | null
+  value: { uplift_pct: Range | null; wording: string; unavailable_reason: string | null }
+  feasibility: Record<string, { status: string; reasons: string[] }>
+  warnings: string[]
+}

@@ -157,7 +157,7 @@ export default function App() {
     scenes: st.scenes, sceneKey: st.sceneKey, setScene: st.setScene, showRoof: st.showRoof, toggleRoof: st.toggleRoof,
     explode: st.explode, toggleExplode: st.toggleExplode, selectedRoom: st.selectedRoom, selectRoom: st.selectRoom,
     heatTint: st.heatTint, toggleHeatTint: st.toggleHeatTint, retrofitIds: st.retrofitIds, view: st.view,
-    setView: st.setView, runTwin: st.runTwin, appliances: st.appliances, scenario: st.scenario, resetView: st.resetView,
+    setView: st.setView, runTwin: st.runTwin, runHouse: st.runHouse, appliances: st.appliances, scenario: st.scenario, resetView: st.resetView,
     twinBusy: st.twinBusy,
   })))
   const scene = s.scenes[s.sceneKey]
@@ -170,6 +170,14 @@ export default function App() {
     const t = setTimeout(() => { void s.runTwin() }, 350)
     return () => clearTimeout(t)
   }, [energyKey, s.sceneKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Calibrated whole-house numbers (main app engine) follow the package; appliances don't change them.
+  const houseKey = [...s.retrofitIds].sort().join('+')
+  useEffect(() => {
+    if (!scene) return
+    const t = setTimeout(() => { void s.runHouse() }, 350)
+    return () => clearTimeout(t)
+  }, [houseKey, s.sceneKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

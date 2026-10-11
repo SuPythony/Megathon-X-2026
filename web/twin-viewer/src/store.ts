@@ -3,7 +3,7 @@ import energyJson from './data/appliance_energy.json'
 import visualsJson from './data/appliance_visuals.json'
 import { bbox, clampToRoom, findFree, findWallSpot, overlaps } from './geometry'
 import type {
-  ApplianceQuestion, AppliancePlacement, ApplianceVisual, EnergyOverlay, RoomScene, SceneAppliance, ScenarioView, Vec3,
+  ApplianceQuestion, AppliancePlacement, ApplianceVisual, EnergyOverlay, HouseSummary, RoomScene, SceneAppliance, ScenarioView, Vec3,
 } from './types'
 
 const sceneModules = import.meta.glob<RoomScene>('./data/scenes/*.scene.json', { eager: true, import: 'default' })
@@ -40,6 +40,8 @@ interface ViewerState {
   baselineRooms: EnergyOverlay | null
   twinSource: TwinSource
   twinBusy: boolean
+  house: HouseSummary | null      // calibrated numbers from the main app; null = not available for this home
+  houseBusy: boolean
   viewNonce: number
   panelTab: 'home' | 'retrofits' | 'geometry' | 'data'
   setPanelTab: (t: 'home' | 'retrofits' | 'geometry' | 'data') => void
@@ -55,6 +57,7 @@ interface ViewerState {
   toggleRetrofit: (id: string) => void
   setView: (v: 'before' | 'after') => void
   runTwin: () => Promise<void>
+  runHouse: () => Promise<void>
   updateAnswers: (id: string, answers: Record<string, string>) => void
   replaceScene: (scene: RoomScene) => void
   moveAppliance: (id: string, x: number, y: number) => void
@@ -83,6 +86,8 @@ export const useViewer = create<ViewerState>((set, get) => ({
   baselineRooms: EXAMPLE_SCENES[firstKey]?.energy ?? null,
   twinSource: 'idle',
   twinBusy: false,
+  house: null,
+  houseBusy: false,
   viewNonce: 0,
   panelTab: 'home',
   setPanelTab: (t) => set({ panelTab: t }),
@@ -92,6 +97,7 @@ export const useViewer = create<ViewerState>((set, get) => ({
     set((s) => ({
       sceneKey: key, appliances: s.scenes[key].appliances, selectedRoom: null, selectedAppliance: null, notice: null,
       retrofitIds: [], view: 'before', scenario: null, baselineRooms: s.scenes[key].energy ?? null, twinSource: 'idle',
+      house: null,
     })),
   addScene: (sc) => {
     const key = `${sc.archetype_id}:${sc.property_id}`
@@ -146,6 +152,30 @@ export const useViewer = create<ViewerState>((set, get) => ({
         : { scenario: null, baselineRooms: appsChanged ? null : sc.energy ?? null, twinSource: 'unavailable' })
     } finally {
       set({ twinBusy: false })
+    }
+  },
+
+  // Calibrated whole-house numbers from the main app's engine (same posterior as the dashboard and chat). Only the
+  // dashboard's homes have bills to calibrate on; elsewhere (house-type examples, the dev server) this stays null.
+  runHouse: async () => {
+    const s = get()
+    const sc = scene(s)
+    const ids = [...s.retrofitIds].sort()
+    set({ houseBusy: true })
+    try {
+      const res = await fetch('/api/scenario/summary', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ property_id: sc.property_id, retrofit_ids: ids }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const data = await res.json() as HouseSummary
+      const now = get()
+      if (now.sceneKey !== s.sceneKey || [...now.retrofitIds].sort().join('+') !== ids.join('+')) return
+      set({ house: data })
+    } catch {
+      if (get().sceneKey === s.sceneKey) set({ house: null })
+    } finally {
+      set({ houseBusy: false })
     }
   },
 

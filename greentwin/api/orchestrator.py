@@ -285,3 +285,77 @@ def spec_for(pid: str, retrofit_ids: Sequence[str], **kw) -> ScenarioSpec:
     sid = f"{pid}-" + ("+".join(ids) if ids else "baseline")
     return ScenarioSpec(scenario_id=sid, property_id=pid, retrofits=[RetrofitAction(retrofit_id=r) for r in ids], **kw)
 
+
+
+# --------------------------------------------------------------------------- compact house numbers for the 3D viewer
+def _rng(d, unit: str = "") -> Optional[dict]:
+    """Distribution -> the viewer's Range {headline (median), lo, hi (90% interval), unit}."""
+    if d is None:
+        return None
+    ci = d.interval(0.9)
+    return {"headline": round(float(d.median), 2), "lo": round(float(ci.lo), 2), "hi": round(float(ci.hi), 2),
+            "unit": unit or d.unit}
+
+
+def house_summary(orch: GreenTwinOrchestrator, pid: str, retrofit_ids: Sequence[str]) -> dict:
+    """The calibrated whole-house numbers for one package, in the viewer's shape: per fuel before / after / saving,
+    the full energy bill (unit rates + standing charges for each fuel still supplied), carbon, net installed cost
+    after confirmed grants, payback, score before -> after, estimated rating and the indicative value range.
+    Same engine and posterior as run_scenario (calibrated to the home's bills); one package run, never summed."""
+    from contracts.summarise import summarise
+    from greentwin.retrofit.runner import standing_charges
+
+    spec = spec_for(pid, retrofit_ids, include_pareto=False, include_element_heat_loss=False, requested_by="ui")
+    res = orch.run_scenario(spec)
+    prop, _ = orch.home(pid)
+    _calib, samples = orch.calibrate(pid)
+    n = samples.n_samples
+    actions = list(spec.retrofits)
+    meter = orch.engine.meter(prop, n)
+    base_run, after_run = run_packages(samples, [[], actions])
+    base, after = anchored(base_run, base_run, meter), anchored(after_run, base_run, meter)
+    sc = standing_charges()
+
+    def full_bill(e):  # a fuel's standing charge is paid only while that fuel is supplied
+        return e.bill() + sc["electricity"] + np.where(e.gas > 1.0, sc["gas"], 0.0)
+
+    def row(b, a, unit):
+        return {"before": _rng(summarise(b, unit)), "after": _rng(summarise(a, unit)), "saving": _rng(saving(b, a, unit, "x"))}
+
+    rows = {"gas_kwh": row(base.gas, after.gas, "kWh/yr"),
+            "electricity_kwh": row(base.electricity, after.electricity, "kWh/yr"),
+            "bill_gbp": row(full_bill(base), full_bill(after), "GBP/yr"),
+            "carbon_kg": row(base.carbon(), after.carbon(), "kgCO2e/yr") if fuel_supported(prop) else None}
+    net, parts = cat.package_cost(actions, n, orch.seed, prop.constraints.off_gas_grid)
+    cost, payback, cost_note = None, None, None
+    if not actions:
+        cost_note = None
+    elif net is None:
+        cost_note = "; ".join(f"{cat.get(p.retrofit_id).name}: {p.unavailable_reason}" for p in parts if not p.available)
+    else:
+        cost = _rng(summarise(net, "GBP"))
+        bill_save = full_bill(base) - full_bill(after)
+        pos = bill_save > 0
+        if pos.sum() >= 10:
+            payback = _rng(summarise(net[pos] / bill_save[pos], "years"))
+        if not pos.all():
+            cost_note = (f"The bill falls in {pos.mean():.0%} of draws; payback is over those draws only"
+                         if payback else "The bill doesn't fall, so the package doesn't pay back on bills")
+    grants = sorted({g for p in parts for g in p.grants_applied})
+    status = {f.retrofit_id: f for f in (res.feasibility.items if res.feasibility else [])}
+    return {
+        "property_id": pid, "retrofit_ids": [a.retrofit_id for a in actions], "key": "+".join(a.retrofit_id for a in sorted(actions, key=lambda a: a.retrofit_id)),
+        "engine": res.provenance.engine, "calibration": res.calibration.method if res.calibration else None,
+        "n_samples": n, "rows": rows,
+        "net_cost_gbp": cost, "cost_note": cost_note, "grants_applied": grants, "payback_years": payback,
+        "score": {"before": res.score_before.score, "after": res.score_after.score,
+                  "band_before": str(res.score_before.band.value if hasattr(res.score_before.band, "value") else res.score_before.band),
+                  "band_after": str(res.score_after.band.value if hasattr(res.score_after.band, "value") else res.score_after.band)},
+        "rating_after": ({"band": res.rating_after.band, "sap": _rng(res.rating_after.sap),
+                          "label": "estimated rating, not an EPC"} if res.rating_after else None),
+        "value": {"uplift_pct": _rng(res.value.uplift_pct), "wording": res.value.wording,
+                  "unavailable_reason": res.value.unavailable_reason},
+        "feasibility": {r: {"status": status[r].status, "reasons": status[r].reasons}
+                        for r in [a.retrofit_id for a in actions] if r in status and status[r].status != "feasible"},
+        "warnings": res.warnings[:6],
+    }
