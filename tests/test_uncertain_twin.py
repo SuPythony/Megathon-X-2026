@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -31,7 +32,7 @@ def request(**facts):
 def test_prepare_import_does_not_load_jax():
     result = subprocess.run(
         [
-            str(ROOT / ".venv/bin/python"),
+            sys.executable,  # the interpreter running the tests (a uv-synced .venv, or uv run --with)
             "-B",
             "-c",
             "import sys; from greentwin.twin.missing_inputs import generate_missing_inputs; assert 'jax' not in sys.modules",
