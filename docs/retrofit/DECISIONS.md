@@ -35,7 +35,7 @@ Branch: `p2/retrofit-engine` (from `main`). Design source: `LLD.pdf` §4.2 (`del
 | R-25 | Baselines: greedy bill-per-£ and CO2-only (max median carbon in budget); hypervolume of the in-budget median front vs each baseline (Monte Carlo, normalised 4-D box) | Decided |
 | R-26 | Relevance: one EBM per measure on real EPC certificates + assessor recommendations (2025, hashed 2% sample); rules-only baseline; ranks, never vetoes | Decided |
 | R-27 | Orchestrator `greentwin/api/orchestrator.py`: `run_scenario` assembles `ScenarioResult` from the parts; `plan()` adds staging, Pareto modes, baselines, relevance; cached in memory + `cache/scenarios` | Decided |
-| R-29 | Feasibility layer 2: Jev (`greentwin/jev`, `JEV_ENABLED` + `JEV_API_KEY`) on rule survivors; can only downgrade (never lift a veto, never infeasible); fixed reason texts by code; confidence < `JEV_CONFIDENCE_TAU` → needs_survey; cached in `cache/jev`; Jev off/keyless → rules unchanged; `GREENTWIN_FEASIBILITY_LAYER2=0` disables. Jev request format is assumed until checked against TypeSafe's docs | Decided (user: Jev, not OpenAI) |
+| R-29 | Feasibility layer 2: Jev (`greentwin/jev`, `JEV_ENABLED` + `JEV_API_KEY`) on rule survivors; can only downgrade (never lift a veto, never infeasible); fixed reason texts by code; one `POST /v1/systemone` per home with two `choice` questions per survivor (status, condition code); acts only when the chosen status has P ≥ 0.5 and is stricter, else rules stand with p_feasible = 1 − P(needs_survey); cached in `cache/jev`; Jev off/keyless → rules unchanged; `GREENTWIN_FEASIBILITY_LAYER2=0` disables. (A 0.85 confidence cut sent every item to needs_survey on SH1–SH3, so it was dropped.) | Decided (user: Jev, not OpenAI) |
 | R-28 | Ranking check: synthetic city homes, prior-draw truth, noisy meters → calibrate → potential; Spearman/NDCG vs generator-rule labels, baseline "rank by total kWh"; `p_top_decile` from the posterior | Decided |
 
 ---
@@ -242,7 +242,7 @@ These satisfy the Block 4 checks:
 - Triple glazing stays feasible on SH3 (`R_GLAZING_DONE` blocks double and secondary only); it ranks "optional" with no cost.
 - HHR storage heaters change almost nothing in the stand-in physics: same efficiency, and controllability is modelled as heating hours, which standard mode ignores.
 - `p_top_decile` is computed in the ranking batch (R-28, `eval/reports/retrofit_ranking/homes.json`), not per request: it needs the population.
-- Feasibility layer 2 (R-29) runs on Jev; no `JEV_API_KEY` yet, so only the rules path and a mocked Jev response are tested, and the HTTP request shape in `greentwin/jev` is unconfirmed.
+- Feasibility layer 2 (R-29) runs on Jev, live-tested on SH1–SH3. Its probabilities aren't recalibrated on a labelled set yet.
 - Staging sums ladder marginals when it reorders steps (R-22): exact only in ladder order.
 - PV export isn't credited in bills or the rating (no sourced export tariff), so PV is understated.
 - `ScenarioResult` assembly: done in `greentwin/api/orchestrator.py` (R-27). Weather scenarios other than `typical` need Part 0's `load_weather`.

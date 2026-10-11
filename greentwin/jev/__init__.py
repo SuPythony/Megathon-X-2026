@@ -4,9 +4,9 @@ Settings from .env: JEV_ENABLED (true/false), JEV_API_KEY, JEV_BASE_URL, JEV_MOD
 Every response is cached under JEV_CACHE_DIR by hash(request), so runs replay without a key.
 Disabled, no key or any error -> `judge` returns None and the caller falls back to its rules.
 
-HACK: the request/response shape below (POST {JEV_BASE_URL}/judge with {model, task, instructions, input, schema};
-JSON reply matching the schema, optionally wrapped in {"output": ...}) is our assumption. Confirm it against
-TypeSafe's API docs once the key arrives; only `_post` should need to change.
+API (TypeSafe 0.2.0, https://api.typesafe.ai/openapi.json): POST {JEV_BASE_URL} (= .../v1/systemone) with
+{model, state, questions: {name: {type: choice|noul|score, instructions, criteria}}} -> {answers: {name: {...}}}.
+A choice answer carries {choice, confidence, probabilities}.
 """
 from __future__ import annotations
 
@@ -36,21 +36,19 @@ def enabled() -> bool:
     return _env("JEV_ENABLED").lower() == "true" and bool(key) and not key.startswith("__ASK_USER__")
 
 
-def _post(task: str, instructions: str, payload: dict, schema: dict) -> dict:
+def _post(state, questions: dict) -> dict:
     import httpx
 
-    r = httpx.post(f"{BASE_URL}/judge", timeout=60,
+    r = httpx.post(BASE_URL, timeout=60,
                    headers={"Authorization": f"Bearer {_env('JEV_API_KEY')}", "Content-Type": "application/json"},
-                   json={"model": MODEL, "task": task, "instructions": instructions, "input": payload,
-                         "schema": schema})
+                   json={"model": MODEL, "state": state, "questions": questions})
     r.raise_for_status()
-    body = r.json()
-    return body.get("output", body) if isinstance(body, dict) else body
+    return r.json()["answers"]
 
 
-def judge(task: str, instructions: str, payload: dict, schema: dict) -> Optional[dict]:
-    """Cached structured judgement, or None (disabled / no key / error)."""
-    key = hashlib.sha256(json.dumps({"task": task, "m": MODEL, "i": instructions, "p": payload}, sort_keys=True,
+def systemone(task: str, state, questions: dict) -> Optional[dict]:
+    """Cached answers keyed by question name, or None (disabled / no key / error)."""
+    key = hashlib.sha256(json.dumps({"m": MODEL, "s": state, "q": questions}, sort_keys=True,
                                     default=str).encode()).hexdigest()
     f = CACHE / task / f"{key}.json"
     if f.exists():
@@ -58,7 +56,7 @@ def judge(task: str, instructions: str, payload: dict, schema: dict) -> Optional
     if not enabled():
         return None
     try:
-        out = _post(task, instructions, payload, schema)
+        out = _post(state, questions)
     except Exception:  # noqa: BLE001 - Jev is advisory; callers fall back to rules
         return None
     f.parent.mkdir(parents=True, exist_ok=True)

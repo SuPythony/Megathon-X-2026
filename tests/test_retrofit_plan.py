@@ -121,7 +121,7 @@ def test_layer2_only_downgrades(monkeypatch):
     assert rep["external_wall_insulation"].status == "infeasible"          # rule veto can't be lifted
     assert rep["internal_wall_insulation"].status == "needs_survey"
     assert rep["internal_wall_insulation"].decided_by == "jev"
-    assert rep["loft_insulation"].status == "needs_survey"                 # low confidence -> survey
+    assert rep["loft_insulation"].status == "feasible"                     # unsure Jev doesn't move the rules
     assert all("L2_" not in c for c in rules["loft_insulation"].reason_codes)
     monkeypatch.setattr(l2, "_call", lambda payload: None)                 # no key -> rules unchanged
     assert l2.assess_layer2(p).model_dump() == assess(p).model_dump()
