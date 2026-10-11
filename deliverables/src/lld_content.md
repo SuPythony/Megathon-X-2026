@@ -274,7 +274,7 @@ log(price_i / HPI_LA,type,month_i) ~ StudentT(ν, μ_i, σ_type)
 **Feasibility (`retrofit/rules.py` + `jev/feasibility.py` → `FeasibilityReport`).**
 1. **Layer 1:** evaluate every rule in `feasibility_rules.json` on `Property` (+ memory constraints). A `blocks` match → `infeasible`, `p_feasible = 0`. A `downgrade` → that status. **Rule vetoes always win.**
 2. **Layer 2** (survivors only): Jev Choice {feasible, with conditions, needs survey, infeasible} on a state built from home facts + EPC text + agent notes + memory. Its confidence is recalibrated with isotonic regression; below τ → `needs_survey`.
-3. **Without a Jev key:** OpenAI structured output (`gpt-6-luna`) on the same schema (`router = claude_fallback`, literal kept until the contract is renamed); otherwise rules only.
+3. **Without a Jev key:** OpenAI structured output (`gpt-6-luna`) on the same schema (`router = llm_fallback`); otherwise rules only.
 
 Reasons shown to users come from rule codes and the knowledge base, never from the LLM.
 

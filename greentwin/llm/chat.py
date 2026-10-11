@@ -53,7 +53,7 @@ def route(property_id: str, message: str) -> WhatIfRoute:
         intent, conf = "out_of_scope", 0.7
     else:
         intent, conf = "explain", 0.6
-    return WhatIfRoute(intent=intent, confidence=conf, router="claude_fallback")  # literal reused for "non-Jev"
+    return WhatIfRoute(intent=intent, confidence=conf, router="llm_fallback")  # rule router standing in for Jev
 
 
 # --------------------------------------------------------------------------- validator

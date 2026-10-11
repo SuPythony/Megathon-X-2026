@@ -864,7 +864,7 @@ class GreenTwin(BaseModel):
 class Feasibility(BaseModel):
     retrofit_id: str
     status: Literal["feasible", "feasible_with_conditions", "needs_survey", "infeasible"]
-    decided_by: Literal["rules", "jev", "claude_fallback", "agent"]
+    decided_by: Literal["rules", "jev", "llm_fallback", "agent"]
     reason_codes: list[str] = Field(default_factory=list)
     reasons: list[str] = Field(default_factory=list, description="Human-readable, from rules/KB (never the LLM)")
     p_feasible: float = Field(ge=0, le=1, description="1.0/0.0 for rules; recalibrated confidence for Jev")
@@ -875,7 +875,7 @@ class FeasibilityReport(BaseModel):
     items: list[Feasibility]
     rules_version: str
     jev_used: bool = False
-    router: Literal["jev", "claude_fallback", "rules_only"] = "rules_only"
+    router: Literal["jev", "llm_fallback", "rules_only"] = "rules_only"
 
 
 class WhatIfRoute(BaseModel):
@@ -886,7 +886,7 @@ class WhatIfRoute(BaseModel):
     scenario: Optional[ScenarioSpec] = None
     needs_clarification: bool = False
     clarifying_question: Optional[str] = None
-    router: Literal["jev", "claude_fallback"]
+    router: Literal["jev", "llm_fallback"]
 
 
 class ExplanationCheck(BaseModel):

@@ -733,7 +733,7 @@ export interface GreenTwin {
 export interface Feasibility {
   retrofit_id: string;
   status: "feasible" | "feasible_with_conditions" | "needs_survey" | "infeasible";
-  decided_by: "rules" | "jev" | "claude_fallback" | "agent";
+  decided_by: "rules" | "jev" | "llm_fallback" | "agent";
   reason_codes?: string[];
   /** Human-readable, from rules/KB (never the LLM) */
   reasons?: string[];
@@ -746,7 +746,7 @@ export interface FeasibilityReport {
   items: Feasibility[];
   rules_version: string;
   jev_used?: boolean;
-  router?: "jev" | "claude_fallback" | "rules_only";
+  router?: "jev" | "llm_fallback" | "rules_only";
 }
 
 /** Output of the System-1 router (Jev or Claude fallback). */
@@ -756,7 +756,7 @@ export interface WhatIfRoute {
   scenario?: ScenarioSpec | null;
   needs_clarification?: boolean;
   clarifying_question?: string | null;
-  router: "jev" | "claude_fallback";
+  router: "jev" | "llm_fallback";
 }
 
 /** Validator output for one LLM answer. */

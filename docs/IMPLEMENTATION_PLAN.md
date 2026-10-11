@@ -89,7 +89,7 @@ All modules exchange the Pydantic models in `contracts/models.py`. JSON on the w
 | `RetrofitItem` (catalogue) | P2 + P4 | twin, rules, UI | twin_edits, blocked_by_rules, depends_on, excludes, cost range, grants, sizing |
 | `ScenarioSpec` | UI, LLM/Jev router, batch | `run_scenario` | retrofits[{id,size,stage_year}], weather, n_samples, include_value/pareto, seed |
 | `ScenarioResult` | `run_scenario` (P2 twin + P3 value/Pareto + P4 assembly) | UI, LLM, dashboard, eval | baseline/after per fuel, savings per fuel, improvement potential, carbon + factors, bills, score before/after with components, per-retrofit effects + feasibility + suitability, value range, element heat loss (3D), pareto, warnings |
-| `WhatIfRoute` | Jev / Claude fallback | API | intent, confidence, ScenarioSpec, clarification |
+| `WhatIfRoute` | Jev / OpenAI fallback | API | intent, confidence, ScenarioSpec, clarification |
 | `ExplanationCheck` | validator | API, eval | numbers found, unsupported numbers, Jev probability, passed |
 | `CustomerMemory` | API | optimiser, LLM, UI | facts, completed, rejected, saved scenarios |
 
@@ -206,7 +206,7 @@ The front end develops against `contracts/examples/*` and a mock server (`/scena
 | M10 | Green-twin matching | Causal (design) | Matched pairs on type/form/age/tenure/LSOA/quarter/area → Δlog price, Δcost per 10 score pts | UCL linked | CEM + NN matching, bootstrap | SMD < 0.1, CI width, vs Nationwide/DECC | Hedonic coefficient | P3 | C |
 | M11 | DR-learner value uplift | Causal ML | Repeat sales, treatment = band improved → CATE on Δlog price | UCL linked | EconML DRLearner (+ BCF optional) | Method check only: recovery of the premium we inserted into synthetic values (not evidence of real uplift); BLP/GATES; refutations | Matching (M10) | P3 | C |
 | M12 | Pareto optimiser | Optimisation | Feasible subsets × posterior samples → front, P(on front), knee, staging | M02/M09 | Enumeration + non-dominated sort; DP staging | Hypervolume vs greedy | Greedy kWh/£ | P3 | C |
-| M13 | Jev threshold calibration | Calibration | Jev confidences on labelled routes/feasibility → calibrated P | ~50 prompts, ~200 home×retrofit pairs | Isotonic regression | ECE, reliability, routing accuracy ≥ 95% above τ | Claude structured output | P4 | C |
+| M13 | Jev threshold calibration | Calibration | Jev confidences on labelled routes/feasibility → calibrated P | ~50 prompts, ~200 home×retrofit pairs | Isotonic regression | ECE, reliability, routing accuracy ≥ 95% above τ | OpenAI structured output | P4 | C |
 | M14 | Green Profits take-up | **Scenario rule, not trained** | Improvement potential, bill saving, tenure, deprivation decile → P(take-up) via documented logistic rule with assumed coefficients (sliders) | `green_profits_assumptions.json` | Monte Carlo over assumption ranges | Sensitivity of profit to each assumption | — | P3 | C |
 | M15 | NEED savings CATE | Causal ML | Insulation installed (treatment) → Δgas | NEED 50k | DR/X-learner | vs twin predictions by archetype | Twin only | P3 | Could |
 | M16 | Differentiable RC graph (twin v2) | Physics-ML | EPC element features → conductances/capacitances (MLP/GNN) → hourly ODE | Meter data + synthetic | PyTorch + torchdiffeq (GPU) | Per-fuel MAE, monotonic sweep | Twin v1 | P2 | D |
@@ -261,7 +261,7 @@ Order follows the build order in the strategy report. Each checkpoint leaves a s
 | C4 | Geography: LSOA maps, hotspots, HDD trends; Lloyds dashboard API (layers, segments, Green Profits Monte Carlo) | P1 (+P3 for segments) |
 | C5 | 3D twin v1 → v2 → v3 (outside/inside, retrofit objects, timeline) | P5 |
 | C6 | Lloyds dashboard UI: heat map with switchable layers, segments table, Green Profits view, funnel | P5 (+P1) |
-| C7 | Knowledge-base extras: vector docs (methods, grants, guidance), embedded graph of rules/grants; Jev router + feasibility layer 2 + explanation check **if `JEV_API_KEY` exists**, else Claude fallback (M13) | P4 |
+| C7 | Knowledge-base extras: vector docs (methods, grants, guidance), embedded graph of rules/grants; Jev router + feasibility layer 2 + explanation check **if `JEV_API_KEY` exists**, else OpenAI fallback (M13) | P4 |
 | C8 | Green-twin matching (M10) + DR-learner (M11) + "green twins of your home" | P3 |
 | C9 | Customer memory + agent capture v1 (photo upload, manual tags, agent confirmation) | P4 + P5 |
 
@@ -284,7 +284,7 @@ M16 → M17 → M18/M19/M20, UKCP18 lifetime savings and the overheating flag, G
 
 ## 7. LLM design (P4)
 
-- **Model:** `LLM_MODEL` from `.env`; default `claude-sonnet-5-5`. The key comes from `ANTHROPIC_API_KEY`, which is a placeholder for now: ask the team lead when needed.
+- **Model:** `LLM_MODEL` from `.env`: OpenAI `gpt-6-luna` for every call (team-lead decision, 11 Oct 2026). The key comes from `OPENAI_API_KEY`. Implementation: `docs/LLM.md`.
 - **Tools only:**
   - `get_home_facts(property_id)`
   - `get_results(scenario_id)`
@@ -323,7 +323,7 @@ M16 → M17 → M18/M19/M20, UKCP18 lifetime savings and the overheating flag, G
   2. Feasibility layer 2 → `Feasibility` (status + confidence), only for retrofits that pass the rules.
   3. Explanation check.
 - **Jev never produces kWh, £, CO2 or score values.**
-- **`JEV_ENABLED=false` or no key:** use the same interface with Claude structured output (`router="claude_fallback"`), or rules only.
+- **`JEV_ENABLED=false` or no key:** use the same interface with OpenAI structured output (`router="llm_fallback"`, `gpt-6-luna`), or rules only.
 - **Calibration (M13):** isotonic recalibration; τ chosen so decisions above it are ≥ 95% correct; reliability diagram in the evaluation report.
 - **Suitability:** P(suitable) = P(feasible) × P(net benefit). Rule vetoes always win. Low confidence → `needs_survey`.
 
@@ -415,7 +415,7 @@ Regenerate the files with `python scripts/make_showcase_examples.py`. The mock r
 - **Ask the team lead when a task first needs one.** Never hard-code, commit or log keys.
 - Code must degrade gracefully without keys:
   - The LLM falls back to the template explainer.
-  - Jev falls back to Claude or rules.
+  - Jev falls back to OpenAI structured output or rules.
   - EPC falls back to cached sample files.
 
 ## 13. Definition of done (every task)

@@ -1,7 +1,7 @@
 """Build deliverables/M1.pdf — GreenTwin approach and idea (Megathon X, Lloyds PS2).
 
 Run:  python deliverables/src/build_m1.py
-Needs reportlab and the Windows Segoe UI fonts (falls back to Helvetica elsewhere).
+Needs reportlab. Uses Segoe UI (Windows) or DejaVu Sans (Linux), else Helvetica.
 """
 
 from pathlib import Path
@@ -21,15 +21,23 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "deliverables" / "M1.pdf"
 
 # ----------------------------------------------------------------------------- fonts
-try:
-    fdir = Path("C:/Windows/Fonts")
-    pdfmetrics.registerFont(TTFont("Seg", str(fdir / "segoeui.ttf")))
-    pdfmetrics.registerFont(TTFont("SegB", str(fdir / "segoeuib.ttf")))
-    pdfmetrics.registerFont(TTFont("SegI", str(fdir / "segoeuii.ttf")))
-    pdfmetrics.registerFontFamily("Seg", normal="Seg", bold="SegB", italic="SegI", boldItalic="SegB")
-    F, FB = "Seg", "SegB"
-except Exception:  # pragma: no cover
-    F, FB = "Helvetica", "Helvetica-Bold"
+def _fonts():
+    """Segoe UI on Windows, DejaVu Sans on Linux (both cover arrows, >= and GBP), else Helvetica."""
+    for d, reg, bold, ital in (("C:/Windows/Fonts", "segoeui.ttf", "segoeuib.ttf", "segoeuii.ttf"),
+                               ("/usr/share/fonts/truetype/dejavu", "DejaVuSans.ttf", "DejaVuSans-Bold.ttf",
+                                "DejaVuSans-Oblique.ttf")):
+        try:
+            pdfmetrics.registerFont(TTFont("Seg", str(Path(d) / reg)))
+            pdfmetrics.registerFont(TTFont("SegB", str(Path(d) / bold)))
+            pdfmetrics.registerFont(TTFont("SegI", str(Path(d) / ital)))
+            pdfmetrics.registerFontFamily("Seg", normal="Seg", bold="SegB", italic="SegI", boldItalic="SegB")
+            return "Seg", "SegB"
+        except Exception:  # pragma: no cover - try the next family
+            continue
+    return "Helvetica", "Helvetica-Bold"
+
+
+F, FB = _fonts()
 
 GREEN = colors.HexColor("#0b6e4f")
 GREEN_L = colors.HexColor("#e6f2ec")
@@ -492,7 +500,7 @@ def build():
         "supported by the JSON.",
         "<b>System 1 / System 2 routing.</b> Jev classifies the question (numeric, comparative, feasibility, "
         "out-of-scope) and fills the scenario with a calibrated confidence; below the threshold the LLM asks a "
-        "clarifying question. Numbers always come from the physics tool (System 2). Without a Jev key, Claude with "
+        "clarifying question. Numbers always come from the physics tool (System 2). Without a Jev key, OpenAI gpt-6-luna with "
         "structured output fills the same interface.",
         "<b>Honesty.</b> Missing or conflicting data, infeasible retrofits and electricity increases are stated plainly; "
         "loan figures are illustrative; a human adviser makes credit decisions.",
@@ -527,7 +535,7 @@ def build():
         ["Retrofit relevance prior", "EBM classifier", "P(EPC would recommend a measure)", "Rules only"],
         ["Value: quantile / matching / DR-learner", "ML + causal", "Indicative value range", "Hedonic OLS"],
         ["Pareto optimiser", "Optimisation", "Front, P(on front), staging", "Greedy kWh per £"],
-        ["Jev calibration", "Isotonic", "Calibrated routing / feasibility confidence", "Claude structured output"],
+        ["Jev calibration", "Isotonic", "Calibrated routing / feasibility confidence", "OpenAI structured output"],
         ["Stretch (GPU)", "Physics-ML / operators / CV", "RC graph, DeepONet surrogate, GraphSAGE, spatial PINO, photo-to-twin", "Level-1 twin"],
     ], [50 * mm, 32 * mm, 56 * mm, 32 * mm], zebra=True)
     story.append(PageBreak())
@@ -583,7 +591,7 @@ def build():
         ["Score", "Monotonicity sweep: 0 violations; reproducibility", "—"],
         ["LLM", "Groundedness ≥ 90%, accuracy ≥ 90%, unsupported &lt; 5% on 30–100 adversarial scenarios", "LLM without validator"],
         ["Pareto", "Hypervolume", "Greedy kWh per £"],
-        ["Jev", "Routing accuracy, feasibility precision/recall, calibration error", "Rules; Claude structured output"],
+        ["Jev", "Routing accuracy, feasibility precision/recall, calibration error", "Rules; OpenAI structured output"],
     ], [34 * mm, 82 * mm, 54 * mm], zebra=True)
     P("Adversarial scenarios cover missing months, conflicting data (rating A but 400 kWh/m²), infeasible requests "
       "(a heat pump in a third-floor flat), electricity rising after a heat-pump switch and too little data to estimate "
@@ -640,7 +648,7 @@ def build():
         ["Too many techniques", "Tiers, checkpoints and stop rules; stretch work only after the demo build"],
         ["Synthetic labels mirror the generator", "Validate against NEED; state the limitation"],
         ["Value read as causal", "Ranges, \"indicative\", sensitivity and refutation tests"],
-        ["API keys or Jev access unavailable", "Same interfaces with Claude, rules or cached fallbacks"],
+        ["API keys or Jev access unavailable", "Same interfaces with OpenAI, rules or cached fallbacks"],
         ["Live demo failure", "Precomputed showcase packages, offline mode, recorded video"],
     ], [60 * mm, 110 * mm])
 

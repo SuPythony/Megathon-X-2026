@@ -298,7 +298,7 @@ def architecture():
 def whatif_flow():
     W, H = 482, 92
     d = Drawing(W, H)
-    steps = [("User", ["3D toggle or", "chat question"]), ("Router", ["Jev / Claude", "→ ScenarioSpec"]),
+    steps = [("User", ["3D toggle or", "chat question"]), ("Router", ["Jev / OpenAI", "→ ScenarioSpec"]),
              ("Feasibility", ["rules veto", "→ Jev"]), ("run_scenario", ["twin on every", "posterior sample"]),
              ("ScenarioResult", ["Distributions", "+ provenance"]), ("LLM + validator", ["quotes tool", "numbers only"]),
              ("UI", ["numbers, 3D,", "explanation"])]
@@ -444,8 +444,8 @@ def build():
         ["Learned models", "EBM (InterpretML) energy prior, XGBoost baseline; GraphSAGE GNN (PyTorch Geometric) on the "
          "LSOA graph; Bayesian hedonic value model (NumPyro)"],
         ["Photo-to-twin", "Claude Haiku 5.5 (claude-haiku-5-5) vision + structured outputs; react-konva editor"],
-        ["LLM + router", "Claude tool use (LLM_MODEL, team default claude-sonnet-5-5) + numeric validator + template "
-         "fallback; Jev System 1 if a key exists, else Claude structured output"],
+        ["LLM + router", "OpenAI Responses API tool use (LLM_MODEL = gpt-6-luna) + numeric validator + template "
+         "fallback; Jev System 1 if a key exists, else OpenAI structured output"],
         ["API + front end", "FastAPI; React + Vite + TypeScript, react-three-fiber + drei, Recharts, MapLibre + "
          "deck.gl, Zustand; types generated from the contracts"],
     ], [32 * mm, 138 * mm])
@@ -535,9 +535,9 @@ def build():
         "Decide what is possible for a home, route what-if questions, and explain computed numbers without ever "
         "inventing one.",
         ["Feasibility: rule vetoes from contracts/feasibility_rules.json always win; Jev classifies survivors with "
-         "recalibrated confidence; low confidence → needs survey; Claude structured output without a Jev key.",
+         "recalibrated confidence; low confidence → needs survey; OpenAI structured output without a Jev key.",
          "Router: Jev intent + ScenarioSpec slots; below the threshold → clarifying question.",
-         "Chat: tool-only Claude (get_home_facts, get_results, run_scenario, search_docs, query_graph), numeric "
+         "Chat: tool-only gpt-6-luna (get_home_facts, get_energy_prior, run_scenario, rank_recommendations, search_docs, query_graph, memory tools), numeric "
          "validator, regenerate once, template fallback; knowledge base (SQL, vector, graph); customer memory."],
         "Jev threshold calibration (isotonic) · LLM evaluated on ≥ 30 adversarial scenarios",
         "Property, catalogue, CustomerMemory, ScenarioResult (via tools)",
