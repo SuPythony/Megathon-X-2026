@@ -95,12 +95,12 @@ class GreenTwinOrchestrator:
             return self._calib[pid]
 
     def feasibility(self, prop: Property, constraints: Optional[dict] = None) -> FeasibilityReport:
-        """Layer 1 rules, then layer 2 (OpenAI screen on survivors; rules-only without a key or if disabled)."""
+        """Layer 1 rules, then layer 2 (Jev on survivors; rules-only when Jev is off or keyless)."""
         import os
 
         if os.environ.get("GREENTWIN_FEASIBILITY_LAYER2", "1") == "0":
             return assess(prop, constraints)
-        from greentwin.retrofit.feasibility_llm import assess_layer2
+        from greentwin.retrofit.feasibility_jev import assess_layer2
 
         return assess_layer2(prop, constraints)
 
