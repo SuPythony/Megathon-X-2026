@@ -910,7 +910,8 @@ class Citation(BaseModel):
 
 
 class ToolCallRecord(BaseModel):
-    name: Literal["get_home_facts", "get_results", "run_scenario", "search_docs", "query_graph"]
+    name: Literal["get_home_facts", "get_results", "run_scenario", "search_docs", "query_graph", "get_energy_prior",
+                  "rank_recommendations", "get_customer_memory", "propose_memory"]
     input: dict
     output_ref: Optional[str] = Field(None, description="e.g. the scenario_id a run_scenario call produced")
 

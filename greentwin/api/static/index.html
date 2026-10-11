@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GreenTwin Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: three columns — home + memory | chat | visuals. Stacks on narrow screens. */
+:root {
+  --bg: #f5f7f6; --surface: #ffffff; --surface-2: #f0f4f2; --fg: #15201b; --fg-2: #4a5852; --muted: #7b8783;
+  --line: #e1e7e4; --brand: #0b6e4f; --brand-soft: #e3f1ec; --accent: #2a6fdb; --accent-soft: #e6eefc;
+  --warn: #9a5b00; --warn-soft: #fdf1dc; --bad: #b4232c; --bad-soft: #fbe7e8; --prior: #a8b2ae;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #0f1412; --surface: #161c19; --surface-2: #1c2420; --fg: #e8eeeb; --fg-2: #b4c0bb; --muted: #84918c;
+  --line: #29322e; --brand: #3cc48c; --brand-soft: #173328; --accent: #6f9ff2; --accent-soft: #1a2742;
+  --warn: #f0b45a; --warn-soft: #3a2c12; --bad: #f0707a; --bad-soft: #3b1c1f; --prior: #5f6b66; color-scheme: dark; } }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font); font-variant-numeric: tabular-nums; }
+header { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
+header h1 { font-size: 16px; margin: 0; font-weight: 700; }
+header h1 span { color: var(--brand); }
+.pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg-2); background: var(--surface-2); white-space: nowrap; }
+.pill.ok { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+.pill.warn { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.grow { flex: 1; }
+main { display: grid; grid-template-columns: 300px minmax(0, 1fr) 400px; height: calc(100% - 57px); }
+aside, section { overflow-y: auto; min-width: 0; }
+aside.left { border-right: 1px solid var(--line); padding: 16px; display: grid; gap: 16px; align-content: start; }
+aside.right { border-left: 1px solid var(--line); padding: 16px; display: grid; gap: 16px; align-content: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; }
+.card h2 { font-size: 13px; margin: 0; font-weight: 600; letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
+.card h2 .tag { margin-left: auto; font-weight: 500; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+select, input, textarea, button { font: inherit; color: inherit; }
+select, input { width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 10px; }
+button:hover { border-color: var(--brand); }
+button.primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; }
+button.small { font-size: 12px; padding: 3px 8px; }
+button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.homes { display: grid; gap: 6px; }
+.home { text-align: left; padding: 8px 10px; display: grid; gap: 2px; }
+.home b { font-size: 13px; }
+.home small { color: var(--muted); }
+.home.active { border-color: var(--brand); background: var(--brand-soft); }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 12.5px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); display: inline-flex; gap: 6px; align-items: center; }
+.chip button { border: 0; padding: 0 2px; background: none; color: var(--muted); }
+.chip.proposed { border-style: dashed; border-color: var(--warn); }
+.row { display: flex; gap: 6px; align-items: center; }
+.events { display: grid; gap: 4px; font-size: 12px; color: var(--fg-2); max-height: 160px; overflow-y: auto; }
+/* chat */
+section.chat { display: grid; grid-template-rows: 1fr auto; }
+.thread { overflow-y: auto; padding: 20px 24px; display: grid; gap: 16px; align-content: start; }
+.msg { max-width: 760px; display: grid; gap: 6px; }
+.msg.user { justify-self: end; }
+.bubble { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.msg.user .bubble { background: var(--accent-soft); border-color: transparent; }
+.bubble p { margin: 0 0 8px; } .bubble p:last-child { margin: 0; }
+.bubble ul { margin: 4px 0 8px; padding-left: 20px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.badge { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.badge.ok { background: var(--brand-soft); color: var(--brand); }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.tool { font-size: 11.5px; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.cite { font-size: 11.5px; padding: 2px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); cursor: pointer; border: 0; }
+pre.json { margin: 0; max-height: 260px; overflow: auto; font-size: 11.5px; background: var(--surface-2); padding: 10px; border-radius: 8px; border: 1px solid var(--line); }
+.empty { max-width: 640px; margin: 40px auto 0; text-align: center; display: grid; gap: 14px; color: var(--fg-2); }
+.empty h3 { margin: 0; color: var(--fg); font-size: 20px; }
+.suggest { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.suggest button { font-size: 13px; border-radius: 999px; }
+.composer { border-top: 1px solid var(--line); padding: 12px 24px; background: var(--surface); display: flex; gap: 10px; align-items: flex-end; }
+.composer textarea { flex: 1; resize: none; min-height: 44px; max-height: 140px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.typing { color: var(--muted); font-size: 13px; }
+/* visuals */
+.metric { display: grid; gap: 4px; }
+.metric .head { display: flex; align-items: baseline; gap: 6px; }
+.metric .v { font-size: 22px; font-weight: 700; }
+.metric .u { font-size: 12px; color: var(--muted); }
+.metric .r { font-size: 12px; color: var(--fg-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--muted); }
+.legend span { white-space: nowrap; }
+.drv { display: grid; grid-template-columns: minmax(0, 1.3fr) 1fr 44px; gap: 8px; align-items: center; font-size: 12px; padding: 3px 0; }
+.drv-l { line-height: 1.25; } .drv-l span { display: block; color: var(--muted); font-size: 11px; }
+.drv-t { position: relative; height: 10px; background: var(--surface-2); border-radius: 5px; }
+.drv-t::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line); }
+.drv-t i { position: absolute; top: 0; bottom: 0; border-radius: 5px; }
+.drv-v { text-align: right; color: var(--fg-2); }
+.metric + .metric { margin-top: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+svg text { fill: var(--muted); font-size: 10px; font-family: var(--font); }
+.rec { display: grid; grid-template-columns: 22px 1fr; gap: 4px 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+.rec:first-of-type { border-top: 0; }
+.rec .n { font-weight: 700; color: var(--muted); }
+.rec .t { font-weight: 600; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.rec .sub { grid-column: 2; font-size: 12px; color: var(--fg-2); display: grid; gap: 2px; }
+.rec .acts { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; }
+.st { font-size: 11px; padding: 1px 7px; border-radius: 999px; font-weight: 600; }
+.st.feasible { background: var(--brand-soft); color: var(--brand); }
+.st.feasible_with_conditions, .st.needs_survey { background: var(--warn-soft); color: var(--warn); }
+.st.best { background: var(--accent-soft); color: var(--accent); }
+.moved.up { color: var(--brand); } .moved.down { color: var(--bad); }
+details summary { cursor: pointer; font-size: 12.5px; color: var(--fg-2); }
+.note { font-size: 11.5px; color: var(--muted); }
+dialog { border: 1px solid var(--line); border-radius: 12px; max-width: 640px; width: 92vw; background: var(--surface); color: var(--fg); padding: 18px; }
+dialog::backdrop { background: rgb(0 0 0 / .35); }
+@media (max-width: 1150px) { main { grid-template-columns: 1fr; height: auto; } aside.left, aside.right { border: 0; } section.chat { min-height: 70vh; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Green<span>Twin</span> Assistant</h1>
+  <span class="pill" id="st-model">…</span>
+  <span class="pill" id="st-kb">…</span>
+  <span class="grow"></span>
+  <span class="note">Every number comes from our models' tools and is checked before you see it.</span>
+</header>
+<main>
+  <aside class="left">
+    <div class="card"><div class="label">Home</div><div class="homes" id="homes"></div></div>
+    <div class="card"><div class="label">Customer</div>
+      <select id="customer"></select>
+      <div class="note">Synthetic demo customers. Memory is kept per customer.</div></div>
+    <div class="card" id="facts-card"><h2>Home facts</h2><dl class="facts" id="facts"></dl></div>
+    <div class="card" id="mem-card"><h2>What we remember <span class="tag pill" id="mem-count">0</span></h2>
+      <div id="mem-confirmed" class="chips"></div>
+      <div id="mem-proposed-wrap" hidden><div class="label">Waiting for your OK</div><div id="mem-proposed" class="chips"></div></div>
+      <div class="label">Quick add</div>
+      <div class="row">
+        <select id="qa"><option value="">Choose…</option>
+          <option value="preference|low_disruption|yes">Prefer low-disruption work</option>
+          <option value="constraint|tenure|renting">I rent this home</option>
+          <option value="constraint|outdoor_space|none">No outdoor space</option>
+          <option value="goal|goal|bills">Goal: lower bills</option>
+          <option value="goal|goal|carbon">Goal: lower carbon</option>
+          <option value="constraint|budget_gbp|5000">Budget about £5,000</option>
+        </select><button class="small" id="qa-add">Add</button></div>
+      <div class="label">Recent actions</div><div class="events" id="mem-events"></div>
+      <button class="small" id="mem-reset" title="Demo: forget everything about this customer">Reset memory</button>
+    </div>
+  </aside>
+
+  <section class="chat">
+    <div class="thread" id="thread"></div>
+    <form class="composer" id="composer">
+      <textarea id="input" rows="1" placeholder="Ask about this home: energy use, what to do first, grants, rules…"></textarea>
+      <button class="primary" type="submit" id="send">Send</button>
+    </form>
+  </section>
+
+  <aside class="right">
+    <div class="card"><h2>Energy estimate <span class="tag note">kWh/m²/yr · 90% range</span></h2>
+      <div id="energy"></div>
+      <div class="legend"><span><i style="background:var(--prior)"></i>From home type</span><span><i style="background:var(--brand)"></i>After meter readings</span><span><i style="background:var(--fg)"></i>Metered</span></div>
+    </div>
+    <div class="card"><h2>Meter readings 2025 <span class="tag note">kWh per month</span></h2><div id="usage"></div></div>
+    <div class="card"><h2>What drives the gas estimate</h2><div id="drivers"></div></div>
+    <div class="card"><h2>Recommended next steps</h2><div class="note" id="rec-note"></div><div id="recs"></div>
+      <details id="nf-wrap"><summary>Not possible for this home</summary><div id="notfeasible" class="events" style="max-height:none"></div></details></div>
+  </aside>
+</main>
+
+<dialog id="dlg"><div id="dlg-body"></div><div class="row" style="justify-content:flex-end;margin-top:12px"><button onclick="dlg.close()">Close</button></div></dialog>
+
+<script>
+const S = { homes: [], customers: [], pid: "SH2", cid: "C-001", history: [], session: null, home: null };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const f1 = x => x == null ? "–" : Number(x).toLocaleString(undefined, { maximumFractionDigits: 1 });
+const api = (p, o) => fetch(p, o).then(r => r.json());
+const post = (p, b) => api(p, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+
+function md(t) {  // tiny, safe markdown: paragraphs, bullets, bold, italic, code
+  const lines = esc(t).split("\n"); let html = "", inList = false;
+  for (const l of lines) {
+    const m = l.match(/^\s*[-*•]\s+(.*)/);
+    if (m) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${m[1]}</li>`; continue; }
+    if (inList) { html += "</ul>"; inList = false; }
+    if (l.trim()) html += `<p>${l}</p>`;
+  }
+  if (inList) html += "</ul>";
+  return html.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*(?!\s)(.+?)\*/g, "$1<i>$2</i>").replace(/`(.+?)`/g, "<code>$1</code>");
+}
+
+async function boot() {
+  const st = await api("/api/status");
+  $("st-model").textContent = `${st.llm.model} · ${st.llm.key ? "live" : "no key: template answers"}`;
+  $("st-model").className = "pill " + (st.llm.key ? "ok" : "warn");
+  $("st-kb").textContent = `Knowledge base: ${st.kb.documents} docs · ${st.kb.edges} links`;
+  const h = await api("/api/homes"); S.homes = h.homes; S.customers = h.customers;
+  $("homes").innerHTML = S.homes.map(x => `<button class="home" data-pid="${x.property_id}"><b>${x.property_id}</b><small>${esc(x.label)}</small></button>`).join("");
+  $("homes").onclick = e => { const b = e.target.closest(".home"); if (b) selectHome(b.dataset.pid); };
+  $("customer").innerHTML = S.customers.map(c => `<option value="${c.customer_id}">${esc(c.label)}</option>`).join("") + `<option value="">Anonymous (no memory)</option>`;
+  $("customer").onchange = () => { S.cid = $("customer").value; S.history = []; S.session = null; renderEmpty(); refreshMemory(); refreshRecs(); };
+  $("customer").value = S.cid;
+  selectHome(S.pid);
+}
+
+async function selectHome(pid) {
+  S.pid = pid; S.history = []; S.session = null;
+  document.querySelectorAll(".home").forEach(b => b.classList.toggle("active", b.dataset.pid === pid));
+  renderEmpty();
+  $("energy").innerHTML = `<div class="note">Loading estimate…</div>`;
+  const home = await api(`/api/homes/${pid}`);
+  if (S.pid !== pid) return;  // a newer selection won the race; drop this late response
+  S.home = home;
+  renderFacts(home.facts); renderEnergy(home); renderUsage(home.usage); renderDrivers(home.prior);
+  refreshMemory(); refreshRecs();
+}
+
+function renderFacts(f) {
+  const rows = [["Type", f.type], ["Built", f.age_band], ["Floor area", `${f.floor_area_m2} m²`], ["Area", `${f.district}, ${f.region}`],
+    ["Walls", f.walls.replace(/_/g, " ")], ["Roof", f.roof.replace(/_/g, " ")], ["Glazing", f.glazing.join(", ").replace(/_/g, " ")],
+    ["Heating", f.heating.replace(/_/g, " ")], ["EPC", `${f.epc.band ?? "–"} (SAP ${f.epc.sap ?? "–"})`]];
+  $("facts").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+}
+
+function ci(d) { return d.credible_intervals.find(c => c.level === 0.9); }
+
+function rangeBar(prior, post, metered) {
+  const lo = Math.min(ci(prior).lo, post ? ci(post).lo : Infinity, metered ?? Infinity) * 0.9;
+  const hi = Math.max(ci(prior).hi, post ? ci(post).hi : 0, metered ?? 0) * 1.05;
+  const W = 360, x = v => 8 + (v - lo) / (hi - lo) * (W - 16);
+  const bar = (d, y, col) => `<rect x="${x(ci(d).lo)}" y="${y}" width="${Math.max(2, x(ci(d).hi) - x(ci(d).lo))}" height="8" rx="4" fill="${col}"/><circle cx="${x(d.median)}" cy="${y + 4}" r="5" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`;
+  return `<svg viewBox="0 0 ${W} 50" width="100%" role="img" aria-label="Estimate ranges" style="margin-bottom:4px">
+    ${bar(prior, 6, "var(--prior)")}${post ? bar(post, 22, "var(--brand)") : ""}
+    ${metered != null ? `<line x1="${x(metered)}" x2="${x(metered)}" y1="2" y2="34" stroke="var(--fg)" stroke-width="1.5"/>` : ""}
+    <text x="8" y="46">${f1(lo)}</text><text x="${W - 8}" y="46" text-anchor="end">${f1(hi)}</text></svg>`;
+}
+
+function renderEnergy(home) {
+  const out = [];
+  for (const [fuel, key] of [["Electricity", "electricity"], ["Gas", "gas"]]) {
+    const prior = home.prior[`${key}_kwh_m2`];
+    const u = home.update.fuels[key];
+    if (prior.std === 0) { out.push(`<div class="metric"><div class="label">${fuel}</div><div class="r">No mains gas: gas is 0 (no supply, not missing data).</div></div>`); continue; }
+    const post = u && u.posterior;
+    const head = post || prior;
+    out.push(`<div class="metric"><div class="label">${fuel}</div>
+      <div class="head"><span class="v">${f1(head.median)}</span><span class="u">kWh/m²/yr ${post ? "after meter readings" : "estimate"}</span></div>
+      <div class="r">90% range ${f1(ci(head).lo)}–${f1(ci(head).hi)}${post ? ` · from home type alone ${f1(prior.median)} (${f1(ci(prior).lo)}–${f1(ci(prior).hi)}) · spread −${f1(u.sd_reduction_pct)}%` : ""}${post && u.observed.imputed_months.length ? ` · ${u.observed.imputed_months.join(", ")} filled in, not zero` : ""}</div>
+      ${rangeBar(prior, post, post ? u.observed.intensity_kwh_m2 : null)}</div>`);
+  }
+  $("energy").innerHTML = out.join("");
+}
+
+function renderUsage(rows) {
+  const W = 360, H = 120, n = rows.length, bw = (W - 30) / n;
+  const maxv = Math.max(...rows.map(r => Math.max(r.gas_kwh ?? 0, r.electricity_kwh ?? 0)), 1);
+  const y = v => H - 18 - v / maxv * (H - 28);
+  let s = "";
+  rows.forEach((r, i) => {
+    const x0 = 24 + i * bw;
+    if (r.gas_kwh == null && r.electricity_kwh == null) { s += `<text x="${x0 + bw / 2}" y="${H - 22}" text-anchor="middle">gap</text>`; }
+    if (r.gas_kwh) s += `<rect x="${x0 + 1}" y="${y(r.gas_kwh)}" width="${bw / 2 - 2}" height="${H - 18 - y(r.gas_kwh)}" rx="2" fill="var(--accent)"><title>${r.month} gas ${f1(r.gas_kwh)} kWh</title></rect>`;
+    if (r.electricity_kwh) s += `<rect x="${x0 + bw / 2}" y="${y(r.electricity_kwh)}" width="${bw / 2 - 2}" height="${H - 18 - y(r.electricity_kwh)}" rx="2" fill="var(--brand)"><title>${r.month} electricity ${f1(r.electricity_kwh)} kWh</title></rect>`;
+    s += `<text x="${x0 + bw / 2}" y="${H - 5}" text-anchor="middle">${"JFMAMJJASOND"[i % 12]}</text>`;
+  });
+  $("usage").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Monthly meter readings">${s}</svg><div class="note">Tallest bar: ${f1(maxv)} kWh</div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Gas</span><span><i style="background:var(--brand)"></i>Electricity</span><span>Missing months show as gaps, never zero.</span></div>`;
+}
+
+function renderDrivers(prior) {
+  let c = prior.contributions_gas.length ? prior.contributions_gas : prior.contributions_electricity;
+  const title = prior.contributions_gas.length ? "gas" : "electricity";
+  document.querySelector("#drivers").previousElementSibling.textContent = `What drives the ${title} estimate`;
+  const base = c[0]; c = c.slice(1, 8);
+  const mx = Math.max(...c.map(x => Math.abs(x.contribution)), 1);
+  $("drivers").innerHTML = `<div class="note">Average home: ${f1(base.contribution)} kWh/m²/yr. Red raises the estimate, green lowers it.</div>` +
+    c.map(x => {
+      const w = Math.abs(x.contribution) / mx * 50, pos = x.contribution >= 0;
+      return `<div class="drv"><div class="drv-l">${esc(x.feature)}${x.value ? `<span>${esc(x.value)}</span>` : ""}</div>
+        <div class="drv-t"><i style="${pos ? "left:50%" : `right:50%`};width:${w}%;background:${pos ? "var(--bad)" : "var(--brand)"}"></i></div>
+        <div class="drv-v">${x.contribution > 0 ? "+" : ""}${f1(x.contribution)}</div></div>`;
+    }).join("");
+}
+
+async function refreshRecs() {
+  const pid = S.pid, cid = S.cid;
+  const r = await api(`/api/recommendations?property_id=${pid}&customer_id=${cid || ""}`);
+  if (S.pid !== pid || S.cid !== cid) return;
+  $("rec-note").textContent = "Order: fabric first. Your memory can reorder close options (at most ±15%); it never changes numbers or hides the best option.";
+  $("recs").innerHTML = r.recommendations.map(x => `
+    <div class="rec"><span class="n">${x.rank}</span>
+      <div class="t">${esc(x.name)}<span class="st ${x.status}">${x.status.replace(/_/g, " ")}</span>${x.is_best_base ? `<span class="st best">best first step</span>` : ""}
+        ${x.moved ? `<span class="moved ${x.moved > 0 ? "up" : "down"}">${x.moved > 0 ? "▲" : "▼"} ${Math.abs(x.moved)}</span>` : ""}</div>
+      <div class="sub">
+        ${x.cost_central_gbp != null ? `<span>Typical cost £${x.cost_central_gbp.toLocaleString()} ${x.cost_basis.replace(/_/g, " ")}${x.cost_status !== "sourced" ? " (secondary source)" : ""}</span>` : `<span>Cost not sourced, so not shown</span>`}
+        ${x.conditions.map(c => `<span>⚠ ${esc(c)}</span>`).join("")}
+        ${x.move_reason ? `<span class="moved ${x.moved > 0 ? "up" : "down"}">${esc(x.move_reason)}</span>` : ""}
+        <span class="note">Chance you'd go ahead: ${Math.round(x.memory.p_accept * 100)}% (90% range ${Math.round(x.memory.interval_90[0] * 100)}–${Math.round(x.memory.interval_90[1] * 100)}%)</span>
+      </div>
+      ${S.cid ? `<div class="acts"><button class="small" onclick="act('${x.retrofit_id}','saved')">Save</button>
+        <button class="small" onclick="act('${x.retrofit_id}','rejected')">Not for me</button>
+        <button class="small" onclick="ask('Tell me about ${esc(x.name).replace(/'/g, "")} for my home: is it possible and is there any grant?')">Ask</button></div>` : ""}
+    </div>`).join("");
+  $("notfeasible").innerHTML = r.not_feasible.map(x => `<div><b>${esc(x.name)}</b>: ${esc(x.reasons.join("; "))}</div>`).join("") || "Everything in the catalogue is possible here.";
+}
+
+async function act(rid, type) {
+  let reason = "";
+  if (type === "rejected") { reason = prompt("Why is it not for you? (optional, e.g. upfront cost, disruption)") || ""; }
+  await post(`/api/memory/${S.cid}/events`, { property_id: S.pid, retrofit_id: rid, type, reason });
+  refreshMemory(); refreshRecs();
+}
+
+async function refreshMemory() {
+  if (!S.cid) { $("mem-card").style.opacity = .5; $("mem-confirmed").innerHTML = `<span class="note">Anonymous: nothing is remembered.</span>`; $("mem-proposed-wrap").hidden = true; $("mem-events").innerHTML = ""; $("mem-count").textContent = 0; return; }
+  $("mem-card").style.opacity = 1;
+  const cid = S.cid;
+  const m = await api(`/api/memory/${cid}`);
+  if (S.cid !== cid) return;
+  const label = it => `${it.kind === "constraint" || it.kind === "goal" ? "" : it.kind + ": "}${it.key.replace(/_/g, " ")} = ${esc(it.value).replace(/_/g, " ")}`;
+  $("mem-count").textContent = m.confirmed.length;
+  $("mem-confirmed").innerHTML = m.confirmed.map(it => `<span class="chip" title="${esc(it.source)} · ${esc(it.created_at)}">${label(it)}<button title="Forget" onclick="setStatus('${it.item_id}','retracted')">×</button></span>`).join("") || `<span class="note">Nothing yet. Tell the assistant about yourself, or use quick add.</span>`;
+  $("mem-proposed-wrap").hidden = !m.proposed.length;
+  $("mem-proposed").innerHTML = m.proposed.map(it => `<span class="chip proposed" title="${esc(it.evidence)}">${label(it)}<button title="Confirm" onclick="setStatus('${it.item_id}','confirmed')">✓</button><button title="Discard" onclick="setStatus('${it.item_id}','retracted')">×</button></span>`).join("");
+  $("mem-events").innerHTML = m.events.map(e => `<div>${esc(e.created_at)} · ${esc(e.type)} <b>${esc(e.retrofit_id.replace(/_/g, " "))}</b>${e.reason ? ` (${esc(e.reason)})` : ""}</div>`).join("") || `<span class="note">No actions yet.</span>`;
+}
+
+async function setStatus(id, status) { await post(`/api/memory/items/${id}/status`, { status }); refreshMemory(); refreshRecs(); }
+
+$("qa-add").onclick = async () => {
+  if (!S.cid || !$("qa").value) return;
+  const [kind, key, value] = $("qa").value.split("|");
+  const r = await post(`/api/memory/${S.cid}/items`, { kind, key, value, evidence: "quick add" });
+  if (!r.ok) alert(r.error);
+  $("qa").value = ""; refreshMemory(); refreshRecs();
+};
+
+$("mem-reset").onclick = async () => { if (!S.cid) return; await post(`/api/memory/${S.cid}/reset`, {}); refreshMemory(); refreshRecs(); };
+
+function renderEmpty() {
+  const h = S.homes.find(x => x.property_id === S.pid);
+  $("thread").innerHTML = `<div class="empty"><h3>Ask about ${esc(h ? h.label : S.pid)}</h3>
+    <div>Answers use only our models and knowledge base. Every number is checked against the tools before you see it.</div>
+    <div class="suggest">${["How much energy does my home use, and how sure are you?", "What should I do first?",
+      "Can I get a grant for a heat pump?", "Why can't I have external wall insulation?",
+      "What if I add loft insulation and a heat pump — how much would I save?",
+      "I rent, and I want minimal disruption. What would you suggest?"].map(q => `<button onclick="ask(this.textContent)">${q}</button>`).join("")}</div></div>`;
+}
+
+function addMsg(role, html) {
+  if ($("thread").querySelector(".empty")) $("thread").innerHTML = "";
+  const d = document.createElement("div"); d.className = `msg ${role}`; d.innerHTML = html;
+  $("thread").appendChild(d); $("thread").scrollTop = $("thread").scrollHeight; return d;
+}
+
+window.TOOLS = {};
+async function ask(text) {
+  text = (text || $("input").value).trim(); if (!text) return;
+  $("input").value = ""; $("send").disabled = true;
+  addMsg("user", `<div class="bubble">${esc(text)}</div>`);
+  const wait = addMsg("assistant", `<div class="typing">Checking the home's data and our knowledge base…</div>`);
+  try {
+    const r = await post("/api/chat", { property_id: S.pid, customer_id: S.cid || null, message: text, history: S.history, session_id: S.session });
+    S.session = r.session_id; const x = r.response;
+    S.history.push({ role: "user", content: text }, { role: "assistant", content: x.answer });
+    const id = Math.random().toString(36).slice(2); window.TOOLS[id] = r.tool_outputs;
+    const nums = x.check.numbers_found.length;
+    const badge = x.fallback === "template" ? `<span class="badge warn">Template answer</span>`
+      : `<span class="badge ok">✓ ${nums ? `${nums} number${nums === 1 ? "" : "s"} checked` : "no figures to check"}</span>`;
+    wait.innerHTML = `<div class="bubble">${md(x.answer)}</div>
+      <div class="meta">${badge}${x.fallback === "regenerated" ? `<span class="badge warn">corrected once</span>` : ""}
+        ${r.tool_outputs.map((t, i) => `<span class="tool" onclick="showTool('${id}',${i})">${t.name}</span>`).join("")}
+        ${x.citations.filter(c => c.source !== "tool_result").map(c => `<button class="cite" onclick="showDoc('${esc(c.ref)}')">${esc(c.snippet || c.ref)}</button>`).join("")}
+        <span>${(r.latency_ms / 1000).toFixed(1)} s${x.model ? " · " + x.model : ""}</span></div>`;
+    if (r.tool_outputs.some(t => ["propose_memory", "rank_recommendations"].includes(t.name))) { refreshMemory(); refreshRecs(); }
+  } catch (e) { wait.innerHTML = `<div class="bubble">Something went wrong: ${esc(e)}</div>`; }
+  $("send").disabled = false; $("thread").scrollTop = $("thread").scrollHeight;
+}
+
+function showTool(id, i) {
+  const t = window.TOOLS[id][i];
+  $("dlg-body").innerHTML = `<h3 style="margin:0 0 8px">Tool: ${esc(t.name)}</h3><div class="label">Input</div><pre class="json">${esc(JSON.stringify(t.input, null, 2))}</pre>
+    <div class="label" style="margin-top:8px">Output${t.ms ? ` · ${t.ms} ms` : ""}</div><pre class="json">${esc(JSON.stringify(t.output, null, 2))}</pre>`;
+  dlg.showModal();
+}
+async function showDoc(ref) {
+  if (!ref.includes(":")) ref = "rule:" + ref;
+  const d = await api(`/api/kb/doc/${encodeURIComponent(ref)}`);
+  $("dlg-body").innerHTML = `<div class="label">${esc(d.kind)}${d.verified ? "" : " · not verified"}</div><h3 style="margin:4px 0 8px">${esc(d.title)}</h3>
+    <div style="white-space:pre-wrap;font-size:13px">${esc(d.text)}</div>${d.source_url ? `<p><a href="${esc(d.source_url)}" target="_blank" rel="noopener">Source</a></p>` : ""}`;
+  dlg.showModal();
+}
+
+$("composer").onsubmit = e => { e.preventDefault(); ask(); };
+$("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } });
+boot();
+</script>
+</body>
+</html>

@@ -7,6 +7,12 @@ adds something those documents do not cover, it says so; it never relaxes a rule
 (`.env.example` `LLM_PROVIDER=anthropic`, LLD "Claude"); `AGENTS.md` (Jev fallback "Claude structured output",
 Photo-to-twin "Claude Haiku") must be updated in the same PR, with the team lead's sign-off.
 
+**As built (11 Oct 2026), see `docs/LLM.md`:** two deviations from §0, both decided in the phase-0 spike.
+(1) **Cognee not used:** installing it adds 113 packages and downgrades pandas 3.0.6, which the M04 model depends on,
+so documents use the planned DuckDB fallback (BM25 full-text; dense embeddings deferred). (2) **Plain Responses API
+loop** with the official `openai` SDK instead of `openai-agents`: simpler forced tool choice, validation and replay
+caching, and no extra MCP stack.
+
 ## 0. Reuse decisions (adopt before building)
 
 | Need | Choice | Why | Rejected |

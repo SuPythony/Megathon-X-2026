@@ -780,7 +780,7 @@ export interface Citation {
 }
 
 export interface ToolCallRecord {
-  name: "get_home_facts" | "get_results" | "run_scenario" | "search_docs" | "query_graph";
+  name: "get_home_facts" | "get_results" | "run_scenario" | "search_docs" | "query_graph" | "get_energy_prior" | "rank_recommendations" | "get_customer_memory" | "propose_memory";
   input: Record<string, unknown>;
   /** e.g. the scenario_id a run_scenario call produced */
   output_ref?: string | null;

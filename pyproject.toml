@@ -36,6 +36,7 @@ dependencies = [
   "fastapi>=0.111",
   "uvicorn>=0.30",
   "anthropic>=0.40",
+  "openai>=3.28",            # P4 LLM provider (Responses API)
   "reportlab>=4.0",
   "pytest>=8.0",
   "ruff>=0.5",
