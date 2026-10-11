@@ -1,0 +1,55 @@
+{
+ "seed": 42,
+ "n_samples": 500,
+ "data_version": "showcase examples + synthetic weather",
+ "posterior": "prior_only (calibration not on main)",
+ "homes": {
+  "SH1": {
+   "seconds": 56.1,
+   "pareto_vs_greedy": {
+    "budget_gbp": 10000,
+    "greedy_package": [
+     "draught_proofing",
+     "loft_insulation",
+     "smart_thermostat",
+     "air_source_heat_pump"
+    ],
+    "dominated_by_another_package": false,
+    "n_packages": 256,
+    "n_points_p_on_front_gt_0": 161
+   },
+   "improvement_potential_median_pct": 78.56002160754309
+  },
+  "SH2": {
+   "seconds": 51.2,
+   "pareto_vs_greedy": {
+    "budget_gbp": 10000,
+    "greedy_package": [
+     "draught_proofing",
+     "loft_insulation",
+     "cavity_wall_insulation",
+     "smart_thermostat",
+     "solar_pv"
+    ],
+    "dominated_by_another_package": false,
+    "n_packages": 256,
+    "n_points_p_on_front_gt_0": 122
+   },
+   "improvement_potential_median_pct": 73.02960410552035
+  },
+  "SH3": {
+   "seconds": 3.4,
+   "pareto_vs_greedy": {
+    "budget_gbp": 10000,
+    "greedy_package": [
+     "draught_proofing",
+     "smart_thermostat"
+    ],
+    "dominated_by_another_package": false,
+    "n_packages": 4,
+    "n_points_p_on_front_gt_0": 4
+   },
+   "improvement_potential_median_pct": 18.09904108880487
+  }
+ }
+}

@@ -94,6 +94,8 @@ def retrofit_samples(samples: PosteriorSamples, actions: Sequence[RetrofitAction
             continue
         if key in ("baseload_kwh_per_day", "heating_hours_per_day", "volume_m3") and old:
             params[key] = (np.asarray(params[key]) * (float(value) / float(old))).astype(np.float32)
+        elif key == "setpoint_c":  # controls lower the setpoint by a fixed step; keep the calibrated spread
+            params[key] = (np.asarray(params[key]) + (float(value) - float(old))).astype(np.float32)
         else:
             params[key] = np.full(samples.n_samples, float(value), dtype=np.float32)
     return PosteriorSamples(property_id=samples.property_id, n_samples=samples.n_samples, params=params,
