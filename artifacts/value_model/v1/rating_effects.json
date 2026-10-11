@@ -1,0 +1,24 @@
+{
+  "doc": "Rating effect per SAP point (log points) from three designs; the product mixes them with equal weight (decision V-13). bayesian = per region x type posterior draws (beta_rt / 10).",
+  "designs": {
+    "ols_la_fixed_effects": {
+      "type": "normal",
+      "mean": 0.0007634158728235733,
+      "sd": 6.23811154387719e-05
+    },
+    "within_neighbourhood_cells": {
+      "type": "normal",
+      "mean": 0.00205239595923158,
+      "sd": 6.667174230035068e-05
+    },
+    "bayesian_hierarchical": {
+      "type": "posterior",
+      "source": "posterior.npz:beta_rt / 10"
+    }
+  },
+  "weights": {
+    "ols_la_fixed_effects": 0.3333333333333333,
+    "within_neighbourhood_cells": 0.3333333333333333,
+    "bayesian_hierarchical": 0.3333333333333333
+  }
+}
