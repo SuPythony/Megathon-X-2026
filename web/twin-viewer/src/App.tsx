@@ -166,7 +166,7 @@ export default function App() {
 
   // Re-run the twin when the package, appliances or confirmed geometry change (debounced).
   useEffect(() => {
-    if (!scene?.energy) return
+    if (!scene) return  // house-type examples have no precomputed energy: the server computes it
     const t = setTimeout(() => { void s.runTwin() }, 350)
     return () => clearTimeout(t)
   }, [energyKey, s.sceneKey]) // eslint-disable-line react-hooks/exhaustive-deps

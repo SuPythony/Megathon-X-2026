@@ -121,6 +121,8 @@ dialog::backdrop { background: rgb(0 0 0 / .35); }
 #twin-view iframe { width: 100%; height: 100%; border: 0; display: block; }
 body.twin main { display: none; }
 body.twin #twin-view { display: block; }
+.in3d { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; margin-top: 4px; cursor: pointer; }
+.in3d input { width: auto; margin: 0; }
 </style>
 </head>
 <body>
@@ -188,7 +190,7 @@ body.twin #twin-view { display: block; }
 <dialog id="dlg"><div id="dlg-body"></div><div class="row" style="justify-content:flex-end;margin-top:12px"><button onclick="dlg.close()">Close</button></div></dialog>
 
 <script>
-const S = { homes: [], customers: [], pid: "SH2", cid: "C-001", history: [], session: null, home: null };
+const S = { homes: [], customers: [], pid: "SH2", cid: "C-001", history: [], session: null, home: null, pkg: {} };  // pkg: home -> retrofits shown in 3D
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const f1 = x => x == null ? "–" : Number(x).toLocaleString(undefined, { maximumFractionDigits: 1 });
@@ -226,6 +228,7 @@ async function boot() {
 
 async function selectHome(pid) {
   S.pid = pid; S.history = []; S.session = null;
+  twinSend(); syncPkgUI();
   document.querySelectorAll(".home").forEach(b => b.classList.toggle("active", b.dataset.pid === pid));
   renderEmpty();
   $("energy").innerHTML = `<div class="note">Loading estimate…</div>`;
@@ -318,6 +321,7 @@ async function refreshRecs() {
         ${x.move_reason ? `<span class="moved ${x.moved > 0 ? "up" : "down"}">${esc(x.move_reason)}</span>` : ""}
         <span class="note">Chance you'd go ahead: ${Math.round(x.memory.p_accept * 100)}% (90% range ${Math.round(x.memory.interval_90[0] * 100)}–${Math.round(x.memory.interval_90[1] * 100)}%)</span>
       </div>
+      ${x.status !== "infeasible" ? `<label class="in3d"><input type="checkbox" data-pkg="${esc(x.retrofit_id)}" ${(S.pkg[pid] || []).includes(x.retrofit_id) ? "checked" : ""}> Show in 3D twin</label>` : ""}
       ${S.cid ? `<div class="acts"><button class="small" data-act="saved" data-rid="${esc(x.retrofit_id)}">Save</button>
         <button class="small" data-act="rejected" data-rid="${esc(x.retrofit_id)}">Not for me</button>
         <button class="small" data-ask="Tell me about ${esc(x.name)} for my home: is it possible and is there any grant?">Ask</button></div>` : ""}
@@ -425,6 +429,8 @@ async function ask(text) {
         ${x.citations.filter(c => c.source !== "tool_result").map(c => `<button class="cite" data-doc="${esc(c.ref)}">${esc(c.snippet || c.ref)}</button>`).join("")}
         <span>${(r.latency_ms / 1000).toFixed(1)} s${x.model ? " · " + esc(x.model) : ""}</span></div>`;
     if (r.tool_outputs.some(t => ["propose_memory", "rank_recommendations"].includes(t.name))) { refreshMemory(); refreshRecs(); }
+    const sc = [...r.tool_outputs].reverse().find(t => t.name === "run_scenario" && t.output && t.output.status === "ok");
+    if (sc) { setPkg(S.pid, sc.input.retrofit_ids || []); wait.querySelector(".meta").insertAdjacentHTML("beforeend", `<button class="small" data-open3d="1">Shown in 3D twin →</button>`); }
   } catch (e) { wait.innerHTML = `<div class="bubble">Something went wrong: ${esc(e)}</div>`; }
   $("send").disabled = false; $("thread").scrollTop = $("thread").scrollHeight;
 }
@@ -452,6 +458,37 @@ document.addEventListener("click", e => {
   else if (d.tool) showTool(d.tool, Number(d.idx));
   else if (d.doc) showDoc(d.doc);
   else if (d.capapply) applyCapture(d.capapply);
+  else if (d.open3d) document.getElementById("tab-twin").click();
+});
+document.addEventListener("change", e => {
+  const c = e.target.closest("input[data-pkg]"); if (!c) return;
+  const cur = new Set(S.pkg[S.pid] || []);
+  c.checked ? cur.add(c.dataset.pkg) : cur.delete(c.dataset.pkg);
+  setPkg(S.pid, [...cur]);
+});
+
+// --------------------------------------------------------------------------- shared selection with the 3D twin
+// One package per home, shared with the embedded viewer (web/twin-viewer/src/bridge.ts) over same-origin postMessage.
+function twinFrame() { const f = document.getElementById("twin-frame"); return f && f.src ? f.contentWindow : null; }
+function twinSend() { const w = twinFrame(); if (w) w.postMessage({ type: "greentwin:select", property_id: S.pid, retrofit_ids: S.pkg[S.pid] || [] }, location.origin); }
+function setPkg(pid, ids) {
+  S.pkg[pid] = [...new Set(ids)].sort();
+  if (pid === S.pid) { twinSend(); syncPkgUI(); }
+}
+function syncPkgUI() {
+  const ids = S.pkg[S.pid] || [];
+  document.querySelectorAll("input[data-pkg]").forEach(c => { c.checked = ids.includes(c.dataset.pkg); });
+  const t = document.getElementById("tab-twin");
+  t.textContent = ids.length ? `3D twin (${ids.length})` : "3D twin";
+}
+window.addEventListener("message", e => {
+  if (e.origin !== location.origin || !e.data) return;
+  if (e.data.type === "greentwin:ready") twinSend();
+  if (e.data.type !== "greentwin:state") return;
+  const { property_id: pid, retrofit_ids: ids } = e.data;
+  if (!S.homes.some(h => h.property_id === pid)) return;   // a house-type example: not a dashboard home
+  S.pkg[pid] = [...(ids || [])].sort();
+  if (pid !== S.pid) selectHome(pid); else syncPkgUI();
 });
 $("composer").onsubmit = e => { e.preventDefault(); ask(); };
 $("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } });
