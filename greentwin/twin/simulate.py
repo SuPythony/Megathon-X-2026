@@ -129,12 +129,55 @@ def electricity_layer(base: TwinParams, weather: dict[str, np.ndarray]) -> dict:
     return prepare_electricity_inputs(base, wm, development=True, intake=intake).numeric_arrays()
 
 
+PV_ANGLE_KEYS = ("pv_azimuth_deg", "pv_tilt_deg")
+
+
+def _pv_orientation_groups(samples: PosteriorSamples) -> dict[tuple[float, float], np.ndarray]:
+    """Sample indices by (azimuth, tilt) when the draws carry PV angles (P2 can sample the roof face per draw)."""
+    if not all(k in samples.params for k in PV_ANGLE_KEYS):
+        return {}
+    a = np.stack([np.asarray(samples.params[k], dtype=np.float32) for k in PV_ANGLE_KEYS], axis=1)
+    pairs, inverse = np.unique(a, axis=0, return_inverse=True)
+    return {(float(az), float(tilt)): np.flatnonzero(inverse.ravel() == i) for i, (az, tilt) in enumerate(pairs)}
+
+
+def _subset(samples: PosteriorSamples, idx: np.ndarray, angles: tuple[float, float]) -> PosteriorSamples:
+    """The draws in ``idx``, with the base PV angles set to theirs (the electricity layer is built from the base)."""
+    base = samples.base.model_copy(update=dict(zip(PV_ANGLE_KEYS, angles)))
+    take = lambda d: None if d is None else {k: np.asarray(v)[idx] for k, v in d.items()}  # noqa: E731
+    return PosteriorSamples(property_id=samples.property_id, n_samples=len(idx), params=take(samples.params),
+                            base=base, seed=samples.seed, inputs=take(samples.inputs))
+
+
+def _merge_runs(n: int, parts: list[tuple[np.ndarray, TwinRun]]) -> TwinRun:
+    def put(get):
+        first = np.asarray(get(parts[0][1]))
+        out = np.empty((n, *first.shape[1:]), dtype=first.dtype)
+        for idx, run in parts:
+            out[idx] = np.asarray(get(run))
+        return out
+    elements = parts[0][1].element_heat_loss_w_per_k
+    return TwinRun(**{k: put(lambda r, k=k: getattr(r, k)) for k in TOTAL_KEYS},
+                   monthly_electricity_kwh=put(lambda r: r.monthly_electricity_kwh),
+                   monthly_gas_kwh=put(lambda r: r.monthly_gas_kwh),
+                   element_heat_loss_w_per_k={e: put(lambda r, e=e: r.element_heat_loss_w_per_k[e]) for e in elements})
+
+
 def simulate(samples: PosteriorSamples, weather: dict[str, np.ndarray], fuel: FuelConfig,
              mode: Literal["calibrated", "standard"] = "calibrated",
              run_physics: Optional[RunPhysics] = None) -> tuple[TwinRun, str]:
     """Physics on every sample. Returns the ``TwinRun`` and the engine name ('physics_l1', 'physics_stub' or
     'custom')."""
     fn, engine = (run_physics, "custom") if run_physics is not None else get_run_physics()
+    if engine not in ("physics_stub", "custom") and _needs_electricity_layer(samples):
+        groups = _pv_orientation_groups(samples)
+        if len(groups) > 1:  # one PV layer per roof orientation; the physics rejects a layer built for another one
+            return _merge_runs(samples.n_samples, [
+                (idx, simulate(_subset(samples, idx, angles), weather, fuel, mode, run_physics)[0])
+                for angles, idx in groups.items()]), engine
+        if groups:
+            (angles, _), = groups.items()
+            samples = _subset(samples, np.arange(samples.n_samples), angles)
     params = _batched_params(samples, mode)
     per_sample = samples.inputs is not None
     if per_sample:  # each draw's own monthly weather and schedules (P2 posterior); replaces the shared weather

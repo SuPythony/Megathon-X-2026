@@ -81,6 +81,9 @@ def element_heat_loss_from_run(run: TwinRun, params: TwinParams) -> list[Element
     return sorted(out, key=lambda e: -e.heat_loss_w_per_k)
 
 
+IMPROVE_ONLY = ("wall_u", "roof_u", "floor_u", "window_u", "door_u")
+
+
 def retrofit_samples(samples: PosteriorSamples, actions: Sequence[RetrofitAction]) -> PosteriorSamples:
     """Posterior samples after a retrofit package. Edited fields take the retrofit value in every sample; a field the
     package scales (e.g. LED on baseload) is scaled per sample, so calibrated spread is kept."""
@@ -95,6 +98,13 @@ def retrofit_samples(samples: PosteriorSamples, actions: Sequence[RetrofitAction
             continue
         if key in ("baseload_kwh_per_day", "heating_hours_per_day", "volume_m3") and old:
             params[key] = (np.asarray(params[key]) * (float(value) / float(old))).astype(np.float32)
+        elif key == "setpoint_c":  # controls lower the setpoint by a fixed step; keep the calibrated spread
+            params[key] = (np.asarray(params[key]) + (float(value) - float(old))).astype(np.float32)
+        elif key == "air_changes_per_hour" and value < old:  # draught proofing: a fixed cut on each draw
+            params[key] = np.maximum(np.asarray(params[key]) - (float(old) - float(value)), min(0.2, float(value))
+                                     ).astype(np.float32)
+        elif key in IMPROVE_ONLY:  # new fabric U never makes a draw that's already better worse
+            params[key] = np.minimum(np.asarray(params[key]), float(value)).astype(np.float32)
         else:
             params[key] = np.full(samples.n_samples, float(value), dtype=np.float32)
     return PosteriorSamples(property_id=samples.property_id, n_samples=samples.n_samples, params=params,
@@ -182,6 +192,12 @@ class GreenDigitalTwin:
         base = pkg.params
         keys = set(_input_keys(base))
         params = {k: np.asarray(v, dtype=np.float32) for k, v in draws.parameters.items() if k in keys}
+        # A value P2 held fixed (e.g. PV angles from the roof) must match the base: simulate builds the PV/battery
+        # layer from the base, and the physics fails closed (NaN) on a geometry mismatch.
+        fixed = {k: float(v[0]) for k, v in params.items() if v.size and np.ptp(v) == 0
+                 and isinstance(getattr(base, k, None), (int, float)) and float(getattr(base, k)) != float(v[0])}
+        if fixed:
+            base = base.model_copy(update=fixed)
         inputs = {k: np.asarray(v, dtype=np.float32) for k, v in draws.weather.items()}
         self.last_engine = "physics_l1"
         return result, PosteriorSamples(property_id=prop.property_id, n_samples=n, params=params, base=base,
