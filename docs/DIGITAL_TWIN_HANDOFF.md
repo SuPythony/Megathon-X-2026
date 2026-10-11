@@ -253,7 +253,7 @@ measured on the EPC → fitted floor plan → RdSAP default table → SAP 2012 f
 
 **Ours (Part 1):**
 1. Verify every `to_verify` value in `rdsap_defaults.json` against RdSAP 2012, and cite the appliance figures.
-2. Run vision live on real photos (needs `ANTHROPIC_API_KEY` from the team lead); cache demo drafts.
+2. Run vision live on real photos (needs `OPENAI_API_KEY` from the team lead; same client as the LLM); cache demo drafts.
 3. Wire `TwinIntake` → twin once an API endpoint exists.
 
 **Other teams:**

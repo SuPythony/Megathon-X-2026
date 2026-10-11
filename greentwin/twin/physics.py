@@ -1,6 +1,8 @@
 """Differentiable monthly, single-zone steady-state RC heat balance.
 
-No calibration or thermal capacitance. Prepared electricity inputs enable the
+No calibration. Thermal mass is opt-in: with ``heat_capacity_kj_per_k`` in the params (the twin passes it) the
+off-period temperature follows an exponential cool-down with tau = C / (3.6 H) and gains use SAP 2012 Table 9a
+utilisation; without it the steady-state, fixed-setback model is unchanged. Prepared electricity inputs enable the
 half-hour PV and battery layer; without them only no-PV/no-battery runs are valid.
 ``run_physics`` is the numeric JAX seam; ``simulate_thermal`` is the validated,
 contract-based boundary. See docs/THERMAL_PHYSICS.md for equations and limitations.
@@ -54,6 +56,10 @@ def _input_arrays(params, weather):
     p = {key: jnp.asarray(params[key]) for key in PHYSICS_PARAM_KEYS}
     for key in ("hot_water_standing_loss_kwh_per_day", "shower_electric_kwh_per_day"):
         p[key] = jnp.asarray(params.get(key, 0.0))
+    # Optional twin inputs (P1): absent -> the steady-state model above, unchanged.
+    for key in ("heat_capacity_kj_per_k", "secondary_heating_scale"):
+        if key in params:
+            p[key] = jnp.asarray(params[key])
     p["retained_electric_heat_fraction"] = jnp.asarray(params.get("retained_electric_heat_fraction", .85))
     if "hot_water_efficiency" in params:
         p["hot_water_efficiency"] = jnp.asarray(params["hot_water_efficiency"])
@@ -90,12 +96,29 @@ def _input_arrays(params, weather):
     return p, w
 
 
+def _utilisation(gains, losses, tau):
+    """SAP 2012 Table 9a gain utilisation, a = 1 + tau / 15, gamma = gains / losses; gamma = 1 uses its limit
+    a / (a + 1). Written so gamma > 1 never overflows and gradients stay finite at the singular point."""
+    a = 1.0 + tau / 15.0
+    gamma = jnp.clip(gains / jnp.maximum(losses, 1e-6), 0.0, 1e3)
+    near_one = jnp.abs(gamma - 1.0) < 1e-3
+    above = gamma > 1.0
+    g_lo = jnp.where(near_one | above, 0.5, gamma)
+    g_hi = jnp.where(near_one | ~above, 2.0, gamma)
+    eta_lo = (1.0 - g_lo ** a) / (1.0 - g_lo ** (a + 1.0))
+    inv = 1.0 / g_hi
+    eta_hi = (inv - inv ** (a + 1.0)) / (1.0 - inv ** (a + 1.0))
+    return jnp.where(near_one, a / (a + 1.0), jnp.where(above, eta_hi, eta_lo))
+
+
 def _valid_domain(p, w, fuel, has_electricity=False):
     valid = jnp.all(jnp.stack([jnp.isfinite(v) for v in p.values()]))
     for key, value in p.items():
         if key != "setpoint_c":
             valid = valid & (value >= 0)
     valid = valid & (p["volume_m3"] > 0) & (p["heat_loss_multiplier"] > 0)
+    if "heat_capacity_kj_per_k" in p:
+        valid = valid & (p["heat_capacity_kj_per_k"] > 0)
     valid = valid & (p["heating_efficiency"] > 0) & (p["heating_hours_per_day"] <= 24)
     valid = valid & (p["lighting_share_of_baseload"] <= 1)
     valid = valid & (p["retained_electric_heat_fraction"] <= 1)
@@ -191,25 +214,37 @@ def run_physics(
 
     # Monthly-mean temperature degree days at EACH controlled temperature.
     # HDD15.5 is not subtracted again: its reference is not the thermostat.
+    if "heat_capacity_kj_per_k" in p:
+        # Thermal mass (opt-in, from the twin): time constant tau = C / (3.6 H) hours. While the heating is off the
+        # home cools towards outside, so the off-period temperature is the mean of that exponential decay rather
+        # than a fixed setback; and gains are used with SAP 2012 Table 9a utilisation instead of in full.
+        tau = p["heat_capacity_kj_per_k"] / (3.6 * jnp.maximum(coefficient, 1e-6))
+        t_off = jnp.clip(24.0 - p["heating_hours_per_day"], 0.01, 24.0)
+        off_drop = 1.0 - (tau / t_off) * (1.0 - jnp.exp(-t_off / tau))
+        setback_c = p["setpoint_c"] - jnp.maximum(p["setpoint_c"] - w["mean_temp_c"], 0) * off_drop
+    else:
+        tau = None
+        setback_c = p["setpoint_c"] - assumptions.setback_delta_c
     loss_normal = coefficient * jnp.maximum(p["setpoint_c"] - w["mean_temp_c"], 0) * hours / 1000
-    loss_setback = (
-        coefficient
-        * jnp.maximum(p["setpoint_c"] - assumptions.setback_delta_c - w["mean_temp_c"], 0)
-        * hours
-        / 1000
-    )
-    space_normal = jnp.maximum(loss_normal - gains, 0)
-    space_setback = jnp.maximum(loss_setback - gains, 0)
+    loss_setback = coefficient * jnp.maximum(setback_c - w["mean_temp_c"], 0) * hours / 1000
+
+    def used_gains(loss_state):
+        if tau is None:
+            return jnp.minimum(gains, loss_state)
+        return jnp.minimum(_utilisation(gains, loss_state, tau) * gains, loss_state)
+
+    used_normal, used_setback = used_gains(loss_normal), used_gains(loss_setback)
+    space_normal = loss_normal - used_normal
+    space_setback = loss_setback - used_setback
     space = normal_fraction * space_normal + (1 - normal_fraction) * space_setback
     loss = normal_fraction * loss_normal + (1 - normal_fraction) * loss_setback
-    unused = normal_fraction * jnp.maximum(gains - loss_normal, 0) + (1 - normal_fraction) * jnp.maximum(
-        gains - loss_setback, 0
-    )
+    unused = normal_fraction * (gains - used_normal) + (1 - normal_fraction) * (gains - used_setback)
 
     hot = p["hot_water_kwh_per_day"] * days * w["hot_water_multiplier"]
     standing_loss = p["hot_water_standing_loss_kwh_per_day"] * days
     shower = p["shower_electric_kwh_per_day"] * days * w["hot_water_multiplier"]
-    secondary = jnp.minimum(w["secondary_heating_kwh_monthly"], space)
+    requested = w["secondary_heating_kwh_monthly"] * p.get("secondary_heating_scale", 1.0)  # scale: opt-in (P1)
+    secondary = jnp.minimum(requested, space)
     main_space = space - secondary
     dhw_efficiency = p.get(
         "hot_water_efficiency",
@@ -237,7 +272,7 @@ def run_physics(
         "monthly_shower_electricity_kwh": shower,
         "monthly_main_space_heating_kwh": main_space,
         "monthly_secondary_electricity_kwh": secondary,
-        "monthly_secondary_unused_request_kwh": w["secondary_heating_kwh_monthly"] - secondary,
+        "monthly_secondary_unused_request_kwh": requested - secondary,
         "monthly_auxiliary_electricity_kwh": auxiliary,
         "monthly_heating_auxiliary_electricity_kwh": w["heating_auxiliary_electricity_kwh_monthly"],
         "monthly_outdoor_other_electricity_kwh": w["extra_electricity_kwh_monthly"],

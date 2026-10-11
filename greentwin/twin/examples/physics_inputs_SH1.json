@@ -35,7 +35,7 @@
     "hot_water_kwh_per_day": 2.23,
     "baseload_kwh_per_day": 6.987,
     "lighting_share_of_baseload": 0.239,
-    "internal_gains_w": 363.3,
+    "internal_gains_w": 417.3,
     "solar_gain_factor": 1.0,
     "pv_kwp": 0.0,
     "pv_azimuth_deg": 180.0,
@@ -399,7 +399,7 @@
     },
     {
       "field": "internal_gains_w",
-      "value": 363.3,
+      "value": 417.3,
       "source": "default",
       "status": "default",
       "confirmed": false,
@@ -804,7 +804,7 @@
     "occupants": 3.0,
     "presence": "part_day",
     "presence_fraction": 0.7,
-    "metabolic_gains_w": 126.0,
+    "metabolic_gains_w": 180.0,
     "source": "user answer: occupants (fixed)"
   },
   "heating_behaviour": {

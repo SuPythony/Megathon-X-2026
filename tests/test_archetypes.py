@@ -124,32 +124,40 @@ def test_fit_layout_low_archetype_confidence_needs_confirmation():
     assert fitted.area_source == "archetype_default"
 
 
-class FakeMessages:
-    def __init__(self, parsed, stop_reason="end_turn"):
-        self.parsed, self.stop_reason, self.calls = parsed, stop_reason, []
+class FakeResponses:
+    def __init__(self, parsed, status="completed"):
+        self.parsed, self.status, self.calls = parsed, status, []
 
     def parse(self, **kwargs):
         self.calls.append(kwargs)
-        return SimpleNamespace(stop_reason=self.stop_reason, stop_details=None, parsed_output=self.parsed)
+        return SimpleNamespace(status=self.status, incomplete_details=None, output_parsed=self.parsed)
 
 
-def test_extract_floor_plan_uses_sonnet_structured_output_and_caches(tmp_path):
-    fake = SimpleNamespace(messages=FakeMessages(_extraction()))
+def test_extract_floor_plan_uses_shared_llm_structured_output_and_caches(tmp_path):
+    from greentwin.llm import client as llm
+
+    fake = SimpleNamespace(responses=FakeResponses(_extraction()))
     first = extract_floor_plan(PNG, client=fake, cache_dir=tmp_path)
     second = extract_floor_plan(PNG, client=fake, cache_dir=tmp_path)
     assert first == second
-    assert len(fake.messages.calls) == 1, "second call should come from cache"
-    call = fake.messages.calls[0]
-    assert call["model"] == "claude-sonnet-5-5"
-    assert call["output_format"] is FloorPlanExtraction
-    assert call["messages"][0]["content"][0]["source"]["media_type"] == "image/png"
+    assert len(fake.responses.calls) == 1, "second call should come from cache"
+    call = fake.responses.calls[0]
+    assert call["model"] == llm.MODEL  # the team's one provider (gpt-6-luna)
+    assert call["text_format"] is FloorPlanExtraction
+    assert call["input"][0]["content"][0]["image_url"].startswith("data:image/png;base64,")
 
 
 def test_extract_fuse_board_refusal_raises(tmp_path):
-    fake = SimpleNamespace(messages=FakeMessages(None, stop_reason="refusal"))
+    fake = SimpleNamespace(responses=FakeResponses(None))
     with pytest.raises(VisionError):
         extract_fuse_board(PNG, client=fake, cache_dir=tmp_path)
     assert not list(tmp_path.iterdir()), "failed calls must not be cached"
+
+
+def test_extract_incomplete_output_raises(tmp_path):
+    fake = SimpleNamespace(responses=FakeResponses(_extraction(), status="incomplete"))
+    with pytest.raises(VisionError):
+        extract_floor_plan(PNG, client=fake, cache_dir=tmp_path)
 
 
 def test_fuse_board_schema_example():

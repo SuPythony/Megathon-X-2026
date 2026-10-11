@@ -74,7 +74,10 @@ def prior_samples(base: TwinParams, n_samples: int = 1000, seed: int = 42,
 
 def _batched_params(samples: PosteriorSamples, mode: str) -> dict[str, jnp.ndarray]:
     out = {}
-    for key in _input_keys(samples.base):
+    keys = _input_keys(samples.base)
+    if samples.inputs is not None:  # calibrated by P2: only what P2's fit used, no twin-only defaults (thermal mass)
+        keys = [k for k in keys if k in PHYSICS_PARAM_KEYS or k in samples.params]
+    for key in keys:
         if mode == "standard" and key in BEHAVIOUR_KEYS:
             values = np.full(samples.n_samples, float(getattr(samples.base, key)), dtype=np.float32)
         elif key in samples.params:
@@ -111,6 +114,7 @@ def _needs_electricity_layer(samples: PosteriorSamples) -> bool:
 def electricity_layer(base: TwinParams, weather: dict[str, np.ndarray]) -> dict:
     """P2's half-hourly PV/battery inputs, generated in development mode from the monthly weather and the home's PV
     angles (labelled synthetic, not PVGIS). Prepared once per home and shared by every sample."""
+    from contracts.electricity import ElectricityIntake
     from contracts.models import WeatherMonth
     from greentwin.twin.electricity_inputs import prepare_electricity_inputs
 
@@ -119,7 +123,10 @@ def electricity_layer(base: TwinParams, weather: dict[str, np.ndarray]) -> dict:
     wm = [WeatherMonth(area_code=area, month=m, hdd_15_5=float(h), mean_temp_c=float(t), ghi_kwh_m2=float(g),
                        source="synthetic")
           for m, h, t, g in zip(months, weather["hdd_15_5"], weather["mean_temp_c"], weather["ghi_kwh_m2"])]
-    return prepare_electricity_inputs(base, wm, development=True).numeric_arrays()
+    # The twin's battery round trip (generated, never asked) split evenly between charging and discharging.
+    leg = float(getattr(base, "battery_round_trip_efficiency", 0.9)) ** 0.5
+    intake = ElectricityIntake(battery_charge_efficiency=leg, battery_discharge_efficiency=leg)
+    return prepare_electricity_inputs(base, wm, development=True, intake=intake).numeric_arrays()
 
 
 def simulate(samples: PosteriorSamples, weather: dict[str, np.ndarray], fuel: FuelConfig,
@@ -129,6 +136,10 @@ def simulate(samples: PosteriorSamples, weather: dict[str, np.ndarray], fuel: Fu
     'custom')."""
     fn, engine = (run_physics, "custom") if run_physics is not None else get_run_physics()
     params = _batched_params(samples, mode)
+    per_sample = samples.inputs is not None
+    if per_sample:  # each draw's own monthly weather and schedules (P2 posterior); replaces the shared weather
+        weather = {k: np.asarray(v).mean(axis=0) for k, v in samples.inputs.items()}
+        w_each = {k: jnp.asarray(v) for k, v in samples.inputs.items()}
     w = {k: jnp.asarray(v) for k, v in weather.items()}
     run_mode = mode
     if engine not in ("physics_stub", "custom"):
@@ -139,8 +150,13 @@ def simulate(samples: PosteriorSamples, weather: dict[str, np.ndarray], fuel: Fu
             run_mode = "calibrated"  # P2 alias for "run these parameters as given"
         if _needs_electricity_layer(samples):
             w["electricity_inputs"] = jax.tree_util.tree_map(jnp.asarray, electricity_layer(samples.base, weather))
-    batched = jax.jit(jax.vmap(lambda p: fn(p, w, run_mode, fuel)))
-    out = batched(params)
+    if per_sample:
+        shared = {k: v for k, v in w.items() if k not in w_each}  # e.g. the electricity layer
+        batched = jax.jit(jax.vmap(lambda p, wi: fn(p, {**shared, **wi}, run_mode, fuel)))
+        out = batched(params, w_each)
+    else:
+        batched = jax.jit(jax.vmap(lambda p: fn(p, w, run_mode, fuel)))
+        out = batched(params)
 
     missing = [k for k in (*TOTAL_KEYS, *MONTHLY_KEYS) if k not in out]
     if missing:

@@ -8,8 +8,10 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 **Status legend:** ✅ built and tested · 🟡 built, runs on stand-in physics or unverified defaults · ⏳ needs another part ·
 ❌ not built.
 
-> **Honesty note.** The twin now runs P2's physics (`greentwin/twin/physics.py`, engine `physics_l1`): a monthly
-> steady-state heat balance with a half-hourly PV/battery layer. It is **uncalibrated**, uses **synthetic weather**,
+> **Honesty note.** The twin runs P2's physics (`greentwin/twin/physics.py`, engine `physics_l1`): a monthly heat
+> balance (thermal mass opt-in, passed by the twin) with a half-hourly PV/battery layer. Homes with bills are
+> calibrated with P2's Bayesian calibration (SVI by default: an approximation); otherwise results are prior predictions.
+> Weather is **synthetic**,
 > and the PV/battery layer runs on **development-generated** half-hourly profiles. The precomputed demo city and
 > showcase scenes were built on the earlier stand-in (`physics_stub`, contract engine `mock`) until regenerated.
 
@@ -36,7 +38,7 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 |---|---|---|
 | **6 prefit UK house types:** Victorian terrace, 1930s semi, 1960s–80s detached, post-2000 terrace, bungalow, flat. Rooms, walls (exterior / party / internal), doors and windows | ✅ | `archetypes.py` |
 | **Fit to a home:** floor area, built form (which walls are shared), orientation, ceiling height, room names | ✅ | `build_layout` |
-| **Read a floor-plan photo** (Claude Sonnet 5.5, structured outputs): house type, rooms, printed dimensions; drafts only, cached | 🟡 not yet run on real photos (needs `ANTHROPIC_API_KEY`) | `vision.py` |
+| **Read a floor-plan photo** (the team's LLM, `gpt-6-luna` via `greentwin.llm.client`, structured outputs): house type, rooms, printed dimensions; drafts only, cached. Room photos → element tags is P4's `capture.py` on the same client | 🟡 not yet run on real photos (needs `OPENAI_API_KEY`) | `vision.py` |
 | **Read a fuse-box photo:** breakers, ratings, labels, circuit types | 🟡 as above | `vision.extract_fuse_board` |
 | **User-confirmed geometry:** width and depth (each scaled on its own), ceiling height, front direction, built form; floor-area mismatch vs the EPC flagged | ✅ | `geometry.py`, viewer Geometry tab |
 | Edit individual room sizes | ❌ | rooms keep the house type's proportions |
@@ -49,7 +51,7 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 | **U-values per element:** walls, roof (loft depth), floor (ISO 13370), windows (by glazing), doors | 🟡 | `params.py` |
 | **Ventilation** (air changes from age and draught proofing) | 🟡 assumption | `params.py` |
 | **Separate hot-water system:** combi / cylinder / immersion / heat-pump cylinder / instant electric, with its own fuel, efficiency, cylinder loss and electric showers | ✅ | `household.hot_water_system` |
-| **Thermal mass:** heat capacity from construction × layout areas, SAP thermal-mass parameter and class | 🟡 κ values `to_verify` | `thermal.py` |
+| **Thermal mass:** heat capacity from construction × layout areas, SAP thermal-mass parameter and class; physics_l1 uses it (cool-down while the heating is off, SAP gain utilisation). Not used once calibrated: P2's fit is steady-state | 🟡 κ values `to_verify` | `thermal.py`, `physics.py` |
 | **Occupancy and heating behaviour** (user answers, else SAP defaults with wider uncertainty) | ✅ | `household.py` |
 | **Appliances → consumption:** 19 types, size questions, kWh/yr, fuel, 12-month and 24-hour schedules, matching internal heat gains, by category (baseload, gas cooking, showers, plug-in heaters, outdoor) | 🟡 typical estimates, not yet cited | `appliances.py`, `appliance_energy.json` |
 | **Weather** aligned to the meter months; missing values filled and flagged | 🟡 synthetic until Part 0's `load_weather` | `weather.py` |
@@ -65,7 +67,7 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 | **Stand-in physics:** monthly heat balance with thermal mass (time constant, SAP gain utilisation, cooling while the heating is off), per-fuel energy, PV, hot water, schedules | 🟡 | `physics_stub.py` |
 | **Run every posterior sample at once** (`jax.vmap`); standard mode (SAP-style) for the rating | ✅ | `simulate.py` |
 | **Physics contract tests** any physics model must pass (outputs, balances, monotonicity, jit/vmap/grad) | ✅ | `tests/test_physics_contract.py` |
-| **Bayesian calibration** on meter readings | ⏳ calibration team | inputs ready in the package |
+| **Bayesian calibration** on meter readings: `GreenDigitalTwin.calibrate()` runs P2's `calibrate_household` on the physics inputs package (12 parameters, SVI ~8 s a home; NUTS via `calibration_config`); the posterior keeps each draw's own weather and schedules | ✅ · 🟡 SVI runs 4–8% above bills on SH1/SH3 | `twin.py`, `greentwin/bayes/calibration.py` |
 
 ## 5. Retrofits and what-ifs
 
@@ -122,10 +124,10 @@ uv run pytest -q                                  # all tests
 ## 10. What would make the numbers real
 
 1. **Physics:** P2's `greentwin/twin/physics.py` is merged and used. Remaining gaps: no thermal mass, no standard mode (the wrapper supplies it), PV needs the electricity layer. Regenerate the demo city and scenes on it.
-2. **Calibration:** the team's Bayesian calibration on real meter readings, from the physics inputs package.
+2. **Calibration:** connected (P2's). Use NUTS for converged posteriors; add thermal mass to P2's fit.
 3. **Data (Part 0):** EPC lookup by certificate number, real weather by district and month, EPC records for the city.
 4. **Sources:**
    - verify the RdSAP defaults (p3 already verified the RdSAP 10 loft table)
    - cite the appliance figures
    - confirm the BUS grant, a PV export tariff and the rental-standard status
-5. **Keys:** `ANTHROPIC_API_KEY` (photo reading) and `EPC_API_TOKEN` (EPC data), from the team lead.
+5. **Keys:** `OPENAI_API_KEY` (photo reading, shared with the LLM) and `EPC_API_TOKEN` (EPC data), from the team lead.

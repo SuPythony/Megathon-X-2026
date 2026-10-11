@@ -51,6 +51,7 @@ from greentwin.twin.retrofits import apply_retrofits
 from greentwin.twin.rooms import RoomAllocation, allocate_rooms
 from greentwin.twin.scene import AppliancePlacement
 from greentwin.twin.simulate import prior_samples, simulate
+from greentwin.twin.vision import MODEL as VISION_MODEL
 from greentwin.twin.weather import resolve_weather
 
 MODEL_VERSION = "twin/0.1"
@@ -97,17 +98,21 @@ def retrofit_samples(samples: PosteriorSamples, actions: Sequence[RetrofitAction
         else:
             params[key] = np.full(samples.n_samples, float(value), dtype=np.float32)
     return PosteriorSamples(property_id=samples.property_id, n_samples=samples.n_samples, params=params,
-                            base=new_base, seed=samples.seed)
+                            base=new_base, seed=samples.seed, inputs=samples.inputs)
 
 
 class GreenDigitalTwin:
     """Implements ``greentwin.interfaces.DigitalTwin``."""
 
-    def __init__(self, n_samples: int = 1000, seed: int = 42, epc_lookup: EPCLookup = NoEPCLookup()):
+    def __init__(self, n_samples: int = 1000, seed: int = 42, epc_lookup: EPCLookup = NoEPCLookup(),
+                 calibration_config: Optional[Any] = None):
         self.n_samples = n_samples
         self.seed = seed
         self.epc_lookup = epc_lookup
         self.last_engine = "physics_stub"
+        # P2's CalibrationConfig. Default: P2's SVI settings (about 8 s a home on a laptop); pass
+        # CalibrationConfig(method="nuts") for converged chains (slower).
+        self.calibration_config = calibration_config
 
     # ---------------------------------------------------------------- Protocol methods
     def params_from_property(self, prop: Property, layout: Optional[TwinLayout] = None) -> ExtendedTwinParams:
@@ -130,23 +135,57 @@ class GreenDigitalTwin:
         return run
 
     def calibrate(self, prop: Property, usage: Sequence[EnergyUsageMonth], weather: Sequence[WeatherMonth],
-                  prior: Optional[EnergyPrior] = None) -> tuple[CalibrationResult, PosteriorSamples]:
-        """No meter readings -> prior_only (built). With readings, Bayesian calibration is the calibration team's:
-        give them ``physics_inputs(prop, usage=usage)``."""
-        params = self.params_from_property(prop)
-        if any(r.gas_kwh is not None or r.electricity_import_kwh is not None for r in usage):
-            raise NotImplementedError("Bayesian calibration is built by the calibration team; inputs: "
-                                      "GreenDigitalTwin.physics_inputs(prop, usage=usage)")
-        samples = prior_samples(params, self.n_samples, self.seed)
-        calibrated = ("heat_loss_multiplier", "setpoint_c", "baseload_kwh_per_day", "heating_efficiency")
-        result = CalibrationResult(
-            property_id=prop.property_id, method="prior_only", n_samples=self.n_samples, months_used=0,
-            parameters={k: summarise(samples.params[k], "") for k in calibrated},
-            diagnostics=CalibrationDiagnostics(), data_confidence="low",
-            posterior_ref=f"memory:prior/{prop.property_id}", prior_source="rdsap_defaults",
-            provenance=provenance(self.last_engine, self.n_samples, self.seed),
+                  prior: Optional[EnergyPrior] = None, intake: Optional[TwinIntake] = None,
+                  ) -> tuple[CalibrationResult, PosteriorSamples]:
+        """No meter readings -> prior_only. With readings -> P2's Bayesian calibration (greentwin.bayes.calibration) on
+        this home's physics inputs package; the posterior comes back as samples of the twin's own parameters."""
+        if not any(r.gas_kwh is not None or r.electricity_import_kwh is not None for r in usage):
+            params = self.params_from_property(prop)
+            samples = prior_samples(params, self.n_samples, self.seed)
+            calibrated = ("heat_loss_multiplier", "setpoint_c", "baseload_kwh_per_day", "heating_efficiency")
+            result = CalibrationResult(
+                property_id=prop.property_id, method="prior_only", n_samples=self.n_samples, months_used=0,
+                parameters={k: summarise(samples.params[k], "") for k in calibrated},
+                diagnostics=CalibrationDiagnostics(), data_confidence="low",
+                posterior_ref=f"memory:prior/{prop.property_id}", prior_source="rdsap_defaults",
+                provenance=provenance(self.last_engine, self.n_samples, self.seed),
+            )
+            return result, samples
+        return self._calibrate_p2(prop, usage, weather, intake)
+
+    def _calibrate_p2(self, prop: Property, usage: Sequence[EnergyUsageMonth], weather: Sequence[WeatherMonth],
+                      intake: Optional[TwinIntake]) -> tuple[CalibrationResult, PosteriorSamples]:
+        from contracts.calibration import CalibrationConfig
+        from contracts.uncertain_twin import HouseholdRequest
+        from greentwin.bayes.calibration import (
+            calibrate_household,
+            observations_from_usage,
+            predictive_inputs,
+            shared_calibration_result,
         )
-        return result, samples
+        from greentwin.twin.simulate import _input_keys
+
+        pkg = build_physics_inputs(prop, intake=intake, usage=usage, weather_months=weather or None)
+        months = sorted({r.month for r in usage})
+        request = HouseholdRequest(
+            property_id=prop.property_id, property=prop, physics_package=pkg.model_dump(mode="json"), months=months,
+            weather=list(weather), allow_development_weather=not weather, seed=self.seed,
+        )
+        config = self.calibration_config or CalibrationConfig(method="svi", seed=self.seed)  # P2's SVI defaults, ~8 s
+        fit = calibrate_household(request, observations_from_usage(usage, prop.property_id), config=config)
+        result = shared_calibration_result(fit, posterior_ref=f"memory:calibration/{fit.result.calibration_id}")
+        # P2's joint posterior realisations: calibrated constants with their conditioned nuisance inputs, i.e. each
+        # draw's own parameters AND monthly weather/schedules. Both are kept, so re-simulating reproduces P2's fit
+        # (the twin's thermal-mass option isn't used here: P2 fits without it).
+        n = min(self.n_samples, 256)
+        draws = predictive_inputs(fit, n_samples=n)
+        base = pkg.params
+        keys = set(_input_keys(base))
+        params = {k: np.asarray(v, dtype=np.float32) for k, v in draws.parameters.items() if k in keys}
+        inputs = {k: np.asarray(v, dtype=np.float32) for k, v in draws.weather.items()}
+        self.last_engine = "physics_l1"
+        return result, PosteriorSamples(property_id=prop.property_id, n_samples=n, params=params, base=base,
+                                        seed=self.seed, inputs=inputs)
 
     def element_heat_loss(self, samples: PosteriorSamples, actions: Sequence[RetrofitAction] = ()) -> list[ElementHeatLoss]:
         run = self.simulate(samples, actions)
@@ -194,7 +233,7 @@ class GreenDigitalTwin:
         return CaptureResult(property_id=property_id, floor_plan=plan,
                              draft_property_fields={"archetype_id": extraction.archetype_id,
                                                     "storeys": extraction.storeys, "bedrooms": extraction.bedrooms},
-                             needs_confirmation=fitted.needs_confirmation, vision_model="claude-sonnet-5-5")
+                             needs_confirmation=fitted.needs_confirmation, vision_model=VISION_MODEL)
 
     # ---------------------------------------------------------------- Part 1 extras
     def physics_inputs(self, prop: Property, layout: Optional[TwinLayout] = None,

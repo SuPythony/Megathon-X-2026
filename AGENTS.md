@@ -75,7 +75,7 @@ This is a hackathon. **Speed is the goal, not bug-free code.** A working, good-l
 | Plan | Phases and checkpoints, not clock time. Build order is Tier A → B → C → D. |
 | Physics library | **JAX** (`jax.numpy`). The twin runs inside the NumPyro model (NUTS/SVI need its gradients) and is `vmap`ped over posterior samples. Option B's ODE twin uses `diffrax`. Not numpy, not PyTorch. |
 | Electricity depth | Half-hourly electricity layer from London smart-meter load shapes; battery, LED and time-of-use retrofits; GraphSAGE GNN on DESNZ LSOA consumption for area priors and the dashboard. |
-| Photo-to-twin | Claude Haiku 5.5 (`claude-haiku-5-5`) vision with structured outputs drafts rooms + element tags with confidence; the agent confirms in a react-konva editor; v1 fallback is manual tags. Vision never produces energy numbers. |
+| Photo-to-twin | The team's LLM provider (`gpt-6-luna`, `greentwin.llm.client`, per the LLM decision) with structured outputs. Two readers on that one client: floor plan + fuse box → layout and circuits (`greentwin/twin/vision.py`, P1); room photos → element tags with confidence (`greentwin/twin/capture.py`, P4). The person confirms every draft; v1 fallback is manual tags. Vision never produces energy numbers. |
 | Hardware | GPU available, used for Tier-D models (twin v2, DeepONet, home-level GraphSAGE, PINO). |
 | Showcase homes | SH1 (Victorian terrace, conservation area), SH2 (1970s cavity semi), SH3 (all-electric 3rd-floor flat). See `contracts/examples/`. |
 
@@ -141,7 +141,7 @@ cp .env.example .env            # fill only what you have; see Keys
 - JAX GPU is Linux-only. Run GPU NumPyro in WSL2; CPU is fine for per-home SVI.
 
 ## Keys
-- `.env.example` lists every key: `OPENAI_API_KEY` (LLM), `ANTHROPIC_API_KEY` (photo-to-twin until migrated), `JEV_API_KEY`, `EPC_API_TOKEN`, CEDA, Met Office. `__ASK_USER__` means not provided yet.
+- `.env.example` lists every key: `OPENAI_API_KEY` (LLM and photo-to-twin), `JEV_API_KEY`, `EPC_API_TOKEN`, CEDA, Met Office. `__ASK_USER__` means not provided yet.
 - **Agents/teammates: ask the team lead when a task first needs a key.** Never invent, commit or log keys.
 - Code must work without keys:
   - The template explainer replaces the LLM.

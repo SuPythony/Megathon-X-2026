@@ -109,7 +109,10 @@ def prior_distribution(spec):
         mean = (spec.centre - spec.lower) / (spec.upper - spec.lower)
         return dist.TransformedDistribution(
             dist.Beta(mean * spec.scale, (1 - mean) * spec.scale),
-            dist.transforms.AffineTransform(spec.lower, spec.upper - spec.lower),
+            # domain= gives the transform its bounded codomain, so the support is [lower, upper] and SVI/NUTS map
+            # through it (without it the support is Real() and draws escape the physical range, e.g. efficiency > 1).
+            dist.transforms.AffineTransform(spec.lower, spec.upper - spec.lower,
+                                            domain=dist.constraints.unit_interval),
         )
     if spec.family == "uniform":
         return dist.Uniform(spec.lower, spec.upper)

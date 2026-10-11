@@ -70,13 +70,13 @@ What does **not** change: whole-house physics and Bayesian calibration stay the 
 
 | Item | Choice | Why |
 |---|---|---|
-| Model | `claude-sonnet-5-5` | Team decision. Good vision quality at Sonnet price ($2 / $10 per MTok). |
-| Output | Structured outputs: `client.messages.parse(..., output_format=<PydanticModel>)` | Schema-validated Pydantic object; no hand JSON parsing. Verified against `anthropic` 1.13. |
-| Thinking | Adaptive (default on). Effort `high` for floor plans, `medium` for fuse boxes. | Set explicitly per task. |
-| Refusal handling | Check `stop_reason` before reading `parsed_output`; `refusal` / `max_tokens` raise `VisionError` and are never cached. | Server-side fallback on Sonnet 5.5 only retries `cyber`/`frontier_llm` declines, which don't apply to floor plans, so it's not enabled. |
+| Model | `gpt-6-luna` via `greentwin.llm.client` (`LLM_MODEL`) | Team lead decision (11 Oct 2026): one LLM provider for every call. Originally `claude-sonnet-5-5`. |
+| Output | Structured outputs: `client.responses.parse(..., text_format=<PydanticModel>)` | Schema-validated Pydantic object; no hand JSON parsing. Same call pattern as P4's `capture.py`. |
+| Reasoning | Effort `high` for floor plans, `medium` for fuse boxes. | Set explicitly per task. |
+| Refusal handling | `status == "incomplete"` or no `output_parsed` (refusal) raise `VisionError` and are never cached. | Falls back to the user confirming by hand. |
 | Caching | `cache/llm/vision/<Schema>_<hash>.json`, keyed by model + prompt version + image bytes | Same photo → same draft; demo replays offline; no key needed. |
 
-**Correction for `AGENTS.md`:** it names `claude-haiku-5-5`, which isn't a real model ID. The photo-to-twin row should name `claude-sonnet-5-5`.
+`AGENTS.md`'s photo-to-twin row now names the shared provider. Two photo readers, one client: floor plan + fuse box here (layout, circuits); room photos → element tags in P4's `capture.py`.
 
 Schema notes for structured outputs: no recursive schemas, and no `minimum`/`maximum`/`minLength`. The Python SDK strips those and validates them client-side.
 
