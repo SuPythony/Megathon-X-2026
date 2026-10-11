@@ -978,7 +978,8 @@
             "rules",
             "jev",
             "claude",
-            "haiku_vision",
+            "llm",
+            "llm_vision",
             "template",
             "mock"
           ],

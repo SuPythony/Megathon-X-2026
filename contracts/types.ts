@@ -68,7 +68,7 @@ export interface Distribution {
 
 /** Where a number came from. Every result carries one. */
 export interface Provenance {
-  engine: "physics_l1" | "bayes_calibration" | "surrogate_deeponet" | "sap_estimator" | "ebm" | "xgboost" | "gnn" | "bayesian_hedonic" | "hedonic" | "dr_learner" | "rules" | "jev" | "claude" | "haiku_vision" | "template" | "mock";
+  engine: "physics_l1" | "bayes_calibration" | "surrogate_deeponet" | "sap_estimator" | "ebm" | "xgboost" | "gnn" | "bayesian_hedonic" | "hedonic" | "dr_learner" | "rules" | "jev" | "claude" | "llm" | "llm_vision" | "template" | "mock";
   model_version: string;
   data_version: string;
   seed?: number | null;
@@ -461,7 +461,7 @@ export interface FloorPlan {
   area_vs_epc_pct?: number | null;
   exterior_wall_length_m?: number | null;
   window_area_m2?: number | null;
-  source: "haiku_vision" | "agent_drawn" | "parametric";
+  source: "llm_vision" | "agent_drawn" | "parametric";
   confirmed_by_agent?: boolean;
 }
 
@@ -473,7 +473,7 @@ export interface ElementTag {
   field: string;
   value: number | string;
   confidence: number;
-  source: "haiku_vision" | "manual";
+  source: "llm_vision" | "manual";
   confirmed_by_agent?: boolean;
 }
 

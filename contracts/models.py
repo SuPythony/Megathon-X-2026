@@ -141,7 +141,7 @@ class Provenance(BaseModel):
 
     engine: Literal[
         "physics_l1", "bayes_calibration", "surrogate_deeponet", "sap_estimator", "ebm", "xgboost", "gnn",
-        "bayesian_hedonic", "hedonic", "dr_learner", "rules", "jev", "claude", "haiku_vision", "template", "mock",
+        "bayesian_hedonic", "hedonic", "dr_learner", "rules", "jev", "claude", "llm", "llm_vision", "template", "mock",
     ]
     model_version: str
     data_version: str
@@ -595,7 +595,7 @@ class FloorPlan(BaseModel):
     area_vs_epc_pct: Optional[float] = Field(None, description="(plan - EPC floor area) / EPC floor area x 100")
     exterior_wall_length_m: Optional[float] = None
     window_area_m2: Optional[float] = None
-    source: Literal["haiku_vision", "agent_drawn", "parametric"]
+    source: Literal["llm_vision", "agent_drawn", "parametric"]
     confirmed_by_agent: bool = False
 
 
@@ -608,7 +608,7 @@ class ElementTag(BaseModel):
                                    "'roof.loft_insulation_mm'")
     value: float | str
     confidence: float = Field(ge=0, le=1)
-    source: Literal["haiku_vision", "manual"]
+    source: Literal["llm_vision", "manual"]
     confirmed_by_agent: bool = False
 
 
@@ -620,7 +620,7 @@ class CaptureResult(BaseModel):
     tags: list[ElementTag] = Field(default_factory=list)
     draft_property_fields: dict[str, float | str] = Field(default_factory=dict)
     needs_confirmation: list[str] = Field(default_factory=list, description="Fields below the confidence threshold")
-    vision_model: Optional[str] = Field("claude-haiku-5-5", description="None for manual capture")
+    vision_model: Optional[str] = Field("gpt-6-luna", description="None for manual capture")
     consent_recorded: bool = False
     faces_blurred: bool = True
 

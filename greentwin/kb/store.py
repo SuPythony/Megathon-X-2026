@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS memory_events (event_id VARCHAR PRIMARY KEY, customer
     retrofit_id VARCHAR, type VARCHAR, reason VARCHAR, created_at TIMESTAMP);
 CREATE TABLE IF NOT EXISTS chat_turns (turn_id VARCHAR PRIMARY KEY, session_id VARCHAR, customer_id VARCHAR,
     property_id VARCHAR, role VARCHAR, text VARCHAR, meta JSON, created_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS captures (capture_id VARCHAR PRIMARY KEY, property_id VARCHAR, result JSON,
+    evidence JSON, status VARCHAR, created_at TIMESTAMP);
 CREATE TABLE IF NOT EXISTS tool_calls (call_id VARCHAR, turn_id VARCHAR, name VARCHAR, input JSON, output JSON,
     ms DOUBLE, created_at TIMESTAMP);
 """

@@ -164,6 +164,30 @@ def chat_endpoint(body: ChatIn):
     return chat(req, body.session_id)
 
 
+class CaptureIn(BaseModel):
+    images_b64: list[str] = Field(default_factory=list, max_length=4)
+    consent: bool = False
+
+
+@app.post("/api/capture/{pid}")
+def capture_photos(pid: str, body: CaptureIn):
+    from greentwin.twin.capture import capture
+    _home(pid)
+    return capture(pid, body.images_b64, body.consent)
+
+
+class ApplyIn(BaseModel):
+    capture_id: str
+    accepted: list[int] = Field(default_factory=list)
+
+
+@app.post("/api/capture/{pid}/apply")
+def capture_apply(pid: str, body: ApplyIn):
+    from greentwin.twin.capture import apply
+    _home(pid)
+    return apply(pid, body.capture_id, body.accepted)
+
+
 @app.get("/api/kb/search")
 def kb_search(query: str = Query("", alias="q"), kind: Optional[str] = None):
     return search_docs(query, kind or None)
