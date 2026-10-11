@@ -341,7 +341,53 @@ These are contract changes, so the consumers (dashboard, API) review them before
 | Verify: BUS grant value, MEES status, RdSAP defaults | Us + team lead | Labels |
 | `build_demo_city.py`, `CityHome`, area extensions | Us (P1) + dashboard owner | All |
 
-## 7. Build order (thinnest path first)
+## 7. Status: step 1 built (11 Oct 2026)
+
+**Built:** `greentwin/twin/city.py`, `greentwin/twin/city_assumptions.json`, `scripts/build_demo_city.py`, tests
+`tests/test_demo_city.py`. Output: `artifacts/demo_city/v1/{homes.json, areas.json, config.json}` (500 homes).
+
+- **Homes are synthetic** (no EPC extract or `EPC_API_TOKEN` on this machine). They're placed over real Manchester
+  postcode districts (M8, M14, M19, M20, M21) with synthetic small areas (`M14-03`, never real LSOA codes). The housing
+  mix is a labelled assumption. Loft insulation and low-energy lighting follow p3's EPC-fitted priors. Swap
+  `synthetic_homes()` for an EPC mapper when real records are available; nothing downstream changes.
+- Per home: twin params + provenance, 200 prior samples, baseline + 3 packages (`fabric_first`, `heat_pump`,
+  `solar_pv`), each re-simulated as a whole. All homes run in a few batched, vmapped physics calls (grouped by fuel):
+  500 homes in about 2 s.
+- **Insights built:**
+  - 2.3 self-funding loans: P(saving ≥ repayment) per package; best package per home.
+  - 2.4 price stress test: base / +30% / −20% before and after the best package.
+  - 2.5 carbon per £1k lent.
+  - 2.6 confidence tiers for synthetic customers.
+  - 2.10 street deals: ≥ 5 same-type homes with the same best package in a small area, plus the bulk saving.
+- `areas.json` rows are `DashboardArea` (contract) plus the step-1 layers (`CityArea`, the proposed extension in §5).
+
+**First run** (500 synthetic homes, **stand-in physics, uncalibrated, synthetic weather: illustrative only**):
+
+| Metric | Value |
+|---|---|
+| Finance demand (best costed package per home) | £2.66M |
+| Homes whose best package self-funds (P ≥ 0.8, 6% over 10 years) | 27.6% |
+| Lending in those self-funding packages | £134k |
+| Carbon saving (best packages) | 368 tCO₂e/yr |
+| Homes over the £2,500 bill threshold: today / +30% price shock / +30% after retrofit | 32% / 61% / 46% |
+| Customer tiers A / B / C | 2 / 53 / 39 |
+| Homes in street-deal clusters | 146 |
+
+**What the first run already says:**
+- Self-funding loans are mostly cheap fabric measures. The big-ticket packages (heat pump, PV) don't pay for
+  themselves at the assumed rate and term, so the lending story for them is grants, longer terms or a lower rate.
+  These are sliders in `city_assumptions.json`.
+- Retrofit is a price-shock hedge: it cuts the share of homes over the bill threshold under a +30% shock by about a
+  quarter.
+- Few customers reach tier A, because every U-value is still an unverified RdSAP default. Verifying the defaults
+  and collecting 12 months of bills is what unlocks instant offers.
+
+**Not yet:**
+- rentals (2.8), rating after, value, score map: these need P2, P3, P4 and P5
+- the cold-year weather and income-based stress: these need P0
+- the full city size and drill-down scenes
+
+## 8. Build order (thinnest path first)
 
 1. `build_demo_city.py` on 500 homes from one district with stub physics: `CityHome` + `areas.json`.
 2. Insights that only need P1 + configs: **2.3 self-funding**, **2.4 stress test (price shocks)**, **2.5 carbon per £**,
