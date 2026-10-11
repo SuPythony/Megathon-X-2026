@@ -1383,8 +1383,19 @@
     },
     "fuel": {
       "additionalProperties": {
-        "type": "string"
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
       },
+      "description": "heating_fuel, hot_water_fuel, hot_water_efficiency",
       "title": "Fuel",
       "type": "object"
     },

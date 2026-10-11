@@ -100,7 +100,7 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 
 | Capability | Status | Where |
 |---|---|---|
-| **Demo city:** 500 homes over real Manchester postcode districts, in a few batched physics calls (~2 s) | 🟡 synthetic homes until EPC data; stand-in physics | `city.py`, `scripts/build_demo_city.py`, `artifacts/demo_city/v1/` |
+| **Demo city:** 60 homes over real Manchester postcode districts, batched physics calls (~4 s on physics_l1) | 🟡 synthetic homes until EPC data; uncalibrated | `city.py`, `scripts/build_demo_city.py`, `artifacts/demo_city/v1/` |
 | **Insights:** self-funding loans, price stress test, carbon per £1k lent, confidence-tiered offers, street deals, greening evidence with loan-term sensitivity | 🟡 | `city.py`, `docs/business_insight.md` |
 | **Area roll-ups** in the `DashboardArea` contract (+ proposed extensions) | ✅ | `areas.json` |
 | Rentals and rent uplift, value uplift, score map, cold-year and income stress test | ⏳ Parts 0, 2, 3, 4, 5 | plan in `docs/business_insight.md` |

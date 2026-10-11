@@ -100,7 +100,8 @@
   },
   "fuel": {
     "heating_fuel": "mains_gas",
-    "hot_water_fuel": "mains_gas"
+    "hot_water_fuel": "mains_gas",
+    "hot_water_efficiency": 0.756
   },
   "fabric": [
     {
@@ -1604,9 +1605,9 @@
       "mu": 0.0,
       "sigma": 0.07,
       "base": 0.84,
-      "lower": null,
-      "upper": null,
-      "rationale": "Tight: confounded with heat_loss_multiplier on gas data alone"
+      "lower": 0.3,
+      "upper": 0.99,
+      "rationale": "Tight: confounded with heat_loss_multiplier on gas data alone; a combustion system stays below 100%"
     },
     {
       "param": "hot_water_kwh_per_day",
