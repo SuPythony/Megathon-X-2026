@@ -28,11 +28,13 @@ from greentwin.twin.appliances import DAYS, ApplianceSummary, summarise_applianc
 from greentwin.twin.archetypes import TwinLayout
 from greentwin.twin.geometry import GeometryConfirmation, apply_geometry, from_layout
 from greentwin.twin.household import (
+    BASELOAD_SIGMA,
     DEFAULT_HEATER_HOURS,
     HEATER_HOURS,
     FollowUp,
     HotWaterSystem,
     apply_user_heating,
+    apply_user_ownership,
     follow_up_questions,
     heating_behaviour,
     hot_water_system,
@@ -236,10 +238,11 @@ def _priors(params: ExtendedTwinParams, sources: dict[str, str], household: dict
               "(unverified U-values and unconfirmed geometry widen it)"),
         _behaviour_prior("setpoint_c", params.setpoint_c, household["setpoint_sd"], sources["setpoint_c"], 14.0, 24.0),
         Prior(param="baseload_kwh_per_day", kind="lognormal", mu=0.0,
-              sigma=(0.2 if has_appliances else 0.3) + (0.0 if lighting_known else 0.05),
+              sigma=(household.get("baseload_sigma") or (0.2 if has_appliances else 0.3))
+              + (0.0 if lighting_known else 0.05),
               base=params.baseload_kwh_per_day,
-              rationale=("From the appliance list" if has_appliances else "SAP default")
-              + ("" if lighting_known else "; lighting share not known, wider")),
+              rationale=("From the appliance list, width by how complete the customer said it is" if has_appliances
+                         else "SAP default") + ("" if lighting_known else "; lighting share not known, wider")),
         Prior(param="heating_efficiency", kind="lognormal", mu=0.0, sigma=0.07, base=params.heating_efficiency,
               rationale="Tight: confounded with heat_loss_multiplier on gas data alone"),
         Prior(param="hot_water_kwh_per_day", kind="lognormal", mu=0.0, sigma=0.2 if occupants_given else 0.35,
@@ -252,6 +255,14 @@ def _priors(params: ExtendedTwinParams, sources: dict[str, str], household: dict
               rationale="Thermal mass from construction (to_verify kappa); weakly identified from monthly bills: "
                         "propagate as uncertainty, don't calibrate"),
     ]
+    for key in ("pv_kwp", "battery_kwh"):
+        sd = household.get("ownership_sigma", {}).get(key)
+        if sd == 0:
+            priors.append(Prior(param=key, kind="fixed", mu=0.0, sigma=0.0, base=getattr(params, key),
+                                rationale=f"Customer answer, fixed: {sources[key]}"))
+        elif sd:
+            priors.append(Prior(param=key, kind="lognormal", mu=0.0, sigma=sd, base=getattr(params, key),
+                                rationale=f"Size not known, so uncertain: {sources[key]}"))
     if "user answer" in heater:
         priors.append(Prior(param="secondary_heating_scale", kind="fixed", mu=0.0, sigma=0.0, base=1.0,
                             rationale=f"Customer answer, fixed: {heater}"))
@@ -366,6 +377,10 @@ def build_physics_inputs(
     # The user's heating answers replace the EPC's (EPCs can be years old)
     prop, heating_conflicts, heating_sources = apply_user_heating(
         prop, intake.heating_system if intake else None, intake.hot_water_source if intake else None)
+    # Solar and battery as the customer knows them replace the EPC's
+    prop, ownership = apply_user_ownership(
+        prop, intake.solar_pv if intake else None, intake.pv_kwp if intake else None,
+        intake.home_battery if intake else None, intake.battery_kwh if intake else None)
     geometry_flags: list[str] = []
     if intake and intake.geometry:  # the user's confirmed (or corrected) geometry wins over any fitted layout
         layout, geometry_flags = apply_geometry(intake.geometry, prop)
@@ -394,7 +409,10 @@ def build_physics_inputs(
         heating_periods=intake.heating_periods if intake and intake.heating_periods else None,
         internal_walls=intake.internal_walls if intake else None,
         led_lighting=led,
+        appliance_completeness=intake.appliance_completeness if intake and placements else None,
     )
+    if intake:
+        sources.update(ownership.sources)
     sources.update({f"user_{k}": v for k, v in heating_sources.items()})
     if heater_use:
         sources["secondary_heating_scale"] = f"user answer: plug-in heaters {heater_use.replace('_', ' ')} ({heater_hours:g} h/day) (fixed)"
@@ -442,7 +460,7 @@ def build_physics_inputs(
 
     to_verify = sorted(k for k, s in sources.items() if "to_verify" in s)
     assumptions = sorted(k for k, s in sources.items() if "assumption" in s or "default" in s)
-    flags = list(heating_conflicts) + geometry_flags
+    flags = list(heating_conflicts) + geometry_flags + (ownership.flags if intake else [])
     if meter:
         flags += meter_fuel_conflicts(prop, meter.gas_kwh, bool(summary and summary.gas_cooking_kwh_per_day > 0))
     if weather.source == "synthetic":
@@ -452,7 +470,10 @@ def build_physics_inputs(
     if prop.heating.main_fuel in ("oil", "lpg", "solid", "district"):
         flags.append(f"heating fuel {prop.heating.main_fuel}: TwinRun has no output field for it yet (open decision)")
 
-    household = {"setpoint_sd": behaviour.setpoint_sd, "hours_sd": behaviour.hours_sd}
+    completeness = intake.appliance_completeness if intake and placements else None
+    household = {"setpoint_sd": behaviour.setpoint_sd, "hours_sd": behaviour.hours_sd,
+                 "baseload_sigma": BASELOAD_SIGMA.get(completeness, 0.3) if summary else None,
+                 "ownership_sigma": ownership.sigma if intake else {}}
     used_layout = layout or _layout_for(prop)
     geometry_source = used_layout.geometry_source if layout is not None else "epc_fitted"
     refs = {"house_type": f"house_type:{used_layout.archetype_id}"}
@@ -463,8 +484,12 @@ def build_physics_inputs(
     answered = {"occupants": bool(intake and intake.occupants), "daytime_occupancy": bool(intake and intake.daytime_occupancy),
                 "setpoint_c": bool(intake and intake.thermostat_c is not None),
                 "heating_hours_per_day": bool(intake and intake.heating_periods),
-                "low_energy_lighting_pct": led is not None, "secondary_heating_scale": heater_use is not None}
-    questions = {"occupants", "daytime_occupancy", "setpoint_c", "heating_hours_per_day"} if intake else set()
+                "low_energy_lighting_pct": led is not None, "secondary_heating_scale": heater_use is not None,
+                "pv_kwp": bool(intake and intake.solar_pv), "battery_kwh": bool(intake and intake.home_battery),
+                "appliance_completeness": completeness is not None}
+    questions = {"occupants", "daytime_occupancy", "setpoint_c", "heating_hours_per_day", "pv_kwp",
+                 "battery_kwh"} if intake else set()
+    questions |= {"appliance_completeness"} if intake and placements else set()
     questions |= {"low_energy_lighting_pct"} if "led_lighting" in asked_keys else set()
     questions |= {"secondary_heating_scale"} if "plug_in_heater_use" in asked_keys else set()
     customer = {f: ("given" if answered[f] else "not_sure") for f in questions}

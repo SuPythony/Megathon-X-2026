@@ -23,7 +23,8 @@ from contracts.models import BuiltForm, FloorType, Property, PropertyType, RoofT
 from greentwin.twin.appliances import ApplianceSummary
 from greentwin.twin.archetypes import TwinLayout, build_layout
 from greentwin.twin.household import (
-    DEFAULT_LED_PCT, LED_PCT, LedLighting, Presence, heating_behaviour, hot_water_system, occupancy,
+    DEFAULT_LED_PCT, LED_PCT, LISTED_SHARE, LISTED_SHARE_NOT_SURE, Completeness, LedLighting, Presence,
+    heating_behaviour, hot_water_system, occupancy,
 )
 from greentwin.twin.physics_api import FuelConfig, FuelName
 from greentwin.twin.thermal import PartitionAnswer, thermal_mass
@@ -138,6 +139,7 @@ def params_with_sources(
     heating_periods: Optional[Sequence[tuple[int, int]]] = None,
     internal_walls: Optional[PartitionAnswer] = None,
     led_lighting: Optional[LedLighting] = None,
+    appliance_completeness: Optional[Completeness] = None,
 ) -> tuple[ExtendedTwinParams, dict[str, str]]:
     """Parameters for one home plus, per field, where the value came from. Household answers (occupants, presence,
     thermostat, heating periods) and the appliance list replace SAP defaults when given."""
@@ -242,9 +244,18 @@ def params_with_sources(
     e_cooking = (35 + 7 * n) * 8.76
     lighting_gains_w = 0.85 * e_lighting * 1000 / 8760
     if appliances is not None:
-        baseload = appliances.baseload_kwh_per_day + e_lighting / 365
-        src["baseload_kwh_per_day"] = f"appliance list ({appliances.status}) + sap_2012 lighting"
-        internal_gains = occ.metabolic_gains_w - 40 * n + appliances.gains_w_mean + lighting_gains_w
+        # Appliances not on the list: add part of the gap to the SAP typical, by how complete the list is
+        share = LISTED_SHARE.get(appliance_completeness, LISTED_SHARE_NOT_SURE) if appliance_completeness else LISTED_SHARE_NOT_SURE
+        typical = (e_appliances + (0.0 if appliances.gas_cooking_kwh_per_day > 0 else e_cooking)) / 365
+        top_up = (1 - share) * max(typical - appliances.baseload_kwh_per_day, 0.0)
+        baseload = appliances.baseload_kwh_per_day + top_up + e_lighting / 365
+        src["baseload_kwh_per_day"] = (f"appliance list ({appliances.status}) + unlisted {top_up:.2f} kWh/day "
+                                       "+ sap_2012 lighting")
+        src["appliance_completeness"] = (
+            f"user answer: {appliance_completeness} main appliances listed (fixed)" if appliance_completeness
+            else "customer not sure (or not asked): half the gap to sap_2012 typical use added (uncertain)")
+        internal_gains = (occ.metabolic_gains_w - 40 * n + appliances.gains_w_mean + top_up * 1000 / 24
+                          + lighting_gains_w)
         src["internal_gains_w"] = "metabolic (occupancy) + appliance schedules + sap lighting, less evaporation"
     else:
         baseload = (e_appliances + e_lighting + e_cooking) / 365

@@ -95,6 +95,58 @@ _TOP_UP_USER = {"electric_storage", "electric_storage_hhr", "solid_fuel"}
 _TOP_UP_EPC = {HeatingSystem.electric_storage, HeatingSystem.electric_storage_hhr, HeatingSystem.solid_fuel}
 
 
+# --------------------------------------------------------------------------- solar, battery, appliance list
+YesNo = Literal["yes", "no"]
+Completeness = Literal["all", "most", "few"]
+TYPICAL_PV_KWP = 3.5        # assumption: typical UK home system when the owner doesn't know the size
+TYPICAL_BATTERY_KWH = 5.0   # assumption: typical home battery when the owner doesn't know the capacity
+# Share of the household's appliance use the list covers; the rest of the gap to the SAP typical is added.
+LISTED_SHARE: dict[str, float] = {"all": 1.0, "most": 0.75, "few": 0.3}
+LISTED_SHARE_NOT_SURE = 0.5
+BASELOAD_SIGMA: dict[str, float] = {"all": 0.15, "most": 0.2, "few": 0.3}
+
+
+class Ownership(BaseModel):
+    """What the customer said about solar panels and a battery, applied over the EPC."""
+
+    pv_kwp: float
+    battery_kwh: float
+    sources: dict[str, str]
+    sigma: dict[str, float] = Field(description="Prior sigma per field: 0 = fixed answer; >0 = lognormal, uncertain")
+    flags: list[str] = Field(default_factory=list)
+
+
+def _owned(name: str, unit: str, has: Optional[str], size: Optional[float], epc_value: float, typical: float
+           ) -> tuple[float, str, Optional[float], list[str]]:
+    if has == "no":
+        flag = [f"EPC records {name} ({epc_value:g} {unit}); you said none: using your answer"] if epc_value else []
+        return 0.0, f"user answer: no {name} (fixed)", 0.0, flag
+    if has == "yes" and size:
+        return float(size), f"user answer: {name} {size:g} {unit} (fixed)", 0.0, []
+    if has == "yes":
+        value = epc_value or typical
+        how = "EPC size" if epc_value else f"typical {typical:g} {unit} (assumption)"
+        return value, f"user answer: has {name}, size not given: {how} (uncertain)", 0.3, []
+    if epc_value:  # not sure: the EPC's record stands, with some doubt
+        return epc_value, f"epc {name} {epc_value:g} {unit} (customer not sure, uncertain)", 0.2, []
+    return 0.0, f"no {name} recorded (customer not sure)", None, [f"Not sure whether the home has {name}: assumed none"]
+
+
+def apply_user_ownership(prop: Property, solar: Optional[YesNo], pv_kwp: Optional[float], battery: Optional[YesNo],
+                         battery_kwh: Optional[float]) -> tuple[Property, Ownership]:
+    r = prop.renewables
+    pv, pv_src, pv_sd, pv_flags = _owned("solar panels", "kWp", solar, pv_kwp, r.pv_kwp, TYPICAL_PV_KWP)
+    bat, bat_src, bat_sd, bat_flags = _owned("a home battery", "kWh", battery, battery_kwh, r.battery_kwh,
+                                             TYPICAL_BATTERY_KWH)
+    flags = pv_flags + bat_flags
+    if bat > 0 and pv == 0:
+        flags.append("A battery without solar panels only shifts grid electricity (no self-consumption gain)")
+    sigma = {k: v for k, v in (("pv_kwp", pv_sd), ("battery_kwh", bat_sd)) if v is not None}
+    own = Ownership(pv_kwp=pv, battery_kwh=bat, sources={"pv_kwp": pv_src, "battery_kwh": bat_src}, sigma=sigma,
+                    flags=flags)
+    return prop.model_copy(update={"renewables": r.model_copy(update={"pv_kwp": pv, "battery_kwh": bat})}), own
+
+
 class FollowUp(BaseModel):
     key: Literal["plug_in_heater_use", "led_lighting"]
     question: str

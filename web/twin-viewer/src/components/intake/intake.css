@@ -121,6 +121,9 @@
 .iw-hour.on { background: linear-gradient(180deg, #ffcf8a, #f5a35b); box-shadow: none; }
 .iw-hours-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
 
+.iw-sub { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; padding: 14px 16px; border-radius: 14px; background: var(--mint-25); border: 1px solid var(--soft-line); animation: iw-rise 0.18s ease-out; }
+.iw-sub .iw-hint { margin: 0; }
+
 /* extras */
 .iw-extras { display: flex; flex-direction: column; gap: 18px; padding: 16px; border-radius: 16px; background: var(--mint-25); border: 1px solid var(--soft-line); }
 .iw-extras h4 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--leaf-ink); }

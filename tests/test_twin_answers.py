@@ -107,3 +107,40 @@ def test_battery_losses_reduce_self_use():
     lossless, lossy = run(1.0), run(0.8)
     assert lossy.electricity_import_kwh.sum() > lossless.electricity_import_kwh.sum()
     assert lossy.pv_generation_kwh.sum() == pytest.approx(lossless.pv_generation_kwh.sum())
+
+
+def test_solar_and_battery_answers_override_the_epc():
+    _, sized = _pkg(solar_pv="yes", pv_kwp=4.0, home_battery="yes", battery_kwh=9.5)
+    assert sized.params.pv_kwp == 4.0 and sized.params.battery_kwh == 9.5
+    assert _prior(sized, "pv_kwp").kind == "fixed" and "pv_kwp" not in sized.prior_table()
+    assert _prov(sized, "pv_kwp").customer_answer == "given" and _prov(sized, "pv_kwp").status == "stated"
+    _, unsized = _pkg(solar_pv="yes", home_battery="no")
+    assert unsized.params.pv_kwp == 3.5 and _prior(unsized, "pv_kwp").kind == "lognormal"
+    assert unsized.params.battery_kwh == 0 and _prior(unsized, "battery_kwh").kind == "fixed"
+    sc, none = _pkg(solar_pv="no")
+    assert none.params.pv_kwp == 0
+    _, unsure = _pkg()
+    assert _prov(unsure, "pv_kwp").customer_answer == "not_sure"
+    assert any("Not sure whether the home has solar" in f for f in unsure.data_quality["flags"])
+    # The physics sees the panels: imports fall with solar
+    run = lambda pkg: simulate(prior_samples(pkg.params, 1, priors={}), pkg.physics_timeseries(), pkg.fuel_config())[0]  # noqa: E731
+    assert run(sized).electricity_import_kwh.sum() < run(none).electricity_import_kwh.sum()
+    # A "no" against an EPC that records panels is flagged
+    epc_pv = sc.prop.model_copy(update={"renewables": sc.prop.renewables.model_copy(update={"pv_kwp": 2.0})})
+    pkg = build_physics_inputs(epc_pv, layout=sc.layout, intake=TwinIntake(intake_id="t", postcode_district="M14", solar_pv="no"))
+    assert pkg.params.pv_kwp == 0 and any("you said none" in f for f in pkg.data_quality["flags"])
+
+
+def test_appliance_completeness_tops_up_unlisted_use():
+    fridge = AppliancePlacement(appliance_id="f", type="fridge_freezer", room_id=None)
+    _, everything = _pkg(appliances=[fridge], appliance_completeness="all")
+    _, few = _pkg(appliances=[fridge], appliance_completeness="few")
+    _, unsure = _pkg(appliances=[fridge])
+    b = lambda p: p.params.baseload_kwh_per_day  # noqa: E731
+    assert b(everything) < b(unsure) < b(few)
+    assert everything.params.internal_gains_w < few.params.internal_gains_w
+    assert _prior(everything, "baseload_kwh_per_day").sigma < _prior(few, "baseload_kwh_per_day").sigma
+    assert _prov(everything, "appliance_completeness").customer_answer == "given"
+    assert _prov(unsure, "appliance_completeness").customer_answer == "not_sure"
+    _, no_list = _pkg(appliance_completeness="all")  # not asked without a list: ignored
+    assert not any(p.field == "appliance_completeness" for p in no_list.input_provenance)

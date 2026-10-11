@@ -33,9 +33,9 @@
     "heating_efficiency": 0.84,
     "heating_fuel": "mains_gas",
     "hot_water_kwh_per_day": 5.857,
-    "baseload_kwh_per_day": 9.347,
-    "lighting_share_of_baseload": 0.216,
-    "internal_gains_w": 360.0,
+    "baseload_kwh_per_day": 11.121,
+    "lighting_share_of_baseload": 0.182,
+    "internal_gains_w": 433.9,
     "solar_gain_factor": 1.0,
     "pv_kwp": 0.0,
     "pv_azimuth_deg": 180.0,
@@ -75,7 +75,8 @@
     "setpoint_c": "user answer: thermostat less 1 K, rooms away from the stat run cooler (fixed)",
     "heating_hours_per_day": "user answer: heating schedule (fixed)",
     "low_energy_lighting_pct": "assumption: 50% low-energy lighting (uncertain)",
-    "baseload_kwh_per_day": "appliance list (typical_estimate) + sap_2012 lighting",
+    "baseload_kwh_per_day": "appliance list (typical_estimate) + unlisted 1.77 kWh/day + sap_2012 lighting",
+    "appliance_completeness": "customer not sure (or not asked): half the gap to sap_2012 typical use added (uncertain)",
     "internal_gains_w": "metabolic (occupancy) + appliance schedules + sap lighting, less evaporation",
     "lighting_share_of_baseload": "sap_2012 appendix L",
     "hot_water_kwh_per_day": "sap_2012 appendix J demand less electric shower use (floor 40%)",
@@ -88,10 +89,10 @@
     "heat_loss_multiplier": "default 1.0 (calibrated)",
     "solar_gain_factor": "twinparams_default",
     "postcode_district": "epc / intake",
-    "pv_kwp": "epc",
+    "pv_kwp": "no solar panels recorded (customer not sure)",
     "pv_azimuth_deg": "epc or 180",
     "pv_tilt_deg": "epc or 35",
-    "battery_kwh": "epc",
+    "battery_kwh": "no a home battery recorded (customer not sure)",
     "heating_fuel": "epc",
     "tariff": "default standard",
     "secondary_heating_scale": "no plug-in heaters listed",
@@ -220,24 +221,34 @@
       "customer_answer": null
     },
     {
+      "field": "appliance_completeness",
+      "value": null,
+      "source": "sap_formula",
+      "status": "estimated",
+      "confirmed": false,
+      "detail": "customer not sure (or not asked): half the gap to sap_2012 typical use added (uncertain)",
+      "ref": null,
+      "customer_answer": "not_sure"
+    },
+    {
       "field": "baseload_kwh_per_day",
-      "value": 9.347,
+      "value": 11.121,
       "source": "appliance_list",
       "status": "stated",
       "confirmed": false,
-      "detail": "appliance list (typical_estimate) + sap_2012 lighting",
+      "detail": "appliance list (typical_estimate) + unlisted 1.77 kWh/day + sap_2012 lighting",
       "ref": "intake:example-SH2",
       "customer_answer": null
     },
     {
       "field": "battery_kwh",
       "value": 0.0,
-      "source": "epc_recorded",
-      "status": "recorded",
+      "source": "default",
+      "status": "default",
       "confirmed": false,
-      "detail": "epc",
+      "detail": "no a home battery recorded (customer not sure)",
       "ref": null,
-      "customer_answer": null
+      "customer_answer": "not_sure"
     },
     {
       "field": "battery_round_trip_efficiency",
@@ -391,7 +402,7 @@
     },
     {
       "field": "internal_gains_w",
-      "value": 360.0,
+      "value": 433.9,
       "source": "default",
       "status": "default",
       "confirmed": false,
@@ -401,7 +412,7 @@
     },
     {
       "field": "lighting_share_of_baseload",
-      "value": 0.216,
+      "value": 0.182,
       "source": "sap_formula",
       "status": "estimated",
       "confirmed": false,
@@ -462,12 +473,12 @@
     {
       "field": "pv_kwp",
       "value": 0.0,
-      "source": "epc_recorded",
-      "status": "recorded",
+      "source": "default",
+      "status": "default",
       "confirmed": false,
-      "detail": "epc",
+      "detail": "no solar panels recorded (customer not sure)",
       "ref": null,
-      "customer_answer": null
+      "customer_answer": "not_sure"
     },
     {
       "field": "pv_tilt_deg",
@@ -644,11 +655,11 @@
     "geometry_source": "epc_fitted",
     "counts_by_status": {
       "assumption": 4,
+      "estimated": 10,
       "stated": 5,
-      "recorded": 9,
-      "estimated": 9,
+      "default": 9,
       "to_verify": 8,
-      "default": 7,
+      "recorded": 7,
       "synthetic": 1
     },
     "heat_loss_share_by_status": {
@@ -1581,11 +1592,11 @@
       "param": "baseload_kwh_per_day",
       "kind": "lognormal",
       "mu": 0.0,
-      "sigma": 0.25,
-      "base": 9.347,
+      "sigma": 0.35,
+      "base": 11.121,
       "lower": null,
       "upper": null,
-      "rationale": "From the appliance list; lighting share not known, wider"
+      "rationale": "From the appliance list, width by how complete the customer said it is; lighting share not known, wider"
     },
     {
       "param": "heating_efficiency",
@@ -1692,6 +1703,8 @@
       "window_u"
     ],
     "flags": [
+      "Not sure whether the home has solar panels: assumed none",
+      "Not sure whether the home has a home battery: assumed none",
       "weather is a synthetic typical year: replace with load_weather(district, months)",
       "some appliance size questions were answered by default"
     ]

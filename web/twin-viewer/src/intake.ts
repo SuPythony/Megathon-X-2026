@@ -40,11 +40,22 @@ export interface TwinIntake {
   thermostat_c: number | null
   heating_periods: [number, number][]
   meter_readings: MeterReading[]
+  // Solar and battery the home has now (override the EPC); null = not sure
+  solar_pv: YesNo | null
+  pv_kwp: number | null
+  home_battery: YesNo | null
+  battery_kwh: number | null
+  // Asked when appliances are placed: does the list cover the main ones? null = not sure
+  appliance_completeness: Completeness | null
   // Optional follow-ups, asked only when relevant (household.follow_up_questions); null = not sure / not asked
   plug_in_heater_use: HeaterUse | null
   led_lighting: LedShare | null
   warnings: string[]
 }
+
+export type YesNo = 'yes' | 'no'
+export type Completeness = 'all' | 'most' | 'few'
+export const COMPLETENESS_OPTIONS: [Completeness, string][] = [['all', 'Yes, all of them'], ['most', 'Most of them'], ['few', 'Only a few']]
 
 export type HeaterUse = 'never' | 'rarely' | 'some_evenings' | 'most_days'
 export const HEATER_USE_OPTIONS: [HeaterUse, string][] = [

@@ -1,12 +1,12 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import {
   Briefcase, Building2, Check, ChevronLeft, ChevronRight, Droplets, Flame, Fuel, Layers, Lightbulb, MapPin,
-  Sofa, Sunrise, TreePine, Wind, X, Zap,
+  BatteryCharging, Refrigerator, Sofa, Sun, Sunrise, TreePine, Wind, X, Zap,
 } from 'lucide-react'
 import {
-  HEATER_USE_OPTIONS, HEATING_OPTIONS, HOT_WATER_OPTIONS, type HeaterUse, LED_OPTIONS, type LedShare, MAX_OCCUPANTS,
+  COMPLETENESS_OPTIONS, type Completeness, HEATER_USE_OPTIONS, HEATING_OPTIONS, HOT_WATER_OPTIONS, type HeaterUse, LED_OPTIONS, type LedShare, MAX_OCCUPANTS,
   type Presence, SCHEDULE_PRESETS, type SchedulePreset, THERMOSTAT_SLIDER, type TwinIntake, askHeaterUse, askLighting,
-  hoursToPeriods, intakeWarnings, normaliseRrn, periodsToHours, postcodeDistrict,
+  type YesNo, hoursToPeriods, intakeWarnings, normaliseRrn, periodsToHours, postcodeDistrict,
 } from '../intake'
 import { exportPlacements, useViewer } from '../store'
 import { Choice, HourStrip, PhotoDrop, Question, Slider } from './intake/controls'
@@ -14,7 +14,7 @@ import { MeterReadings, type MeterRow, emptyMeterRows, meterErrors, toReadings }
 import './intake/intake.css'
 
 const FIND_EPC_URL = 'https://find-energy-certificate.service.gov.uk/'
-const STEPS = ['Home', 'Heating', 'Household', 'Bills', 'Photos', 'Review'] as const
+const STEPS = ['Home', 'Energy', 'Household', 'Bills', 'Rooms', 'Review'] as const
 type Step = (typeof STEPS)[number]
 
 const HEATING_ICONS: Record<string, ReactNode> = {
@@ -61,6 +61,11 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
   const [thermostat, setThermostat] = useState<number | null>(null)
   const [schedule, setSchedule] = useState<SchedulePreset | null>(null)
   const [hours, setHours] = useState<boolean[]>(() => periodsToHours(SCHEDULE_PRESETS.morning_evening.periods))
+  const [solar, setSolar] = useState<YesNo | null>(null)
+  const [pvKwp, setPvKwp] = useState<number | null>(null)
+  const [battery, setBattery] = useState<YesNo | null>(null)
+  const [batteryKwh, setBatteryKwh] = useState<number | null>(null)
+  const [complete, setComplete] = useState<Completeness | null>(null)
   const [heaterUse, setHeaterUse] = useState<HeaterUse | null>(null)
   const [led, setLed] = useState<LedShare | null>(null)
   const [meterRows, setMeterRows] = useState<MeterRow[]>(emptyMeterRows)
@@ -91,7 +96,7 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
   const blocked: Partial<Record<Step, string>> = {
     Home: !district ? 'Enter your postcode to continue' : epcError || '',
     Bills: meterBad ? 'Fix the highlighted months' : '',
-    Photos: photosNeedConsent ? 'Tick the consent switch, or remove the photos' : '',
+    Rooms: photosNeedConsent ? 'Tick the consent switch, or remove the photos' : '',
   }
   const idx = STEPS.indexOf(step)
   const canLeave = !blocked[step]
@@ -115,6 +120,11 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
       thermostat_c: thermostat,
       heating_periods: periods,
       meter_readings: toReadings(meterRows, noGas),
+      solar_pv: solar,
+      pv_kwp: solar === 'yes' ? pvKwp : null,
+      home_battery: battery,
+      battery_kwh: battery === 'yes' ? batteryKwh : null,
+      appliance_completeness: placements.length ? complete : null,
       plug_in_heater_use: heaterWhy ? heaterUse : null,
       led_lighting: lightWhy ? led : null,
     }
@@ -134,16 +144,20 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
     { step: 'Home', label: 'Postcode district', value: district },
     { step: 'Home', label: 'EPC number', value: rrn ?? (noEpc ? 'None' : null) },
     { step: 'Home', label: 'Internal walls', value: walls && (walls === 'solid' ? 'Solid' : 'Hollow') },
-    { step: 'Heating', label: 'Heating', value: HEATING_OPTIONS.find(([v]) => v === heating)?.[1] ?? null },
-    ...(combi ? [] : [{ step: 'Heating' as Step, label: 'Hot water', value: HOT_WATER_OPTIONS.find(([v]) => v === hotWater)?.[1] ?? null }]),
+    { step: 'Energy', label: 'Heating', value: HEATING_OPTIONS.find(([v]) => v === heating)?.[1] ?? null },
+    ...(combi ? [] : [{ step: 'Energy' as Step, label: 'Hot water', value: HOT_WATER_OPTIONS.find(([v]) => v === hotWater)?.[1] ?? null }]),
+    { step: 'Energy', label: 'Solar panels', value: solar === 'no' ? 'None' : solar === 'yes' ? (pvKwp ? `${pvKwp} kWp` : 'Yes, size not known') : null },
+    { step: 'Energy', label: 'Home battery', value: battery === 'no' ? 'None' : battery === 'yes' ? (batteryKwh ? `${batteryKwh} kWh` : 'Yes, size not known') : null },
     { step: 'Household', label: 'People', value: occupants !== null ? people(occupants) : null },
     { step: 'Household', label: 'Daytime', value: PRESENCE.find(([v]) => v === presence)?.[1] ?? null },
     { step: 'Household', label: 'Thermostat', value: thermostat !== null ? `${thermostat} °C` : null },
     { step: 'Household', label: 'Heating on', value: periods.length ? periods.map(([a, b]) => `${a}–${b}h`).join(', ') : null },
     ...(heaterWhy ? [{ step: 'Household' as Step, label: 'Plug-in heaters', value: HEATER_USE_OPTIONS.find(([v]) => v === heaterUse)?.[1] ?? null }] : []),
     ...(lightWhy ? [{ step: 'Household' as Step, label: 'LED lighting', value: LED_OPTIONS.find(([v]) => v === led)?.[1] ?? null }] : []),
+    ...(placements.length ? [{ step: 'Rooms' as Step, label: 'Appliances', value: `${placements.length} placed`, none: true }] : []),
+    ...(placements.length ? [{ step: 'Rooms' as Step, label: 'All main ones?', value: COMPLETENESS_OPTIONS.find(([v]) => v === complete)?.[1] ?? null }] : []),
     { step: 'Bills', label: 'Bills', value: nBills ? `${nBills} month${nBills === 1 ? '' : 's'}` : null, none: true },
-    { step: 'Photos', label: 'Photos', value: [plan && 'Floor plan', fuse && 'Fuse box'].filter(Boolean).join(', ') || null, none: true },
+    { step: 'Rooms', label: 'Photos', value: [plan && 'Floor plan', fuse && 'Fuse box'].filter(Boolean).join(', ') || null, none: true },
   ]
   const unsure = answers.filter((a) => a.value === null && !a.none).length
   const given = answers.filter((a) => a.value !== null).length
@@ -188,7 +202,7 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
                   <MapPin size={16} />
                   <input autoFocus value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="M14 5AB"
                     autoComplete="postal-code" aria-label="Postcode"
-                    onKeyDown={(e) => { if (e.key === 'Enter' && district) setStep('Heating') }} />
+                    onKeyDown={(e) => { if (e.key === 'Enter' && district) setStep('Energy') }} />
                 </div>
                 {district ? <p className="iw-ok">Only the district <b>{district}</b> is kept. Your full postcode never leaves this device.</p>
                   : postcode.trim() ? <p className="iw-err">Enter a UK postcode, e.g. M14 5AB</p> : null}
@@ -210,7 +224,7 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
                   options={[['solid', 'Solid'], ['hollow', 'Hollow']]} />
               </Question>
             </>
-          ) : step === 'Heating' ? (
+          ) : step === 'Energy' ? (
             <>
               <Question label="How is your home heated?" hint="Your answer replaces the EPC, which may be out of date.">
                 <Choice label="Heating system" value={heating} onChange={setHeating} columns={2}
@@ -223,6 +237,27 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
                   <Choice label="Hot water" value={hotWater} onChange={setHotWater} columns={2} options={HOT_WATER_OPTIONS} />
                 </Question>
               )}
+              <Question label="Do you have solar panels?" hint="Your answer replaces the EPC.">
+                <Choice label="Solar panels" value={solar} onChange={setSolar} columns={3}
+                  options={[['yes', 'Yes', <Sun key="y" size={18} />], ['no', 'No']]} />
+                {solar === 'yes' && (
+                  <div className="iw-sub">
+                    <p className="iw-hint">Size, from the installer's MCS certificate. Not sure? We'll use a typical size and keep it uncertain.</p>
+                    <Slider label="Solar size" value={pvKwp} onChange={setPvKwp} min={1} max={10} step={0.5} start={4}
+                      format={(v) => `${v} kWp · about ${Math.round(v / 0.4)} panels`} />
+                  </div>
+                )}
+              </Question>
+              <Question label="Do you have a home battery?">
+                <Choice label="Home battery" value={battery} onChange={setBattery} columns={3}
+                  options={[['yes', 'Yes', <BatteryCharging key="y" size={18} />], ['no', 'No']]} />
+                {battery === 'yes' && (
+                  <div className="iw-sub">
+                    <p className="iw-hint">Usable capacity, on the battery or its app.</p>
+                    <Slider label="Battery capacity" value={batteryKwh} onChange={setBatteryKwh} min={2} max={20} step={0.5} start={5} unit=" kWh" />
+                  </div>
+                )}
+              </Question>
             </>
           ) : step === 'Household' ? (
             <>
@@ -276,8 +311,17 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
                 uses energy. Leave a month blank if you don't have it: blank means missing, not zero.</p>
               <MeterReadings rows={meterRows} setRows={setMeterRows} noGas={noGas} setNoGas={setNoGas} />
             </>
-          ) : step === 'Photos' ? (
+          ) : step === 'Rooms' ? (
             <>
+              {placements.length ? (
+                <Question label={`You've placed ${placements.length} appliance${placements.length === 1 ? '' : 's'}. Is that all your main ones?`}
+                  hint="Things like the fridge, washing machine, cooker, TV, dishwasher, tumble dryer, electric shower. Anything missing is filled in with typical use.">
+                  <Choice label="Appliance list complete" value={complete} onChange={setComplete} columns={4}
+                    options={COMPLETENESS_OPTIONS.map(([v, l]) => [v, l] as [Completeness, string])} />
+                </Question>
+              ) : (
+                <p className="iw-note"><Refrigerator size={14} /> No appliances placed yet: the twin uses typical use for a home your size. Add them room by room in the viewer.</p>
+              )}
               <p className="iw-lead">Photos help draw your rooms and circuits. They're optional and only used to build your twin.</p>
               <div className="iw-drops">
                 <PhotoDrop label="Floor plan" hint="From an estate agent listing or a sketch" file={plan} onFile={setPlan} />
@@ -290,7 +334,6 @@ export function IntakeForm({ onClose }: { onClose: () => void }) {
                   I agree to these photos being processed to build my home's twin
                 </label>
               )}
-              <p className="iw-hint">The {appliances.length} appliances placed in the viewer are included. You can add more room by room.</p>
             </>
           ) : (
             <>

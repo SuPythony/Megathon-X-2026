@@ -86,6 +86,14 @@ class TwinIntake(BaseModel):
     heating_periods: list[tuple[int, int]] = Field(default_factory=list,
                                                    description="Heating on periods, e.g. [(6, 9), (17, 22)]")
     meter_readings: list[MeterReading] = Field(default_factory=list, description="Monthly bills, ideally 12+ months")
+    # Solar and battery the home has now (override the EPC); sizes optional
+    solar_pv: Optional[Literal["yes", "no"]] = Field(None, description="Has solar panels; None = not sure")
+    pv_kwp: Optional[float] = Field(None, gt=0, le=20, description="Solar size if known, kWp")
+    home_battery: Optional[Literal["yes", "no"]] = Field(None, description="Has a home battery; None = not sure")
+    battery_kwh: Optional[float] = Field(None, gt=0, le=50, description="Battery capacity if known, kWh")
+    # Asked when appliances are listed: does the list cover the household's main appliances?
+    appliance_completeness: Optional[Literal["all", "most", "few"]] = Field(
+        None, description="all / most / only a few of the main appliances are listed; None = not sure")
     # Optional follow-ups, asked only when relevant (household.follow_up_questions); None = not sure / not asked.
     plug_in_heater_use: Optional[Literal["never", "rarely", "some_evenings", "most_days"]] = None
     led_lighting: Optional[Literal["all", "most", "about_half", "few"]] = None
