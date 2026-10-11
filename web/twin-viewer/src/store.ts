@@ -33,7 +33,6 @@ interface ViewerState {
   showRoof: boolean
   explode: boolean
   heatTint: boolean
-  heatFlow: boolean
   notice: string | null
   retrofitIds: string[]
   view: 'before' | 'after'
@@ -55,7 +54,6 @@ interface ViewerState {
   toggleRoof: () => void
   toggleExplode: () => void
   toggleHeatTint: () => void
-  toggleHeatFlow: () => void
   toggleRetrofit: (id: string) => void
   setView: (v: 'before' | 'after') => void
   runTwin: () => Promise<void>
@@ -81,7 +79,6 @@ export const useViewer = create<ViewerState>((set, get) => ({
   showRoof: true,
   explode: false,
   heatTint: false,
-  heatFlow: false,
   notice: null,
   retrofitIds: [],
   view: 'before',
@@ -113,7 +110,6 @@ export const useViewer = create<ViewerState>((set, get) => ({
   toggleRoof: () => set((s) => ({ showRoof: !s.showRoof })),
   toggleExplode: () => set((s) => ({ explode: !s.explode })),
   toggleHeatTint: () => set((s) => ({ heatTint: !s.heatTint })),
-  toggleHeatFlow: () => set((s) => ({ heatFlow: !s.heatFlow })),
 
   // Selecting a retrofit drops the ones it excludes (e.g. double vs triple glazing). Packages are re-simulated.
   toggleRetrofit: (id) =>

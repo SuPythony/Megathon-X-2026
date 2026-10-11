@@ -1,17 +1,16 @@
 import { CameraControls, Environment, Lightformer, Sky, useProgress } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
-import { Flame, Home, Layers, Plus, RotateCcw, Triangle, Wind } from 'lucide-react'
+import { Flame, Home, Layers, Plus, RotateCcw, Triangle } from 'lucide-react'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useShallow } from 'zustand/react/shallow'
 import { Appliances } from './components/Appliances'
-import { HeatFlow } from './components/HeatFlow'
 import { HEAT_RAMP, House, storeyOffset } from './components/House'
 import { IntakeForm } from './components/IntakeForm'
 import { Panel } from './components/Panel'
 import { Retrofits } from './components/Retrofits'
 import { bbox } from './geometry'
-import { applianceKey, currentRooms, useViewer } from './store'
+import { applianceKey, useViewer } from './store'
 import type { RoomScene } from './types'
 
 const SCENE_NAMES: Record<string, string> = {
@@ -111,7 +110,6 @@ function Viewport({ scene }: { scene: RoomScene }) {
         <House scene={scene} />
         <Appliances scene={scene} />
         <Retrofits scene={scene} />
-        <HeatFlow scene={scene} />
       </Suspense>
       <CameraControls ref={controls} enabled={!dragging} makeDefault minDistance={2.5} maxDistance={70}
         maxPolarAngle={Math.PI * 0.47} smoothTime={0.35} draggingSmoothTime={0.08} dollySpeed={0.6} />
@@ -158,7 +156,7 @@ export default function App() {
   const s = useViewer(useShallow((st) => ({
     scenes: st.scenes, sceneKey: st.sceneKey, setScene: st.setScene, showRoof: st.showRoof, toggleRoof: st.toggleRoof,
     explode: st.explode, toggleExplode: st.toggleExplode, selectedRoom: st.selectedRoom, selectRoom: st.selectRoom,
-    heatTint: st.heatTint, toggleHeatTint: st.toggleHeatTint, heatFlow: st.heatFlow, toggleHeatFlow: st.toggleHeatFlow, hasEnergy: currentRooms(st) !== null, retrofitIds: st.retrofitIds, view: st.view,
+    heatTint: st.heatTint, toggleHeatTint: st.toggleHeatTint, retrofitIds: st.retrofitIds, view: st.view,
     setView: st.setView, runTwin: st.runTwin, runHouse: st.runHouse, appliances: st.appliances, scenario: st.scenario, resetView: st.resetView,
     twinBusy: st.twinBusy,
   })))
@@ -220,7 +218,6 @@ export default function App() {
         <ToolButton label="Roof" on={s.showRoof} disabled={!!s.selectedRoom || s.explode} onClick={s.toggleRoof}><Triangle size={18} /></ToolButton>
         <ToolButton label="Explode floors" on={s.explode} onClick={s.toggleExplode}><Layers size={18} /></ToolButton>
         <ToolButton label="Heat loss colours" on={s.heatTint} disabled={!scene.energy} onClick={s.toggleHeatTint}><Flame size={18} /></ToolButton>
-        <ToolButton label="Animated heat flow" on={s.heatFlow} disabled={!s.hasEnergy} onClick={s.toggleHeatFlow}><Wind size={18} /></ToolButton>
         <span className="tool-sep" />
         <ToolButton label="Whole house" disabled={!s.selectedRoom} onClick={() => s.selectRoom(null)}><Home size={18} /></ToolButton>
         <ToolButton label="Reset view" onClick={s.resetView}><RotateCcw size={18} /></ToolButton>
