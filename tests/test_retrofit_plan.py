@@ -101,3 +101,27 @@ def test_orchestrator_scenario_and_plan_sh3():
     p = o.plan("SH3", annual_budget_gbp=1000)
     assert p["staging"]["stages"] and p["baselines"]["hypervolume"]["front"] >= p["baselines"]["hypervolume"]["greedy"]
     assert "air_source_heat_pump" in p["staging"]["not_staged"]  # needs a survey on SH3
+
+
+# --------------------------------------------------------------------------- feasibility layer 2 (OpenAI fallback)
+def test_layer2_only_downgrades(monkeypatch):
+    from contracts.models import Property
+    from greentwin.retrofit import feasibility_llm as l2
+    from greentwin.retrofit.rules import assess
+
+    p = Property.model_validate_json(open("contracts/examples/SH1_property.json").read())
+    rules = {f.retrofit_id: f for f in assess(p).items}
+    fake = {"items": [
+        {"retrofit_id": "external_wall_insulation", "status": "feasible", "condition_code": "NONE", "confidence": 1.0},
+        {"retrofit_id": "internal_wall_insulation", "status": "needs_survey", "condition_code": "MOISTURE", "confidence": 0.9},
+        {"retrofit_id": "loft_insulation", "status": "feasible", "condition_code": "NONE", "confidence": 0.3},
+    ]}
+    monkeypatch.setattr(l2, "_call", lambda payload: fake)
+    rep = {f.retrofit_id: f for f in l2.assess_layer2(p).items}
+    assert rep["external_wall_insulation"].status == "infeasible"          # rule veto can't be lifted
+    assert rep["internal_wall_insulation"].status == "needs_survey"
+    assert rep["internal_wall_insulation"].decided_by == "llm_fallback"
+    assert rep["loft_insulation"].status == "needs_survey"                 # low confidence -> survey
+    assert all("L2_" not in c for c in rules["loft_insulation"].reason_codes)
+    monkeypatch.setattr(l2, "_call", lambda payload: None)                 # no key -> rules unchanged
+    assert l2.assess_layer2(p).model_dump() == assess(p).model_dump()

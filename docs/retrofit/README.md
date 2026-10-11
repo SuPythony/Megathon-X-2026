@@ -8,6 +8,7 @@ Numbers come from P2's physics (`physics_l1`) on each home's calibrated posterio
 | --- | --- |
 | `retrofit/catalogue.py` | Validated catalogue, fabric-first ordering, alternatives, sampled costs (null + reason when unsourced), confirmed grants only |
 | `retrofit/rules.py` | Feasibility layer 1 (`feasibility_rules.json`); rule vetoes always win |
+| `retrofit/feasibility_llm.py` | Feasibility layer 2: OpenAI screen on rule survivors, downgrade-only, cached; rules-only without a key (R-29) |
 | `retrofit/runner.py` | Batched twin runs per package (never summed) via the twin's `simulate`, meter anchoring, bills (Ofgem Q4 2026), carbon (DESNZ 2025), `EnergyBreakdown` |
 | `retrofit/property_edits.py` | `property_after`: the recorded features after a package, for the projected score |
 | `retrofit/rating.py` | `sap_estimator.json`: standard-mode runs → anchored SAP → `RatingEstimate` ("estimated rating, not an EPC") |
