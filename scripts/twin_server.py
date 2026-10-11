@@ -32,7 +32,7 @@ from greentwin.twin.scene import (  # noqa: E402
     build_scene,
     retrofit_options,
 )
-from greentwin.twin.showcase import HOMES, load_showcase  # noqa: E402
+from greentwin.twin.showcase import HOMES, example_ids, load_showcase  # noqa: E402
 from greentwin.twin.simulate import prior_samples  # noqa: E402
 from greentwin.twin.twin import GreenDigitalTwin  # noqa: E402
 
@@ -55,9 +55,10 @@ class SceneRequest(BaseModel):
 
 
 def _context(property_id: str, appliances, geometry):
-    if property_id not in HOMES:
-        raise HTTPException(404, f"unknown home {property_id!r}; the dev server knows {sorted(HOMES)}")
-    sc = load_showcase(property_id)
+    try:
+        sc = load_showcase(property_id)  # SH1-SH3, or a house-type example EXAMPLE_<archetype>
+    except (KeyError, StopIteration) as e:
+        raise HTTPException(404, f"unknown home {property_id!r}; known: {sorted(HOMES) + example_ids()}") from e
     apps = appliances if appliances is not None else sc.appliances
     intake = sc.intake.model_copy(update={"geometry": geometry}) if geometry else sc.intake
     pkg = build_physics_inputs(sc.prop, layout=sc.layout, appliances=apps, intake=intake, usage=sc.usage)
@@ -77,7 +78,7 @@ class RunResponse(BaseModel):
 
 @app.get("/api/twin/health")
 def health() -> dict:
-    return {"engine": get_run_physics()[1], "homes": sorted(HOMES), "retrofits": sorted(catalogue())}
+    return {"engine": get_run_physics()[1], "homes": sorted(HOMES) + example_ids(), "retrofits": sorted(catalogue())}
 
 
 @app.post("/api/twin/run", response_model=RunResponse)

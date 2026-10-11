@@ -32,8 +32,10 @@ app.include_router(m04_router)
 def _include_twin_routes() -> None:
     """The 3D viewer's live re-simulation endpoints (/api/twin/*, scripts/twin_server.py) on this same origin."""
     import importlib.util
+    import sys
     spec = importlib.util.spec_from_file_location("twin_server", Path(__file__).resolve().parents[2] / "scripts" / "twin_server.py")
     mod = importlib.util.module_from_spec(spec)
+    sys.modules["twin_server"] = mod  # pydantic resolves the module's postponed annotations through sys.modules
     spec.loader.exec_module(mod)
     app.router.routes.extend(r for r in mod.app.router.routes if getattr(r, "path", "").startswith("/api/twin"))
 

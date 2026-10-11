@@ -55,7 +55,35 @@ class Showcase:
     appliances: list[P]
 
 
+EXAMPLE_PREFIX = "EXAMPLE_"
+
+
+def example_ids() -> list[str]:
+    from greentwin.twin.scene import _EXAMPLE_APPLIANCES
+
+    return [f"{EXAMPLE_PREFIX}{a}" for a in _EXAMPLE_APPLIANCES]
+
+
+def _load_example(pid: str) -> Showcase:
+    """A house-type example (EXAMPLE_<archetype>): the first synthetic demo-city home of that archetype (seeded,
+    greentwin/twin/city.py rules), no meter readings (prior only), the scene's example appliances."""
+    from greentwin.twin.city import synthetic_homes
+    from greentwin.twin.scene import _EXAMPLE_APPLIANCES
+
+    arch = pid.removeprefix(EXAMPLE_PREFIX)
+    if arch not in _EXAMPLE_APPLIANCES:
+        raise KeyError(f"unknown example home {pid!r}; known: {example_ids()}")
+    home = next(h for h in synthetic_homes(400) if h.archetype_id == arch)
+    prop = home.prop.model_copy(update={"property_id": pid})
+    intake = TwinIntake(intake_id=f"example-{pid}", postcode_district=prop.location.postcode_district)
+    layout = build_layout(arch, total_floor_area_m2=prop.floor_area_m2, built_form=prop.built_form)
+    return Showcase(prop=prop, usage=[], intake=intake, layout=layout,
+                    appliances=[P(**a) for a in _EXAMPLE_APPLIANCES[arch]])
+
+
 def load_showcase(pid: str) -> Showcase:
+    if pid.startswith(EXAMPLE_PREFIX):
+        return _load_example(pid)
     if pid not in HOMES:
         raise KeyError(f"unknown showcase home {pid!r}; known: {sorted(HOMES)}")
     h = HOMES[pid]

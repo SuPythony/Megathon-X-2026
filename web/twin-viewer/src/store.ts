@@ -123,7 +123,6 @@ export const useViewer = create<ViewerState>((set, get) => ({
   runTwin: async () => {
     const s = get()
     const sc = scene(s)
-    if (!sc.energy) return
     const key = [...s.retrofitIds].sort().join('+')
     const appsChanged = applianceKey(s.appliances) !== applianceKey(sc.appliances)
     set({ twinBusy: true })
