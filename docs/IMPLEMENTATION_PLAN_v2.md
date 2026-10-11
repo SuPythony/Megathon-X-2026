@@ -238,7 +238,7 @@ Problem-statement coverage:
 
 **4c. Recommendation engine** (`greentwin/retrofit`):
 1. **Feasibility layer 1 (rules):** `feasibility_rules.json` vetoes with reason codes (conservation area/listed → no EWI, no roof access or north-facing roof → no PV, no loft, flat → heat pump needs a survey, no outdoor space, already installed). A rule veto cannot be overridden.
-2. **Feasibility layer 2:** Jev or the Claude fallback, from B6. Only for retrofits that pass the rules. It reads EPC descriptions, agent notes and memory, and returns feasible / with conditions / needs survey / infeasible with recalibrated confidence. Low confidence → `needs_survey`. Shown reasons come from rule codes and the knowledge base.
+2. **Feasibility layer 2:** Jev or the OpenAI fallback, from B6. Only for retrofits that pass the rules. It reads EPC descriptions, agent notes and memory, and returns feasible / with conditions / needs survey / infeasible with recalibrated confidence. Low confidence → `needs_survey`. Shown reasons come from rule codes and the knowledge base.
 3. **Relevance model:** an **EBM classifier** per measure trained on the **real EPC recommendations table**: P(an assessor would recommend X | features).
    - **Baseline:** rules only. **Metrics:** AUC and precision@k on held-out properties; zero infeasible items recommended.
 4. **Ordering + staging:** fabric → glazing → controls → heating system (sized on reduced demand) → generation/storage. Marginal savings come from B3 in that sequence. A small dynamic programme stages the package by dependencies and cash flow.
@@ -323,7 +323,7 @@ Problem-statement coverage:
 
 GraphRAG pattern: retrieve the home's subgraph (constraints, eligible grants, blocked retrofits) plus cited text, then explain tool numbers.
 
-**6d. Grounded LLM** (`greentwin/llm`, Claude tool use):
+**6d. Grounded LLM** (`greentwin/llm`, OpenAI Responses API tool use, `gpt-6-luna`):
 - **System prompt:**
   - Never compute; quote only tool numbers with unit and interval.
   - Say "estimate", "projected" and "indicative"; use `ValueImpact.wording` for value and the `ElementHeatLoss.basis` label for heat loss.
@@ -336,8 +336,8 @@ GraphRAG pattern: retrieve the home's subgraph (constraints, eligible grants, bl
   - On failure: regenerate once, then fall back to a **template explainer**, which also covers having no API key.
 - Cache every call in `cache/llm/` so evaluations replay offline.
 
-**6e. Jev System-1 layer** (`greentwin/jev`, if `JEV_API_KEY` exists; otherwise Claude structured output on the same interface, otherwise rules):
-- **What-if routing:** intent Choice {numeric, comparative, feasibility, out-of-scope} + scenario slots with confidence. Below τ → Claude parses or asks the user to clarify.
+**6e. Jev System-1 layer** (`greentwin/jev`, if `JEV_API_KEY` exists; otherwise OpenAI structured output on the same interface, otherwise rules):
+- **What-if routing:** intent Choice {numeric, comparative, feasibility, out-of-scope} + scenario slots with confidence. Below τ → the LLM parses or asks the user to clarify.
 - **Comparative questions:** Jev Choice over options already computed by physics/Pareto.
 - **Answerability gate:** "Is there enough data to estimate value?"
 - **Feasibility layer 2**, for B4.
@@ -501,7 +501,7 @@ Each block writes its own `metrics.json` (seed, data version, baseline, held-out
 | Pareto | hypervolume, % greedy picks dominated | greedy kWh/£, CO2-only | B4 |
 | Value | coverage, pinball loss on real held-out sales; vs DECC 2013 | hedonic OLS without band | B5 |
 | Value method check | recovery of the planted synthetic premium (method validation only) | — | B5 |
-| Jev / router | routing accuracy, feasibility precision/recall, ECE, latency | rules only, Claude structured output | B6 |
+| Jev / router | routing accuracy, feasibility precision/recall, ECE, latency | rules only, OpenAI structured output | B6 |
 | LLM | groundedness, accuracy, unsupported-claim rate | no validator | B6 |
 | Synthetic data | KS / quantiles vs NEED | — | B2 |
 
@@ -539,7 +539,7 @@ B8 after B1, fed by B3/B4 batch outputs
 
 **Stop rules:**
 - If checkpoint 1 slips, drop Pareto P(on front), matching, the DR-learner and agent capture.
-- If checkpoint 2 slips, drop Jev (keep the Claude fallback), the graph store, 3D v2/v3 and the portfolio front.
+- If checkpoint 2 slips, drop Jev (keep the OpenAI fallback), the graph store, 3D v2/v3 and the portfolio front.
 
 **Stretch only, after checkpoint 3:**
 - Differentiable RC graph in JAX/diffrax (if Option A was chosen).

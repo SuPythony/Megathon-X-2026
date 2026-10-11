@@ -274,7 +274,7 @@ log(price_i / HPI_LA,type,month_i) ~ StudentT(ν, μ_i, σ_type)
 **Feasibility (`retrofit/rules.py` + `jev/feasibility.py` → `FeasibilityReport`).**
 1. **Layer 1:** evaluate every rule in `feasibility_rules.json` on `Property` (+ memory constraints). A `blocks` match → `infeasible`, `p_feasible = 0`. A `downgrade` → that status. **Rule vetoes always win.**
 2. **Layer 2** (survivors only): Jev Choice {feasible, with conditions, needs survey, infeasible} on a state built from home facts + EPC text + agent notes + memory. Its confidence is recalibrated with isotonic regression; below τ → `needs_survey`.
-3. **Without a Jev key:** Claude structured output on the same schema (`router = claude_fallback`); otherwise rules only.
+3. **Without a Jev key:** OpenAI structured output (`gpt-6-luna`) on the same schema (`router = llm_fallback`); otherwise rules only.
 
 Reasons shown to users come from rule codes and the knowledge base, never from the LLM.
 
@@ -284,7 +284,7 @@ Reasons shown to users come from rule codes and the knowledge base, never from t
 - Jev never produces kWh, £, CO2 or score values.
 
 **Chat (`llm/chat.py` → `ChatResponse`).**
-- **Model:** `LLM_MODEL` from `.env` (team default `claude-sonnet-5-5`).
+- **Model:** `LLM_MODEL` from `.env`: OpenAI `gpt-6-luna` for every call (team-lead decision, 11 Oct 2026). Responses API tool loop; see `docs/LLM.md`.
 - **Tools:** `get_home_facts`, `get_results`, `run_scenario`, `search_docs`, `query_graph`, defined with `strict: true` and `tool_choice: auto`. Forced tool choice is rejected on current models, so the system prompt instructs the model to call `run_scenario` for every what-if.
 - **Loop:** manual tool loop or the SDK tool runner. Check `stop_reason` (`refusal`, `max_tokens`) before reading content.
 - **Caching:** the frozen system prompt and tool list are prompt-cached.
@@ -1094,7 +1094,7 @@ A matched greener comparable home, shown only as ranges (never an address).
 | --- | --- | --- |
 | `retrofit_id` | `string` |  |
 | `status` | `"feasible" \| "feasible_with_conditions" \| "needs_survey" \| "infeasible"` |  |
-| `decided_by` | `"rules" \| "jev" \| "claude_fallback" \| "agent"` |  |
+| `decided_by` | `"rules" \| "jev" \| "llm_fallback" \| "agent"` |  |
 | `reason_codes?` | `string[]` |  |
 | `reasons?` | `string[]` | Human-readable, from rules/KB (never the LLM) |
 | `p_feasible` | `number` | 1.0/0.0 for rules; recalibrated confidence for Jev |
@@ -1107,7 +1107,7 @@ A matched greener comparable home, shown only as ranges (never an address).
 | `items` | `Feasibility[]` |  |
 | `rules_version` | `string` |  |
 | `jev_used?` | `boolean` |  |
-| `router?` | `"jev" \| "claude_fallback" \| "rules_only"` |  |
+| `router?` | `"jev" \| "llm_fallback" \| "rules_only"` |  |
 
 #### `WhatIfRoute`
 
@@ -1120,7 +1120,7 @@ Output of the System-1 router (Jev or Claude fallback).
 | `scenario?` | `ScenarioSpec \| null` |  |
 | `needs_clarification?` | `boolean` |  |
 | `clarifying_question?` | `string \| null` |  |
-| `router` | `"jev" \| "claude_fallback"` |  |
+| `router` | `"jev" \| "llm_fallback"` |  |
 
 #### `ExplanationCheck`
 
@@ -1152,7 +1152,7 @@ Validator output for one LLM answer.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `name` | `"get_home_facts" \| "get_results" \| "run_scenario" \| "search_docs" \| "query_graph"` |  |
+| `name` | `"get_home_facts" \| "get_results" \| "run_scenario" \| "search_docs" \| "query_graph" \| "get_energy_prior" \| "rank_recommendations" \| "get_customer_memory" \| "propose_memory"` |  |
 | `input` | `Record<string, unknown>` |  |
 | `output_ref?` | `string \| null` | e.g. the scenario_id a run_scenario call produced |
 
@@ -1447,7 +1447,7 @@ Energy prediction, retrofit ladder, savings/carbon/bills, improvement potential,
 | `GET /homes/{id}/feasibility` | — | `FeasibilityReport` | rules → Jev |
 | `GET /homes/{id}/pareto?budget=` | — | `ParetoPoint[]` | precomputed for showcase homes |
 | `GET /homes/{id}/green-twins` | — | `GreenTwin[]` | ranges only |
-| `POST /route` | `{property_id, message}` | `WhatIfRoute` | Jev / Claude fallback |
+| `POST /route` | `{property_id, message}` | `WhatIfRoute` | Jev / OpenAI fallback |
 | `POST /chat` | `ChatRequest` | `ChatResponse` | tool-only LLM + validator |
 | `GET /dashboard/areas?layer=&region=` | — | `DashboardArea[]` (GeoJSON-wrapped) | Lloyds heat map |
 | `GET /dashboard/segments` · `POST /dashboard/green-profits` | sliders | segment table · Monte Carlo `Distribution`s | scenario, labelled assumptions |
@@ -1824,7 +1824,7 @@ uv run pytest -q                                                  # contracts, s
 | Missing | Replacement |
 | --- | --- |
 | No LLM key | Template explainer |
-| No Jev key | Claude structured output → rules |
+| No Jev key | OpenAI structured output → rules |
 | No EPC API | Cached sample files |
 | Calibration failure | `prior_only` + warning |
 | Unsourced cost / factor / tariff | `null` + reason |

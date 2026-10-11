@@ -4,7 +4,7 @@
     "intent": "numeric",
     "confidence": 0.93,
     "needs_clarification": false,
-    "router": "claude_fallback",
+    "router": "llm_fallback",
     "scenario": {
       "scenario_id": "SH2-hp",
       "property_id": "SH2",

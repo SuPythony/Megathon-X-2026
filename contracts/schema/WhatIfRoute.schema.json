@@ -186,7 +186,7 @@
     "router": {
       "enum": [
         "jev",
-        "claude_fallback"
+        "llm_fallback"
       ],
       "title": "Router",
       "type": "string"

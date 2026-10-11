@@ -69,8 +69,8 @@ This is a hackathon. **Speed is the goal, not bug-free code.** A working, good-l
 | Region | **UK only** (England & Wales data). The India pack was dropped. |
 | Core engine | **Level 1 RC + equipment simulator**, Bayesian-calibrated, is the **only source of numbers**. Level 2 (spatial PINO, 3D heat-flow detail) is **visual only** and is gated to agree within ±5% with Level 1. |
 | Learned models | **EBM primary**, XGBoost baseline. Learned models calibrate, rank, value, or act as surrogates; they never directly produce customer savings. |
-| LLM | Tool-only. Never computes or estimates numbers. Every what-if → `run_scenario`. A numeric validator checks every answer. |
-| Jev | TypeSafe "System 1" model (not JEPA). Used **only** for what-if routing, feasibility layer 2 and the explanation check. **Never** for kWh/£/CO2/score. Rule vetoes always win. Falls back to Claude structured output or rules. |
+| LLM | Tool-only. Never computes or estimates numbers. Every what-if → `run_scenario`. A numeric validator checks every answer. **Provider (P4, 11 Oct 2026, approved by the team lead): OpenAI Responses API, `gpt-6-luna` for every call** (`LLM_MODEL`, key `OPENAI_API_KEY`); knowledge base in DuckDB (BM25 full-text); see `docs/LLM.md`. |
+| Jev | TypeSafe "System 1" model (not JEPA). Used **only** for what-if routing, feasibility layer 2 and the explanation check. **Never** for kWh/£/CO2/score. Rule vetoes always win. Falls back to OpenAI structured output (`gpt-6-luna`) or rules. |
 | Value | Always a **range**, labelled **indicative** (association, not proven causation). Primary: **Bayesian hierarchical hedonic** model on real UK sales; baseline OLS without the rating; repeat-sales and matching only as stretch checks. |
 | Plan | Phases and checkpoints, not clock time. Build order is Tier A → B → C → D. |
 | Physics library | **JAX** (`jax.numpy`). The twin runs inside the NumPyro model (NUTS/SVI need its gradients) and is `vmap`ped over posterior samples. Option B's ODE twin uses `diffrax`. Not numpy, not PyTorch. |
@@ -141,11 +141,11 @@ cp .env.example .env            # fill only what you have; see Keys
 - JAX GPU is Linux-only. Run GPU NumPyro in WSL2; CPU is fine for per-home SVI.
 
 ## Keys
-- `.env.example` lists every key: `ANTHROPIC_API_KEY`, `JEV_API_KEY`, `EPC_API_TOKEN`, CEDA, Met Office. `__ASK_USER__` means not provided yet.
+- `.env.example` lists every key: `OPENAI_API_KEY` (LLM), `ANTHROPIC_API_KEY` (photo-to-twin until migrated), `JEV_API_KEY`, `EPC_API_TOKEN`, CEDA, Met Office. `__ASK_USER__` means not provided yet.
 - **Agents/teammates: ask the team lead when a task first needs a key.** Never invent, commit or log keys.
 - Code must work without keys:
   - The template explainer replaces the LLM.
-  - Claude or rules replace Jev.
+  - OpenAI structured output or rules replace Jev.
   - Cached samples replace the EPC API.
 
 ## Conventions

@@ -20,7 +20,7 @@
           "enum": [
             "rules",
             "jev",
-            "claude_fallback",
+            "llm_fallback",
             "agent"
           ],
           "title": "Decided By",
@@ -84,7 +84,7 @@
       "default": "rules_only",
       "enum": [
         "jev",
-        "claude_fallback",
+        "llm_fallback",
         "rules_only"
       ],
       "title": "Router",

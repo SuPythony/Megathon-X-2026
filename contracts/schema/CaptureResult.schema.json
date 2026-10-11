@@ -43,7 +43,7 @@
         },
         "source": {
           "enum": [
-            "haiku_vision",
+            "llm_vision",
             "manual"
           ],
           "title": "Source",
@@ -121,7 +121,7 @@
         },
         "source": {
           "enum": [
-            "haiku_vision",
+            "llm_vision",
             "agent_drawn",
             "parametric"
           ],
@@ -267,7 +267,7 @@
           "type": "null"
         }
       ],
-      "default": "claude-haiku-5-5",
+      "default": "gpt-6-luna",
       "description": "None for manual capture",
       "title": "Vision Model"
     },

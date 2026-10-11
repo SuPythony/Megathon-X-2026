@@ -604,7 +604,7 @@
           "enum": [
             "rules",
             "jev",
-            "claude_fallback",
+            "llm_fallback",
             "agent"
           ],
           "title": "Decided By",
@@ -668,7 +668,7 @@
           "default": "rules_only",
           "enum": [
             "jev",
-            "claude_fallback",
+            "llm_fallback",
             "rules_only"
           ],
           "title": "Router",
@@ -1044,7 +1044,8 @@
             "rules",
             "jev",
             "claude",
-            "haiku_vision",
+            "llm",
+            "llm_vision",
             "template",
             "mock"
           ],
