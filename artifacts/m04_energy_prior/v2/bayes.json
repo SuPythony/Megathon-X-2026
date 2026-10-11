@@ -1,0 +1,178 @@
+{
+  "seed": 42,
+  "assumptions": {
+    "gas_weather_cv": {
+      "value": 0.07,
+      "status": "assumption",
+      "why": "raw metered gas includes weather; NEED gas is weather-corrected"
+    },
+    "imputed_month_relative_sd": {
+      "value": 0.5,
+      "status": "assumption"
+    }
+  },
+  "electricity": {
+    "noise": {
+      "nu": 1.7766518211502966,
+      "scale": 0.12951997251886216,
+      "n_pairs": 2060220,
+      "years": [
+        2022,
+        2023
+      ]
+    },
+    "area_elasticity": {
+      "beta": 0.4081663292967179,
+      "ci95": [
+        0.39464609989270394,
+        0.4200480231302761
+      ],
+      "n": 600000
+    },
+    "peer_median_kwh_m2": {
+      "Bungalow|1": 34.437086092715234,
+      "Bungalow|2": 30.022075055187635,
+      "Bungalow|3": 27.357237715803453,
+      "Bungalow|4": 26.56042496679947,
+      "Detached|1": 28.49002849002849,
+      "Detached|2": 26.210826210826212,
+      "Detached|3": 26.029216467463478,
+      "Detached|4": 23.10756972111554,
+      "End terrace|1": 29.291547958214622,
+      "End terrace|2": 33.99558498896247,
+      "End terrace|3": 31.346578366445915,
+      "End terrace|4": 25.763612217795487,
+      "Flat|1": 42.82560706401766,
+      "Flat|2": 40.618101545253865,
+      "Flat|3": 45.83333333333333,
+      "Flat|4": 47.5,
+      "Mid terrace|1": 27.09163346613546,
+      "Mid terrace|2": 32.671081677704194,
+      "Mid terrace|3": 29.580573951434882,
+      "Mid terrace|4": 24.881291547958217,
+      "Semi detached|1": 29.48207171314741,
+      "Semi detached|2": 31.346578366445915,
+      "Semi detached|3": 32.13811420982736,
+      "Semi detached|4": 25.232403718459494
+    },
+    "update_test": {
+      "n_homes": 20000,
+      "target": "elec intensity in 2023 (unseen)",
+      "results": {
+        "prior_only": {
+          "mae": 18.353431781411572,
+          "mdae": 11.13597130182463,
+          "coverage_90": 0.9183,
+          "mean_width_90": 87.17753264726647,
+          "crps": 13.430746467223333
+        },
+        "posterior_1yr": {
+          "mae": 10.499503032902968,
+          "mdae": 4.527063686423974,
+          "coverage_90": 0.90615,
+          "mean_width_90": 46.84565469872469,
+          "crps": 7.985731471851848
+        },
+        "posterior_2yr": {
+          "mae": 10.218198739671516,
+          "mdae": 4.638862895025499,
+          "coverage_90": 0.884,
+          "mean_width_90": 41.4149441370179,
+          "crps": 7.754730229677973
+        },
+        "persistence": {
+          "mae": 10.797454085861041,
+          "mdae": 4.7808764940239,
+          "coverage_90": 0.90595,
+          "mean_width_90": 54.0687935322591,
+          "crps": null
+        }
+      },
+      "median_ess_1yr": 1265.122831968068,
+      "median_ess_2yr": 986.3308547214681,
+      "posterior_sd_ratio_2yr": 0.23061130670971042
+    }
+  },
+  "gas": {
+    "noise": {
+      "nu": 1.6701972955284767,
+      "scale": 0.08919574950612075,
+      "n_pairs": 1693651,
+      "years": [
+        2022,
+        2023
+      ]
+    },
+    "area_elasticity": {
+      "beta": 0.5351583097823343,
+      "ci95": [
+        0.5221875504512152,
+        0.5453839479341396
+      ],
+      "n": 600000
+    },
+    "peer_median_kwh_m2": {
+      "Bungalow|1": 157.17439293598233,
+      "Bungalow|2": 137.74834437086093,
+      "Bungalow|3": 117.43929359823399,
+      "Bungalow|4": 94.92273730684327,
+      "Detached|1": 132.27091633466136,
+      "Detached|2": 128.2051282051282,
+      "Detached|3": 110.16144349477682,
+      "Detached|4": 81.27490039840637,
+      "End terrace|1": 129.80132450331126,
+      "End terrace|2": 126.71081677704194,
+      "End terrace|3": 105.44488711819389,
+      "End terrace|4": 80.79470198675497,
+      "Flat|1": 153.75,
+      "Flat|2": 133.33333333333331,
+      "Flat|3": 120.0,
+      "Flat|4": 105.0,
+      "Mid terrace|1": 113.67861885790172,
+      "Mid terrace|2": 115.67328918322296,
+      "Mid terrace|3": 95.36423841059603,
+      "Mid terrace|4": 76.89243027888446,
+      "Semi detached|1": 127.75564409030545,
+      "Semi detached|2": 127.81456953642385,
+      "Semi detached|3": 111.25827814569537,
+      "Semi detached|4": 76.82119205298014
+    },
+    "update_test": {
+      "n_homes": 20000,
+      "target": "gas intensity in 2023 (unseen)",
+      "results": {
+        "prior_only": {
+          "mae": 44.21122996295708,
+          "mdae": 33.41415308009259,
+          "coverage_90": 0.91885,
+          "mean_width_90": 210.42600887301896,
+          "crps": 31.90816169685578
+        },
+        "posterior_1yr": {
+          "mae": 20.643063970586763,
+          "mdae": 11.817959657579571,
+          "coverage_90": 0.9174,
+          "mean_width_90": 105.70036589039263,
+          "crps": 15.727736248091444
+        },
+        "posterior_2yr": {
+          "mae": 22.13547555319752,
+          "mdae": 12.949353501972517,
+          "coverage_90": 0.88195,
+          "mean_width_90": 96.95446775866326,
+          "crps": 16.688748507355758
+        },
+        "persistence": {
+          "mae": 20.613235940594524,
+          "mdae": 11.920529801324506,
+          "coverage_90": 0.90545,
+          "mean_width_90": 108.79597317823232,
+          "crps": null
+        }
+      },
+      "median_ess_1yr": 1137.9103770308138,
+      "median_ess_2yr": 917.1314017807421,
+      "posterior_sd_ratio_2yr": 0.20582375659527377
+    }
+  }
+}

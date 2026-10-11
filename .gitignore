@@ -26,6 +26,7 @@ artifacts/**/*.pkl
 artifacts/**/*.joblib
 artifacts/**/*.nc
 artifacts/**/*.safetensors
+artifacts/**/*.parquet
 
 # LLM / Jev response caches (keep locally for replay; commit only eval snapshots)
 cache/llm/
@@ -48,3 +49,7 @@ Green_Home_Ideas.pdf
 
 # browser automation logs
 .playwright-mcp/
+
+# git worktrees (isolated per-task checkouts)
+.worktrees/
+artifacts/**/monitor.log

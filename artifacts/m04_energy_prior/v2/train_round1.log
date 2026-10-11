@@ -1,0 +1,116 @@
+[electricity] rows train 2,316,535 tune 385,928 cal 385,682 test 772,883; cells train 102,743 tune 51,621
+  [electricity] lightgbm trial 00 tune MAE 5.858  {'num_leaves': 127, 'min_sum_hessian_in_leaf': 50, 'log_target': False, 'learning_rate': 0.05, 'lambda_l2': 1, 'feature_fraction': 0.7}  (20s)
+  [electricity] lightgbm trial 01 tune MAE 5.912  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 50, 'log_target': False, 'learning_rate': 0.02, 'lambda_l2': 1, 'feature_fraction': 0.85}  (26s)
+  [electricity] lightgbm trial 02 tune MAE 6.112  {'num_leaves': 127, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.05, 'lambda_l2': 0, 'feature_fraction': 0.85}  (24s)
+  [electricity] lightgbm trial 03 tune MAE 6.125  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.05, 'lambda_l2': 0, 'feature_fraction': 0.7}  (31s)
+  [electricity] lightgbm trial 04 tune MAE 6.111  {'num_leaves': 127, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.02, 'lambda_l2': 1, 'feature_fraction': 0.85}  (60s)
+  [electricity] lightgbm trial 05 tune MAE 5.879  {'num_leaves': 255, 'min_sum_hessian_in_leaf': 10, 'log_target': False, 'learning_rate': 0.02, 'lambda_l2': 0, 'feature_fraction': 1.0}  (43s)
+  [electricity] lightgbm trial 06 tune MAE 6.132  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 200, 'log_target': True, 'learning_rate': 0.05, 'lambda_l2': 100, 'feature_fraction': 1.0}  (25s)
+  [electricity] lightgbm trial 07 tune MAE 6.125  {'num_leaves': 63, 'min_sum_hessian_in_leaf': 10, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 100, 'feature_fraction': 1.0}  (13s)
+  [electricity] lightgbm trial 08 tune MAE 6.133  {'num_leaves': 255, 'min_sum_hessian_in_leaf': 1000, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 1, 'feature_fraction': 1.0}  (18s)
+  [electricity] lightgbm trial 09 tune MAE 5.857  {'num_leaves': 255, 'min_sum_hessian_in_leaf': 10, 'log_target': False, 'learning_rate': 0.02, 'lambda_l2': 10, 'feature_fraction': 0.7}  (51s)
+  [electricity] lightgbm trial 10 tune MAE 6.113  {'num_leaves': 255, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 0, 'feature_fraction': 0.85}  (49s)
+  [electricity] lightgbm trial 11 tune MAE 6.130  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 1000, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 0, 'feature_fraction': 0.7}  (20s)
+  [electricity] lightgbm trial 12 tune MAE 6.125  {'num_leaves': 127, 'min_sum_hessian_in_leaf': 10, 'log_target': True, 'learning_rate': 0.02, 'lambda_l2': 10, 'feature_fraction': 1.0}  (81s)
+  [electricity] lightgbm trial 13 tune MAE 6.125  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 10, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 100, 'feature_fraction': 0.85}  (19s)
+  [electricity] lightgbm trial 14 tune MAE 6.128  {'num_leaves': 31, 'min_sum_hessian_in_leaf': 10, 'log_target': True, 'learning_rate': 0.02, 'lambda_l2': 1, 'feature_fraction': 0.7}  (56s)
+  [electricity] lightgbm trial 15 tune MAE 6.128  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 10, 'feature_fraction': 1.0}  (12s)
+  [electricity] lightgbm trial 16 tune MAE 5.876  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 1000, 'log_target': False, 'learning_rate': 0.1, 'lambda_l2': 1, 'feature_fraction': 0.85}  (12s)
+  [electricity] lightgbm trial 17 tune MAE 6.129  {'num_leaves': 31, 'min_sum_hessian_in_leaf': 1000, 'log_target': True, 'learning_rate': 0.02, 'lambda_l2': 10, 'feature_fraction': 0.85}  (54s)
+  [electricity] lightgbm trial 18 tune MAE 6.120  {'num_leaves': 31, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.05, 'lambda_l2': 10, 'feature_fraction': 0.7}  (27s)
+  [electricity] lightgbm trial 19 tune MAE 6.126  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 200, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 10, 'feature_fraction': 0.7}  (16s)
+[electricity] best lightgbm: tune MAE 5.857 {'num_leaves': 255, 'min_sum_hessian_in_leaf': 10, 'log_target': False, 'learning_rate': 0.02, 'lambda_l2': 10, 'feature_fraction': 0.7}
+  [electricity] xgboost trial 00 tune MAE 5.942  {'subsample': 0.7, 'reg_lambda': 10, 'min_child_weight': 1000, 'max_depth': 4, 'learning_rate': 0.05}  (30s)
+  [electricity] xgboost trial 01 tune MAE 5.857  {'subsample': 0.85, 'reg_lambda': 100, 'min_child_weight': 50, 'max_depth': 8, 'learning_rate': 0.03}  (7s)
+  [electricity] xgboost trial 02 tune MAE 5.856  {'subsample': 0.85, 'reg_lambda': 100, 'min_child_weight': 10, 'max_depth': 10, 'learning_rate': 0.05}  (6s)
+  [electricity] xgboost trial 03 tune MAE 5.871  {'subsample': 0.7, 'reg_lambda': 10, 'min_child_weight': 50, 'max_depth': 8, 'learning_rate': 0.1}  (3s)
+  [electricity] xgboost trial 04 tune MAE 5.938  {'subsample': 0.7, 'reg_lambda': 10, 'min_child_weight': 50, 'max_depth': 4, 'learning_rate': 0.1}  (16s)
+  [electricity] xgboost trial 05 tune MAE 5.922  {'subsample': 0.85, 'reg_lambda': 1, 'min_child_weight': 50, 'max_depth': 4, 'learning_rate': 0.1}  (16s)
+  [electricity] xgboost trial 06 tune MAE 5.875  {'subsample': 0.85, 'reg_lambda': 10, 'min_child_weight': 50, 'max_depth': 6, 'learning_rate': 0.05}  (11s)
+  [electricity] xgboost trial 07 tune MAE 5.960  {'subsample': 1.0, 'reg_lambda': 1, 'min_child_weight': 200, 'max_depth': 4, 'learning_rate': 0.03}  (33s)
+  [electricity] xgboost trial 08 tune MAE 5.874  {'subsample': 0.85, 'reg_lambda': 100, 'min_child_weight': 200, 'max_depth': 6, 'learning_rate': 0.03}  (18s)
+  [electricity] xgboost trial 09 tune MAE 5.864  {'subsample': 1.0, 'reg_lambda': 10, 'min_child_weight': 1000, 'max_depth': 10, 'learning_rate': 0.05}  (9s)
+  [electricity] xgboost trial 10 tune MAE 5.878  {'subsample': 1.0, 'reg_lambda': 0, 'min_child_weight': 1000, 'max_depth': 6, 'learning_rate': 0.1}  (7s)
+  [electricity] xgboost trial 11 tune MAE 5.880  {'subsample': 0.7, 'reg_lambda': 1, 'min_child_weight': 50, 'max_depth': 6, 'learning_rate': 0.1}  (6s)
+[electricity] best xgboost: tune MAE 5.856 {'subsample': 0.85, 'reg_lambda': 100, 'min_child_weight': 10, 'max_depth': 10, 'learning_rate': 0.05}
+  [electricity] ebm trial 00 tune MAE 6.866  {'smoothing_rounds': 500, 'min_samples_leaf': 10, 'min_hessian': 1.0, 'max_leaves': 3, 'learning_rate': 0.05, 'interactions': 20}  (29s)
+  [electricity] ebm trial 01 tune MAE 7.634  {'smoothing_rounds': 200, 'min_samples_leaf': 10, 'min_hessian': 0.0001, 'max_leaves': 2, 'learning_rate': 0.02, 'interactions': 5}  (6s)
+  [electricity] ebm trial 02 tune MAE 6.867  {'smoothing_rounds': 500, 'min_samples_leaf': 50, 'min_hessian': 50.0, 'max_leaves': 3, 'learning_rate': 0.02, 'interactions': 20}  (42s)
+  [electricity] ebm trial 03 tune MAE 7.224  {'smoothing_rounds': 0, 'min_samples_leaf': 50, 'min_hessian': 50.0, 'max_leaves': 3, 'learning_rate': 0.02, 'interactions': 10}  (18s)
+  [electricity] ebm trial 04 tune MAE 8.808  {'smoothing_rounds': 0, 'min_samples_leaf': 2, 'min_hessian': 50.0, 'max_leaves': 2, 'learning_rate': 0.02, 'interactions': 0}  (3s)
+  [electricity] ebm trial 05 tune MAE 7.220  {'smoothing_rounds': 200, 'min_samples_leaf': 50, 'min_hessian': 1.0, 'max_leaves': 2, 'learning_rate': 0.05, 'interactions': 10}  (15s)
+  [electricity] ebm trial 06 tune MAE 7.634  {'smoothing_rounds': 200, 'min_samples_leaf': 2, 'min_hessian': 50.0, 'max_leaves': 2, 'learning_rate': 0.01, 'interactions': 5}  (9s)
+  [electricity] ebm trial 07 tune MAE 8.819  {'smoothing_rounds': 500, 'min_samples_leaf': 10, 'min_hessian': 50.0, 'max_leaves': 2, 'learning_rate': 0.05, 'interactions': 0}  (2s)
+  [electricity] ebm trial 08 tune MAE 7.628  {'smoothing_rounds': 0, 'min_samples_leaf': 50, 'min_hessian': 1.0, 'max_leaves': 2, 'learning_rate': 0.02, 'interactions': 5}  (5s)
+  [electricity] ebm trial 09 tune MAE 7.639  {'smoothing_rounds': 200, 'min_samples_leaf': 50, 'min_hessian': 0.0001, 'max_leaves': 2, 'learning_rate': 0.05, 'interactions': 5}  (3s)
+[electricity] best ebm: tune MAE 6.866 {'smoothing_rounds': 500, 'min_samples_leaf': 10, 'min_hessian': 1.0, 'max_leaves': 3, 'learning_rate': 0.05, 'interactions': 20}
+[electricity] ridge: alpha 0.01  (6s)
+/home/aryamavmurthy/work/Megathon-Greentwin/.worktrees/p3-energy-pred-model/.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:786: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 7.844362e+05, tolerance: 4.482e+03
+  model = cd_fast.sparse_enet_coordinate_descent(
+/home/aryamavmurthy/work/Megathon-Greentwin/.worktrees/p3-energy-pred-model/.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:786: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 7.844801e+05, tolerance: 4.482e+03
+  model = cd_fast.sparse_enet_coordinate_descent(
+/home/aryamavmurthy/work/Megathon-Greentwin/.worktrees/p3-energy-pred-model/.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:786: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 7.848529e+05, tolerance: 4.482e+03
+  model = cd_fast.sparse_enet_coordinate_descent(
+[electricity] lasso: alpha 1e-06  (135s)
+[electricity] poly2_ridge: alpha 100  (22s)
+[electricity] final fits done 1254s
+[gas] rows train 1,880,562 tune 313,488 cal 313,293 test 627,118; cells train 70,018 tune 36,955
+  [gas] lightgbm trial 00 tune MAE 12.260  {'num_leaves': 127, 'min_sum_hessian_in_leaf': 50, 'log_target': False, 'learning_rate': 0.05, 'lambda_l2': 1, 'feature_fraction': 0.7}  (18s)
+  [gas] lightgbm trial 01 tune MAE 12.341  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 50, 'log_target': False, 'learning_rate': 0.02, 'lambda_l2': 1, 'feature_fraction': 0.85}  (20s)
+  [gas] lightgbm trial 02 tune MAE 12.867  {'num_leaves': 127, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.05, 'lambda_l2': 0, 'feature_fraction': 0.85}  (15s)
+  [gas] lightgbm trial 03 tune MAE 12.908  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.05, 'lambda_l2': 0, 'feature_fraction': 0.7}  (16s)
+  [gas] lightgbm trial 04 tune MAE 12.872  {'num_leaves': 127, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.02, 'lambda_l2': 1, 'feature_fraction': 0.85}  (28s)
+  [gas] lightgbm trial 05 tune MAE 12.268  {'num_leaves': 255, 'min_sum_hessian_in_leaf': 10, 'log_target': False, 'learning_rate': 0.02, 'lambda_l2': 0, 'feature_fraction': 1.0}  (32s)
+  [gas] lightgbm trial 06 tune MAE 12.922  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 200, 'log_target': True, 'learning_rate': 0.05, 'lambda_l2': 100, 'feature_fraction': 1.0}  (12s)
+  [gas] lightgbm trial 07 tune MAE 12.908  {'num_leaves': 63, 'min_sum_hessian_in_leaf': 10, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 100, 'feature_fraction': 1.0}  (8s)
+  [gas] lightgbm trial 08 tune MAE 12.856  {'num_leaves': 255, 'min_sum_hessian_in_leaf': 1000, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 1, 'feature_fraction': 1.0}  (13s)
+  [gas] lightgbm trial 09 tune MAE 12.243  {'num_leaves': 255, 'min_sum_hessian_in_leaf': 10, 'log_target': False, 'learning_rate': 0.02, 'lambda_l2': 10, 'feature_fraction': 0.7}  (54s)
+  [gas] lightgbm trial 10 tune MAE 12.848  {'num_leaves': 255, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 0, 'feature_fraction': 0.85}  (12s)
+  [gas] lightgbm trial 11 tune MAE 12.926  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 1000, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 0, 'feature_fraction': 0.7}  (7s)
+  [gas] lightgbm trial 12 tune MAE 12.900  {'num_leaves': 127, 'min_sum_hessian_in_leaf': 10, 'log_target': True, 'learning_rate': 0.02, 'lambda_l2': 10, 'feature_fraction': 1.0}  (27s)
+  [gas] lightgbm trial 13 tune MAE 12.937  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 10, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 100, 'feature_fraction': 0.85}  (8s)
+  [gas] lightgbm trial 14 tune MAE 12.898  {'num_leaves': 31, 'min_sum_hessian_in_leaf': 10, 'log_target': True, 'learning_rate': 0.02, 'lambda_l2': 1, 'feature_fraction': 0.7}  (36s)
+  [gas] lightgbm trial 15 tune MAE 12.926  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 10, 'feature_fraction': 1.0}  (6s)
+  [gas] lightgbm trial 16 tune MAE 12.318  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 1000, 'log_target': False, 'learning_rate': 0.1, 'lambda_l2': 1, 'feature_fraction': 0.85}  (6s)
+  [gas] lightgbm trial 17 tune MAE 12.893  {'num_leaves': 31, 'min_sum_hessian_in_leaf': 1000, 'log_target': True, 'learning_rate': 0.02, 'lambda_l2': 10, 'feature_fraction': 0.85}  (33s)
+  [gas] lightgbm trial 18 tune MAE 12.882  {'num_leaves': 31, 'min_sum_hessian_in_leaf': 50, 'log_target': True, 'learning_rate': 0.05, 'lambda_l2': 10, 'feature_fraction': 0.7}  (17s)
+  [gas] lightgbm trial 19 tune MAE 12.915  {'num_leaves': 15, 'min_sum_hessian_in_leaf': 200, 'log_target': True, 'learning_rate': 0.1, 'lambda_l2': 10, 'feature_fraction': 0.7}  (9s)
+[gas] best lightgbm: tune MAE 12.243 {'num_leaves': 255, 'min_sum_hessian_in_leaf': 10, 'log_target': False, 'learning_rate': 0.02, 'lambda_l2': 10, 'feature_fraction': 0.7}
+  [gas] xgboost trial 00 tune MAE 12.357  {'subsample': 0.7, 'reg_lambda': 10, 'min_child_weight': 1000, 'max_depth': 4, 'learning_rate': 0.05}  (19s)
+  [gas] xgboost trial 01 tune MAE 12.254  {'subsample': 0.85, 'reg_lambda': 100, 'min_child_weight': 50, 'max_depth': 8, 'learning_rate': 0.03}  (7s)
+  [gas] xgboost trial 02 tune MAE 12.248  {'subsample': 0.85, 'reg_lambda': 100, 'min_child_weight': 10, 'max_depth': 10, 'learning_rate': 0.05}  (4s)
+  [gas] xgboost trial 03 tune MAE 12.279  {'subsample': 0.7, 'reg_lambda': 10, 'min_child_weight': 50, 'max_depth': 8, 'learning_rate': 0.1}  (2s)
+  [gas] xgboost trial 04 tune MAE 12.353  {'subsample': 0.7, 'reg_lambda': 10, 'min_child_weight': 50, 'max_depth': 4, 'learning_rate': 0.1}  (12s)
+  [gas] xgboost trial 05 tune MAE 12.350  {'subsample': 0.85, 'reg_lambda': 1, 'min_child_weight': 50, 'max_depth': 4, 'learning_rate': 0.1}  (9s)
+  [gas] xgboost trial 06 tune MAE 12.288  {'subsample': 0.85, 'reg_lambda': 10, 'min_child_weight': 50, 'max_depth': 6, 'learning_rate': 0.05}  (8s)
+  [gas] xgboost trial 07 tune MAE 12.353  {'subsample': 1.0, 'reg_lambda': 1, 'min_child_weight': 200, 'max_depth': 4, 'learning_rate': 0.03}  (28s)
+  [gas] xgboost trial 08 tune MAE 12.289  {'subsample': 0.85, 'reg_lambda': 100, 'min_child_weight': 200, 'max_depth': 6, 'learning_rate': 0.03}  (8s)
+  [gas] xgboost trial 09 tune MAE 12.240  {'subsample': 1.0, 'reg_lambda': 10, 'min_child_weight': 1000, 'max_depth': 10, 'learning_rate': 0.05}  (23s)
+  [gas] xgboost trial 10 tune MAE 12.270  {'subsample': 1.0, 'reg_lambda': 0, 'min_child_weight': 1000, 'max_depth': 6, 'learning_rate': 0.1}  (13s)
+  [gas] xgboost trial 11 tune MAE 12.292  {'subsample': 0.7, 'reg_lambda': 1, 'min_child_weight': 50, 'max_depth': 6, 'learning_rate': 0.1}  (4s)
+[gas] best xgboost: tune MAE 12.240 {'subsample': 1.0, 'reg_lambda': 10, 'min_child_weight': 1000, 'max_depth': 10, 'learning_rate': 0.05}
+  [gas] ebm trial 00 tune MAE 13.263  {'smoothing_rounds': 500, 'min_samples_leaf': 10, 'min_hessian': 1.0, 'max_leaves': 3, 'learning_rate': 0.05, 'interactions': 20}  (29s)
+  [gas] ebm trial 01 tune MAE 13.602  {'smoothing_rounds': 200, 'min_samples_leaf': 10, 'min_hessian': 0.0001, 'max_leaves': 2, 'learning_rate': 0.02, 'interactions': 5}  (13s)
+  [gas] ebm trial 02 tune MAE 13.270  {'smoothing_rounds': 500, 'min_samples_leaf': 50, 'min_hessian': 50.0, 'max_leaves': 3, 'learning_rate': 0.02, 'interactions': 20}  (35s)
+  [gas] ebm trial 03 tune MAE 13.346  {'smoothing_rounds': 0, 'min_samples_leaf': 50, 'min_hessian': 50.0, 'max_leaves': 3, 'learning_rate': 0.02, 'interactions': 10}  (17s)
+  [gas] ebm trial 04 tune MAE 14.765  {'smoothing_rounds': 0, 'min_samples_leaf': 2, 'min_hessian': 50.0, 'max_leaves': 2, 'learning_rate': 0.02, 'interactions': 0}  (2s)
+  [gas] ebm trial 05 tune MAE 13.348  {'smoothing_rounds': 200, 'min_samples_leaf': 50, 'min_hessian': 1.0, 'max_leaves': 2, 'learning_rate': 0.05, 'interactions': 10}  (13s)
+  [gas] ebm trial 06 tune MAE 13.640  {'smoothing_rounds': 200, 'min_samples_leaf': 2, 'min_hessian': 50.0, 'max_leaves': 2, 'learning_rate': 0.01, 'interactions': 5}  (12s)
+  [gas] ebm trial 07 tune MAE 14.776  {'smoothing_rounds': 500, 'min_samples_leaf': 10, 'min_hessian': 50.0, 'max_leaves': 2, 'learning_rate': 0.05, 'interactions': 0}  (2s)
+  [gas] ebm trial 08 tune MAE 13.600  {'smoothing_rounds': 0, 'min_samples_leaf': 50, 'min_hessian': 1.0, 'max_leaves': 2, 'learning_rate': 0.02, 'interactions': 5}  (10s)
+  [gas] ebm trial 09 tune MAE 13.593  {'smoothing_rounds': 200, 'min_samples_leaf': 50, 'min_hessian': 0.0001, 'max_leaves': 2, 'learning_rate': 0.05, 'interactions': 5}  (8s)
+[gas] best ebm: tune MAE 13.263 {'smoothing_rounds': 500, 'min_samples_leaf': 10, 'min_hessian': 1.0, 'max_leaves': 3, 'learning_rate': 0.05, 'interactions': 20}
+[gas] ridge: alpha 0.001  (5s)
+/home/aryamavmurthy/work/Megathon-Greentwin/.worktrees/p3-energy-pred-model/.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:786: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.251659e+06, tolerance: 7.478e+03
+  model = cd_fast.sparse_enet_coordinate_descent(
+/home/aryamavmurthy/work/Megathon-Greentwin/.worktrees/p3-energy-pred-model/.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:786: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.251749e+06, tolerance: 7.478e+03
+  model = cd_fast.sparse_enet_coordinate_descent(
+/home/aryamavmurthy/work/Megathon-Greentwin/.worktrees/p3-energy-pred-model/.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:786: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.252577e+06, tolerance: 7.478e+03
+  model = cd_fast.sparse_enet_coordinate_descent(
+[gas] lasso: alpha 1e-06  (87s)
+[gas] poly2_ridge: alpha 100  (13s)
+[gas] final fits done 898s
+SH1: elec 31.0 gas 127.3 kWh/m2/yr
+SH2: elec 37.8 gas 125.3 kWh/m2/yr
+SH3: elec 49.3 gas 0.0 kWh/m2/yr
+saved -> /home/aryamavmurthy/work/Megathon-Greentwin/.worktrees/p3-energy-pred-model/artifacts/m04_energy_prior/v2

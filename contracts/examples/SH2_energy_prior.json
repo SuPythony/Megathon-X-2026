@@ -1,0 +1,793 @@
+{
+  "property_id": "SH2",
+  "electricity_kwh_m2": {
+    "unit": "kWh/m2/yr",
+    "n_samples": 1000,
+    "mean": 37.9652229361218,
+    "median": 33.21065821273133,
+    "mode": 27.62140144894187,
+    "std": 21.446307351216273,
+    "skewness": 2.0873276317766787,
+    "percentiles": {
+      "p1": 9.916676627325803,
+      "p5": 14.45617433808771,
+      "p10": 17.456622862024773,
+      "p25": 23.743466568029515,
+      "p50": 33.21065821273133,
+      "p75": 46.14442246896582,
+      "p90": 63.30487993747479,
+      "p95": 77.48010041124755,
+      "p99": 115.79396842918118
+    },
+    "credible_intervals": [
+      {
+        "level": 0.5,
+        "lo": 23.743466568029515,
+        "hi": 46.14442246896582
+      },
+      {
+        "level": 0.9,
+        "lo": 14.45617433808771,
+        "hi": 77.48010041124755
+      }
+    ],
+    "tail_probabilities": [
+      {
+        "label": "above the NEED median for semi detached homes of this age",
+        "threshold": 31.346578366445915,
+        "direction": "above",
+        "probability": 0.546
+      }
+    ],
+    "worst_tail": "high",
+    "worst_5pct_mean": 102.02327267193188,
+    "histogram": {
+      "bin_edges": [
+        5.968245855803944,
+        12.438867205566215,
+        18.909488555328483,
+        25.380109905090755,
+        31.850731254853024,
+        38.32135260461529,
+        44.79197395437757,
+        51.262595304139836,
+        57.733216653902105,
+        64.20383800366437,
+        70.67445935342664,
+        77.14508070318891,
+        83.61570205295119,
+        90.08632340271346,
+        96.55694475247573,
+        103.027566102238,
+        109.49818745200027,
+        115.96880880176253,
+        122.4394301515248,
+        128.91005150128709,
+        135.38067285104935,
+        141.85129420081162,
+        148.3219155505739,
+        154.79253690033616,
+        161.26315825009846,
+        167.73377959986072,
+        174.204400949623,
+        180.67502229938526,
+        187.14564364914753,
+        193.6162649989098,
+        200.08688634867207
+      ],
+      "counts": [
+        27,
+        103,
+        164,
+        172,
+        149,
+        114,
+        82,
+        55,
+        38,
+        26,
+        19,
+        12,
+        10,
+        7,
+        5,
+        4,
+        3,
+        2,
+        2,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "headline": "median"
+  },
+  "gas_kwh_m2": {
+    "unit": "kWh/m2/yr",
+    "n_samples": 1000,
+    "mean": 116.8164628355244,
+    "median": 111.08717157802332,
+    "mode": 103.52516072325119,
+    "std": 49.25059411481037,
+    "skewness": 0.967796861552642,
+    "percentiles": {
+      "p1": 23.956187777465928,
+      "p5": 47.63789292981186,
+      "p10": 61.10551790226285,
+      "p25": 83.5620416705319,
+      "p50": 111.08717157802332,
+      "p75": 143.07642349301062,
+      "p90": 178.57080771847066,
+      "p95": 204.6005460737806,
+      "p99": 264.94207226361044
+    },
+    "credible_intervals": [
+      {
+        "level": 0.5,
+        "lo": 83.5620416705319,
+        "hi": 143.07642349301062
+      },
+      {
+        "level": 0.9,
+        "lo": 47.63789292981186,
+        "hi": 204.6005460737806
+      }
+    ],
+    "tail_probabilities": [
+      {
+        "label": "above the NEED median for semi detached homes of this age",
+        "threshold": 127.81456953642385,
+        "direction": "above",
+        "probability": 0.356
+      }
+    ],
+    "worst_tail": "high",
+    "worst_5pct_mean": 244.031242110379,
+    "histogram": {
+      "bin_edges": [
+        9.686344904677044,
+        22.896161676933623,
+        36.105978449190204,
+        49.315795221446784,
+        62.525611993703365,
+        75.73542876595994,
+        88.94524553821653,
+        102.15506231047311,
+        115.36487908272969,
+        128.57469585498626,
+        141.78451262724283,
+        154.99432939949943,
+        168.204146171756,
+        181.41396294401258,
+        194.62377971626918,
+        207.83359648852576,
+        221.04341326078233,
+        234.2532300330389,
+        247.46304680529548,
+        260.6728635775521,
+        273.88268034980865,
+        287.09249712206525,
+        300.30231389432186,
+        313.5121306665784,
+        326.721947438835,
+        339.9317642110916,
+        353.14158098334815,
+        366.35139775560475,
+        379.56121452786135,
+        392.7710313001179,
+        405.9808480723745
+      ],
+      "counts": [
+        10,
+        16,
+        29,
+        53,
+        80,
+        107,
+        121,
+        123,
+        111,
+        92,
+        72,
+        54,
+        39,
+        28,
+        19,
+        14,
+        9,
+        7,
+        4,
+        3,
+        3,
+        1,
+        2,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "headline": "median"
+  },
+  "contributions_electricity": [
+    {
+      "feature": "average home (intercept)",
+      "value": null,
+      "contribution": 41.45,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "main heating fuel",
+      "value": "gas",
+      "contribution": -4.89,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band",
+      "value": "D",
+      "contribution": 3.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x region",
+      "value": "Semi detached, South West",
+      "contribution": 1.89,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type",
+      "value": "Semi detached",
+      "contribution": 1.56,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x main heating fuel",
+      "value": "D, gas",
+      "contribution": -1.3,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x EPC band",
+      "value": "51-100 m2, D",
+      "contribution": -0.82,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x EPC band",
+      "value": "1930-1972, D",
+      "contribution": -0.78,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x EPC band",
+      "value": "South West, D",
+      "contribution": -0.78,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x region",
+      "value": "1930-1972, South West",
+      "contribution": 0.73,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band",
+      "value": "51-100 m2",
+      "contribution": 0.7,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x floor-area band",
+      "value": "Semi detached, 51-100 m2",
+      "contribution": 0.64,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x floor-area band",
+      "value": "1930-1972, 51-100 m2",
+      "contribution": 0.61,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region",
+      "value": "South West",
+      "contribution": -0.53,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "higher-order interactions (tree correction)",
+      "value": null,
+      "contribution": 0.41,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x region",
+      "value": "51-100 m2, South West",
+      "contribution": 0.4,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x age band",
+      "value": "Semi detached, 1930-1972",
+      "contribution": 0.38,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x EPC band",
+      "value": "Semi detached, D",
+      "contribution": -0.33,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x main heating fuel",
+      "value": "1930-1972, gas",
+      "contribution": 0.26,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed",
+      "value": "no",
+      "contribution": 0.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x conservatory",
+      "value": "D, unknown",
+      "contribution": -0.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x main heating fuel",
+      "value": "Semi detached, gas",
+      "contribution": 0.22,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x deprivation quintile (IMD)",
+      "value": "D, unknown",
+      "contribution": 0.2,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x main heating fuel",
+      "value": "unknown, gas",
+      "contribution": -0.2,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band",
+      "value": "1930-1972",
+      "contribution": 0.19,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x conservatory",
+      "value": "Semi detached, unknown",
+      "contribution": 0.18,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x cavity wall insulation installed",
+      "value": "D, no",
+      "contribution": -0.18,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x conservatory",
+      "value": "51-100 m2, unknown",
+      "contribution": 0.16,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x conservatory",
+      "value": "South West, unknown",
+      "contribution": 0.16,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band x loft insulation installed",
+      "value": "D, no",
+      "contribution": -0.16,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x main heating fuel",
+      "value": "51-100 m2, gas",
+      "contribution": -0.15,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "cavity wall insulation installed",
+      "value": "no",
+      "contribution": 0.14,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x deprivation quintile (IMD)",
+      "value": "Semi detached, unknown",
+      "contribution": -0.14,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x main heating fuel",
+      "value": "South West, gas",
+      "contribution": -0.1,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x cavity wall insulation installed",
+      "value": "Semi detached, no",
+      "contribution": 0.08,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x loft insulation installed",
+      "value": "1930-1972, no",
+      "contribution": 0.08,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x deprivation quintile (IMD)",
+      "value": "South West, unknown",
+      "contribution": -0.08,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x main heating fuel",
+      "value": "unknown, gas",
+      "contribution": 0.07,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x deprivation quintile (IMD)",
+      "value": "1930-1972, unknown",
+      "contribution": 0.06,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x cavity wall insulation installed",
+      "value": "1930-1972, no",
+      "contribution": 0.06,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x loft insulation installed",
+      "value": "51-100 m2, no",
+      "contribution": 0.05,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "solar PV",
+      "value": "no",
+      "contribution": 0.04,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD)",
+      "value": "unknown",
+      "contribution": 0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x loft insulation installed",
+      "value": "Semi detached, no",
+      "contribution": 0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x conservatory",
+      "value": "1930-1972, unknown",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x cavity wall insulation installed",
+      "value": "51-100 m2, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x loft insulation installed",
+      "value": "South West, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x conservatory",
+      "value": "unknown, unknown",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x cavity wall insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory",
+      "value": "unknown",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x deprivation quintile (IMD)",
+      "value": "51-100 m2, unknown",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x loft insulation installed",
+      "value": "unknown, no",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed x cavity wall insulation installed",
+      "value": "no, no",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed x main heating fuel",
+      "value": "no, gas",
+      "contribution": 0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "cavity wall insulation installed x main heating fuel",
+      "value": "no, gas",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x cavity wall insulation installed",
+      "value": "South West, no",
+      "contribution": 0.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x loft insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x cavity wall insulation installed",
+      "value": "unknown, no",
+      "contribution": 0.0,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor area within band",
+      "value": "95 m2",
+      "contribution": -5.52,
+      "unit": "kWh/m2/yr"
+    }
+  ],
+  "contributions_gas": [
+    {
+      "feature": "average home (intercept)",
+      "value": null,
+      "contribution": 128.68,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region",
+      "value": "South West",
+      "contribution": -18.32,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band",
+      "value": "51-100 m2",
+      "contribution": 7.99,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band",
+      "value": "1930-1972",
+      "contribution": 5.23,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type",
+      "value": "Semi detached",
+      "contribution": 4.34,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x region",
+      "value": "1930-1972, South West",
+      "contribution": -2.4,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x age band",
+      "value": "Semi detached, 1930-1972",
+      "contribution": 2.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "EPC band",
+      "value": "D",
+      "contribution": 1.94,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x floor-area band",
+      "value": "1930-1972, 51-100 m2",
+      "contribution": 1.84,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "higher-order interactions (tree correction)",
+      "value": null,
+      "contribution": -1.67,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x region",
+      "value": "Semi detached, South West",
+      "contribution": -1.47,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x floor-area band",
+      "value": "Semi detached, 51-100 m2",
+      "contribution": 1.44,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "cavity wall insulation installed",
+      "value": "no",
+      "contribution": 0.98,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x region",
+      "value": "51-100 m2, South West",
+      "contribution": -0.91,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x conservatory",
+      "value": "South West, unknown",
+      "contribution": -0.41,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "loft insulation installed",
+      "value": "no",
+      "contribution": 0.37,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x deprivation quintile (IMD)",
+      "value": "South West, unknown",
+      "contribution": 0.31,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x deprivation quintile (IMD)",
+      "value": "Semi detached, unknown",
+      "contribution": 0.29,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory",
+      "value": "unknown",
+      "contribution": 0.25,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x conservatory",
+      "value": "1930-1972, unknown",
+      "contribution": -0.17,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x deprivation quintile (IMD)",
+      "value": "1930-1972, unknown",
+      "contribution": -0.14,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x conservatory",
+      "value": "Semi detached, unknown",
+      "contribution": 0.11,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x deprivation quintile (IMD)",
+      "value": "51-100 m2, unknown",
+      "contribution": -0.09,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "property type x solar PV",
+      "value": "Semi detached, no",
+      "contribution": 0.08,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD)",
+      "value": "unknown",
+      "contribution": -0.06,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x conservatory",
+      "value": "51-100 m2, unknown",
+      "contribution": 0.06,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "solar PV",
+      "value": "no",
+      "contribution": 0.03,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "age band x solar PV",
+      "value": "1930-1972, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor-area band x solar PV",
+      "value": "51-100 m2, no",
+      "contribution": -0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "conservatory x solar PV",
+      "value": "unknown, no",
+      "contribution": 0.02,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "region x solar PV",
+      "value": "South West, no",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x conservatory",
+      "value": "unknown, unknown",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "deprivation quintile (IMD) x solar PV",
+      "value": "unknown, no",
+      "contribution": -0.01,
+      "unit": "kWh/m2/yr"
+    },
+    {
+      "feature": "floor area within band",
+      "value": "95 m2",
+      "contribution": -13.2,
+      "unit": "kWh/m2/yr"
+    }
+  ],
+  "out_of_distribution": false,
+  "provenance": {
+    "engine": "ebm",
+    "model_version": "m04_energy_prior-v2",
+    "data_version": "need_anon_2025",
+    "seed": 42,
+    "n_samples": 1000
+  }
+}

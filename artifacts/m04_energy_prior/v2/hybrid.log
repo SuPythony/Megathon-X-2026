@@ -1,0 +1,4 @@
+[electricity] R2 EBM 0.2848  hybrid 0.3015  LightGBM 0.3017 | MAE 19.004 / 18.672 / 18.667 | cover 0.898 | PIT KS 0.0021 | mono [0] | |corr| 2.87 | add err 0.090 | single/batch 0.00e+00
+[gas] R2 EBM 0.1825  hybrid 0.1895  LightGBM 0.1909 | MAE 44.982 / 44.809 / 44.755 | cover 0.899 | PIT KS 0.0017 | mono [0, 0, 0] | |corr| 3.68 | add err 0.058 | single/batch 0.00e+00
+gates: {"electricity": {"beats_ebm_mae_ci": true, "zero_monotone_violations": true, "coverage_88_92": true, "pit_ks_below_0.01": true, "additive_waterfall": true, "single_equals_batch": true}, "gas": {"beats_ebm_mae_ci": true, "zero_monotone_violations": true, "coverage_88_92": true, "pit_ks_below_0.01": true, "additive_waterfall": true, "single_equals_batch": true}} -> PASSED
+served model is now the hybrid (EBM-only kept as model_ebm_only.pkl)
