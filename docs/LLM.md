@@ -47,3 +47,13 @@ step is always shown. Every move states its reason.
   behind the same `search_docs` tool.
 - Customers are synthetic; personal details (emails, phone numbers, full postcodes, street addresses) are refused
   before storage.
+
+## Security notes
+- **Tools cannot cross customers.** The model never chooses a customer: memory tools and ranking take the customer
+  from the server-side session, and any `customer_id` in model arguments is dropped (prompt-injection safe).
+- **API access.** Unknown customer or home ids are rejected; memory items can only be changed through their own
+  customer's route. The app binds to localhost; set `GREENTWIN_API_TOKEN` to require an `X-API-Key` header on every
+  `/api` call (open the page once as `/?token=...`). There is no user login: this is a demo with synthetic customers.
+- **No HTML injection.** The page escapes every stored field and passes data only through `data-*` attributes with
+  one delegated click handler (no string-built inline handlers). Memory keys must match `^[a-z_]{1,40}$`; values are
+  capped at 200 characters; personal details are refused.

@@ -8,8 +8,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+import hmac
+import os
+
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from contracts.models import ChatRequest, ChatTurn, EnergyUsageMonth
@@ -23,6 +26,32 @@ from greentwin.memory import service as mem
 STATIC = Path(__file__).parent / "static"
 app = FastAPI(title="GreenTwin assistant")
 app.include_router(m04_router)
+API_TOKEN = os.environ.get("GREENTWIN_API_TOKEN")  # optional; demo runs on localhost without it
+
+
+@app.middleware("http")
+async def require_token(request: Request, call_next):
+    """If GREENTWIN_API_TOKEN is set, every /api call must send it as X-API-Key."""
+    if API_TOKEN and request.url.path.startswith("/api/"):
+        if not hmac.compare_digest(request.headers.get("x-api-key", ""), API_TOKEN):
+            return JSONResponse({"detail": "missing or wrong X-API-Key"}, status_code=401)
+    return await call_next(request)
+
+
+def _customer(cid: Optional[str]) -> Optional[str]:
+    """Only known (synthetic) customers; unknown ids are rejected rather than silently created."""
+    if not cid:
+        return None
+    if not q("SELECT 1 FROM customers WHERE customer_id = ?", [cid]):
+        raise HTTPException(404, "unknown customer")
+    return cid
+
+
+def _home(pid: str):
+    try:
+        return _prop(pid)
+    except KeyError as e:
+        raise HTTPException(404, "unknown property") from e
 
 
 @app.get("/")
@@ -46,10 +75,7 @@ def homes():
 def home(pid: str):
     from greentwin.models.energy_prior import load_default
     from greentwin.models.prior_update import update_with_meters
-    try:
-        p = _prop(pid)
-    except KeyError as e:
-        raise HTTPException(404, str(e)) from e
+    p = _home(pid)
     usage_rows = q("SELECT * FROM usage_monthly WHERE property_id = ? ORDER BY month", [pid])
     usage = [EnergyUsageMonth(**{k: v for k, v in r.items()}) for r in usage_rows]
     model = load_default()
@@ -62,12 +88,12 @@ def home(pid: str):
 
 @app.get("/api/recommendations")
 def recommendations(property_id: str, customer_id: Optional[str] = None):
-    return mem.rank(_prop(property_id), customer_id or None)
+    return mem.rank(_home(property_id), _customer(customer_id))
 
 
 @app.get("/api/memory/{cid}")
 def get_memory(cid: str):
-    m = mem.memory(cid)
+    m = mem.memory(_customer(cid))
     for k in ("confirmed", "proposed", "events"):
         for it in m[k]:
             for f in ("created_at", "updated_at"):
@@ -85,15 +111,17 @@ class ItemIn(BaseModel):
 
 @app.post("/api/memory/{cid}/items")
 def add_item(cid: str, body: ItemIn):
-    return mem.add_item(cid, body.kind, body.key, body.value, source="user", evidence=body.evidence)
+    return mem.add_item(_customer(cid), body.kind, body.key, body.value, source="user", evidence=body.evidence)
 
 
 class StatusIn(BaseModel):
     status: str
 
 
-@app.post("/api/memory/items/{item_id}/status")
-def set_status(item_id: str, body: StatusIn):
+@app.post("/api/memory/{cid}/items/{item_id}/status")
+def set_status(cid: str, item_id: str, body: StatusIn):
+    if not q("SELECT 1 FROM memory_items WHERE item_id = ? AND customer_id = ?", [item_id, _customer(cid)]):
+        raise HTTPException(404, "unknown memory item for this customer")
     return mem.set_status(item_id, body.status)
 
 
@@ -101,6 +129,7 @@ def set_status(item_id: str, body: StatusIn):
 def reset_memory(cid: str):
     """Demo helper: retract every item (kept for audit) and clear this customer's actions."""
     from greentwin.kb.store import execute
+    cid = _customer(cid)
     execute("UPDATE memory_items SET status = 'retracted' WHERE customer_id = ? AND status <> 'retracted'", [cid])
     execute("DELETE FROM memory_events WHERE customer_id = ?", [cid])
     return {"ok": True}
@@ -115,7 +144,8 @@ class EventIn(BaseModel):
 
 @app.post("/api/memory/{cid}/events")
 def add_event(cid: str, body: EventIn):
-    return mem.add_event(cid, body.property_id, body.retrofit_id, body.type, body.reason)
+    _home(body.property_id)
+    return mem.add_event(_customer(cid), body.property_id, body.retrofit_id, body.type, body.reason)
 
 
 class ChatIn(BaseModel):
@@ -128,8 +158,9 @@ class ChatIn(BaseModel):
 
 @app.post("/api/chat")
 def chat_endpoint(body: ChatIn):
-    req = ChatRequest(property_id=body.property_id, customer_id=body.customer_id or None, message=body.message,
-                      history=body.history)
+    _home(body.property_id)
+    req = ChatRequest(property_id=body.property_id, customer_id=_customer(body.customer_id), message=body.message[:4000],
+                      history=body.history[-8:])
     return chat(req, body.session_id)
 
 

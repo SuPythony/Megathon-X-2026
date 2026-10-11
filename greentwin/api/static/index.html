@@ -173,9 +173,12 @@ dialog::backdrop { background: rgb(0 0 0 / .35); }
 <script>
 const S = { homes: [], customers: [], pid: "SH2", cid: "C-001", history: [], session: null, home: null };
 const $ = id => document.getElementById(id);
-const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const f1 = x => x == null ? "–" : Number(x).toLocaleString(undefined, { maximumFractionDigits: 1 });
-const api = (p, o) => fetch(p, o).then(r => r.json());
+// Optional API token: open the page once as /?token=... and it is kept for this tab.
+const TOKEN = new URLSearchParams(location.search).get("token") || sessionStorage.getItem("gt-token") || "";
+try { if (TOKEN) sessionStorage.setItem("gt-token", TOKEN); } catch (e) {}
+const api = (p, o = {}) => fetch(p, { ...o, headers: { ...(o.headers || {}), ...(TOKEN ? { "x-api-key": TOKEN } : {}) } }).then(r => r.json());
 const post = (p, b) => api(p, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
 
 function md(t) {  // tiny, safe markdown: paragraphs, bullets, bold, italic, code
@@ -298,9 +301,9 @@ async function refreshRecs() {
         ${x.move_reason ? `<span class="moved ${x.moved > 0 ? "up" : "down"}">${esc(x.move_reason)}</span>` : ""}
         <span class="note">Chance you'd go ahead: ${Math.round(x.memory.p_accept * 100)}% (90% range ${Math.round(x.memory.interval_90[0] * 100)}–${Math.round(x.memory.interval_90[1] * 100)}%)</span>
       </div>
-      ${S.cid ? `<div class="acts"><button class="small" onclick="act('${x.retrofit_id}','saved')">Save</button>
-        <button class="small" onclick="act('${x.retrofit_id}','rejected')">Not for me</button>
-        <button class="small" onclick="ask('Tell me about ${esc(x.name).replace(/'/g, "")} for my home: is it possible and is there any grant?')">Ask</button></div>` : ""}
+      ${S.cid ? `<div class="acts"><button class="small" data-act="saved" data-rid="${esc(x.retrofit_id)}">Save</button>
+        <button class="small" data-act="rejected" data-rid="${esc(x.retrofit_id)}">Not for me</button>
+        <button class="small" data-ask="Tell me about ${esc(x.name)} for my home: is it possible and is there any grant?">Ask</button></div>` : ""}
     </div>`).join("");
   $("notfeasible").innerHTML = r.not_feasible.map(x => `<div><b>${esc(x.name)}</b>: ${esc(x.reasons.join("; "))}</div>`).join("") || "Everything in the catalogue is possible here.";
 }
@@ -318,15 +321,15 @@ async function refreshMemory() {
   const cid = S.cid;
   const m = await api(`/api/memory/${cid}`);
   if (S.cid !== cid) return;
-  const label = it => `${it.kind === "constraint" || it.kind === "goal" ? "" : it.kind + ": "}${it.key.replace(/_/g, " ")} = ${esc(it.value).replace(/_/g, " ")}`;
+  const label = it => `${it.kind === "constraint" || it.kind === "goal" ? "" : esc(it.kind) + ": "}${esc(it.key).replace(/_/g, " ")} = ${esc(it.value).replace(/_/g, " ")}`;
   $("mem-count").textContent = m.confirmed.length;
-  $("mem-confirmed").innerHTML = m.confirmed.map(it => `<span class="chip" title="${esc(it.source)} · ${esc(it.created_at)}">${label(it)}<button title="Forget" onclick="setStatus('${it.item_id}','retracted')">×</button></span>`).join("") || `<span class="note">Nothing yet. Tell the assistant about yourself, or use quick add.</span>`;
+  $("mem-confirmed").innerHTML = m.confirmed.map(it => `<span class="chip" title="${esc(it.source)} · ${esc(it.created_at)}">${label(it)}<button title="Forget" data-status="retracted" data-item="${esc(it.item_id)}">×</button></span>`).join("") || `<span class="note">Nothing yet. Tell the assistant about yourself, or use quick add.</span>`;
   $("mem-proposed-wrap").hidden = !m.proposed.length;
-  $("mem-proposed").innerHTML = m.proposed.map(it => `<span class="chip proposed" title="${esc(it.evidence)}">${label(it)}<button title="Confirm" onclick="setStatus('${it.item_id}','confirmed')">✓</button><button title="Discard" onclick="setStatus('${it.item_id}','retracted')">×</button></span>`).join("");
+  $("mem-proposed").innerHTML = m.proposed.map(it => `<span class="chip proposed" title="${esc(it.evidence)}">${label(it)}<button title="Confirm" data-status="confirmed" data-item="${esc(it.item_id)}">✓</button><button title="Discard" data-status="retracted" data-item="${esc(it.item_id)}">×</button></span>`).join("");
   $("mem-events").innerHTML = m.events.map(e => `<div>${esc(e.created_at)} · ${esc(e.type)} <b>${esc(e.retrofit_id.replace(/_/g, " "))}</b>${e.reason ? ` (${esc(e.reason)})` : ""}</div>`).join("") || `<span class="note">No actions yet.</span>`;
 }
 
-async function setStatus(id, status) { await post(`/api/memory/items/${id}/status`, { status }); refreshMemory(); refreshRecs(); }
+async function setStatus(id, status) { await post(`/api/memory/${encodeURIComponent(S.cid)}/items/${encodeURIComponent(id)}/status`, { status }); refreshMemory(); refreshRecs(); }
 
 $("qa-add").onclick = async () => {
   if (!S.cid || !$("qa").value) return;
@@ -345,7 +348,7 @@ function renderEmpty() {
     <div class="suggest">${["How much energy does my home use, and how sure are you?", "What should I do first?",
       "Can I get a grant for a heat pump?", "Why can't I have external wall insulation?",
       "What if I add loft insulation and a heat pump — how much would I save?",
-      "I rent, and I want minimal disruption. What would you suggest?"].map(q => `<button onclick="ask(this.textContent)">${q}</button>`).join("")}</div></div>`;
+      "I rent, and I want minimal disruption. What would you suggest?"].map(q => `<button data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>`;
 }
 
 function addMsg(role, html) {
@@ -370,9 +373,9 @@ async function ask(text) {
       : `<span class="badge ok">✓ ${nums ? `${nums} number${nums === 1 ? "" : "s"} checked` : "no figures to check"}</span>`;
     wait.innerHTML = `<div class="bubble">${md(x.answer)}</div>
       <div class="meta">${badge}${x.fallback === "regenerated" ? `<span class="badge warn">corrected once</span>` : ""}
-        ${r.tool_outputs.map((t, i) => `<span class="tool" onclick="showTool('${id}',${i})">${t.name}</span>`).join("")}
-        ${x.citations.filter(c => c.source !== "tool_result").map(c => `<button class="cite" onclick="showDoc('${esc(c.ref)}')">${esc(c.snippet || c.ref)}</button>`).join("")}
-        <span>${(r.latency_ms / 1000).toFixed(1)} s${x.model ? " · " + x.model : ""}</span></div>`;
+        ${r.tool_outputs.map((t, i) => `<button class="tool" data-tool="${esc(id)}" data-idx="${i}">${esc(t.name)}</button>`).join("")}
+        ${x.citations.filter(c => c.source !== "tool_result").map(c => `<button class="cite" data-doc="${esc(c.ref)}">${esc(c.snippet || c.ref)}</button>`).join("")}
+        <span>${(r.latency_ms / 1000).toFixed(1)} s${x.model ? " · " + esc(x.model) : ""}</span></div>`;
     if (r.tool_outputs.some(t => ["propose_memory", "rank_recommendations"].includes(t.name))) { refreshMemory(); refreshRecs(); }
   } catch (e) { wait.innerHTML = `<div class="bubble">Something went wrong: ${esc(e)}</div>`; }
   $("send").disabled = false; $("thread").scrollTop = $("thread").scrollHeight;
@@ -392,6 +395,15 @@ async function showDoc(ref) {
   dlg.showModal();
 }
 
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const d = b.dataset;
+  if (d.ask) ask(d.ask);
+  else if (d.act) act(d.rid, d.act);
+  else if (d.status) setStatus(d.item, d.status);
+  else if (d.tool) showTool(d.tool, Number(d.idx));
+  else if (d.doc) showDoc(d.doc);
+});
 $("composer").onsubmit = e => { e.preventDefault(); ask(); };
 $("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } });
 boot();

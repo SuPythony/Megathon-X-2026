@@ -36,7 +36,7 @@ TOOLS = [
     {"type": "function", "name": "rank_recommendations", "strict": True,
      "description": "Feasible retrofits for the home in recommended order, personalised by the customer's memory "
                     "(with the reason for every move), plus options that are not feasible and why.",
-     "parameters": _obj({"property_id": S, "customer_id": NS})},
+     "parameters": _obj({"property_id": S})},
     {"type": "function", "name": "search_docs", "strict": True,
      "description": "Search the knowledge base (retrofit guides, feasibility rules, grants, methods, wording rules, "
                     "datasets). Returns cited passages. kind filters: retrofit, rule, grant, method, faq, dataset.",
@@ -48,17 +48,16 @@ TOOLS = [
                                                                  "grants", "excludes"]},
                          "property_id": NS, "retrofit_id": {"type": ["string", "null"], "enum": list(ITEMS) + [None]}})},
     {"type": "function", "name": "get_customer_memory", "strict": True,
-     "description": "What we remember about the customer: confirmed constraints, goals, preferences, facts, "
-                    "unconfirmed proposals and recent actions.",
-     "parameters": _obj({"customer_id": S})},
+     "description": "What we remember about the current customer (the signed-in session's customer only): "
+                    "confirmed constraints, goals, preferences, facts, unconfirmed proposals and recent actions.",
+     "parameters": _obj({"topic": NS})},
     {"type": "function", "name": "propose_memory", "strict": True,
      "description": "Propose remembering something the customer said (stored as unconfirmed until they confirm). "
                     "kind: constraint (keys: tenure=renting|owner, outdoor_space=none|yes, roof=not_available|"
                     "available, budget_gbp=<number they stated>), goal (key goal: bills|carbon|comfort), preference "
                     "(keys: low_disruption=yes, avoid=<retrofit_id or category>, interested_in=<retrofit_id or "
                     "category>), fact, note. evidence must quote the customer's own words.",
-     "parameters": _obj({"customer_id": S, "kind": {"type": "string", "enum": list(mem.KINDS)}, "key": S,
-                         "value": S, "evidence": S})},
+     "parameters": _obj({"kind": {"type": "string", "enum": list(mem.KINDS)}, "key": S, "value": S, "evidence": S})},
 ]
 
 
@@ -188,7 +187,9 @@ def query_graph(template: str, property_id: str | None, retrofit_id: str | None)
     return {"template": template, "rows": [{"retrofit_id": r["id"], "name": ITEMS.get(r["id"], {}).get("name")} for r in rows]}
 
 
-def get_customer_memory(customer_id: str) -> dict:
+def get_customer_memory(customer_id: str | None, topic: str | None = None) -> dict:
+    if not customer_id:
+        return {"note": "Anonymous session: nothing is remembered."}
     m = mem.memory(customer_id)
     short = lambda it: {"kind": it["kind"], "key": it["key"], "value": it["value"], "source": it["source"]}  # noqa: E731
     return {"customer_id": customer_id, "label": m["label"], "confirmed": [short(i) for i in m["confirmed"]],
@@ -197,7 +198,9 @@ def get_customer_memory(customer_id: str) -> dict:
                                 "date": e["created_at"].strftime("%d %b %Y")} for e in m["events"][:10]]}
 
 
-def propose_memory(customer_id: str, kind: str, key: str, value: str, evidence: str) -> dict:
+def propose_memory(customer_id: str | None, kind: str, key: str, value: str, evidence: str) -> dict:
+    if not customer_id:
+        return {"ok": False, "error": "Anonymous session: memory is not stored."}
     return mem.add_item(customer_id, kind, key, value, source="llm", evidence=evidence)
 
 
@@ -206,8 +209,16 @@ HANDLERS = {"get_home_facts": get_home_facts, "get_energy_prior": get_energy_pri
             "get_customer_memory": get_customer_memory, "propose_memory": propose_memory}
 
 
-def call(name: str, args: dict) -> dict:
+SESSION_SCOPED = {"rank_recommendations", "get_customer_memory", "propose_memory"}
+
+
+def call(name: str, args: dict, customer_id: str | None = None) -> dict:
+    """Run a tool. customer_id always comes from the server-side session, never from model arguments, so the
+    model cannot read or write another customer's memory (prompt-injection safe)."""
     try:
+        args = {k: v for k, v in args.items() if k != "customer_id"}
+        if name in SESSION_SCOPED:
+            args["customer_id"] = customer_id
         return HANDLERS[name](**args)
     except Exception as e:  # tool errors go back to the model as data, never dropped
         return {"error": f"{type(e).__name__}: {e}"}

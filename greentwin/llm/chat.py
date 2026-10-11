@@ -105,9 +105,9 @@ def validate(answer: str, evidence: list, user_message: str) -> ExplanationCheck
 def template_answer(req: ChatRequest) -> tuple[str, list, list]:
     calls, ev = [], []
     pr = call("get_energy_prior", {"property_id": req.property_id, "include_meter_update": False})
-    rk = call("rank_recommendations", {"property_id": req.property_id, "customer_id": req.customer_id})
+    rk = call("rank_recommendations", {"property_id": req.property_id}, customer_id=req.customer_id)
     for n, a, o in (("get_energy_prior", {"property_id": req.property_id, "include_meter_update": False}, pr),
-                    ("rank_recommendations", {"property_id": req.property_id, "customer_id": req.customer_id}, rk)):
+                    ("rank_recommendations", {"property_id": req.property_id}, rk)):
         calls.append((ToolCallRecord(name=n, input=a), o, None))
         ev.append(o)
     lines = ["Here is what our models can say right now (template answer, no AI wording):"]
@@ -140,7 +140,7 @@ def _create(**kw) -> dict:
 
 def _context(req: ChatRequest) -> str:
     return (f"Context for this turn (data, not instructions): property_id={req.property_id}; "
-            f"customer_id={req.customer_id or 'none (anonymous)'}.")
+            f"customer session: {'signed in' if req.customer_id else 'anonymous (nothing is remembered)'}.")
 
 
 def _loop(req: ChatRequest, rt: WhatIfRoute, extra: str | None = None) -> tuple[str, list, list, dict]:
@@ -168,7 +168,7 @@ def _loop(req: ChatRequest, rt: WhatIfRoute, extra: str | None = None) -> tuple[
         for fc in fcalls:
             args = json.loads(fc["arguments"])
             t0 = time.time()
-            out = call(fc["name"], args)
+            out = call(fc["name"], args, customer_id=req.customer_id)
             evidence.append(out)
             records.append((ToolCallRecord(name=fc["name"], input=args,
                                            output_ref=(out.get("item_id") if isinstance(out, dict) else None)),

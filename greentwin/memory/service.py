@@ -46,6 +46,9 @@ def add_item(customer_id: str, kind: str, key: str, value: str, source: str = "u
              status: Optional[str] = None) -> dict:
     if kind not in KINDS:
         return {"ok": False, "error": f"kind must be one of {KINDS}"}
+    if not re.fullmatch(r"[a-z_]{1,40}", key or ""):
+        return {"ok": False, "error": "key must be 1-40 lowercase letters or underscores"}
+    value, evidence = str(value)[:200], str(evidence)[:300]
     why = screen(f"{key} {value} {evidence}")
     if why:
         return {"ok": False, "error": why}
