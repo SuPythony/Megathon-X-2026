@@ -4,6 +4,8 @@ Owner: Satyarth. Branch: `satyarth` (not merged into `main` yet). Status as of 1
 package, appliances, household, hot water, retrofits, rooms, `GreenDigitalTwin`).
 Read this to find out what the twin gives you, how to call it, what it needs from you, and what isn't built yet.
 
+**Full list of what the twin can do, with status per feature: `docs/DIGITAL_TWIN_CAPABILITIES.md`.**
+
 Companion docs:
 - `docs/digitaltwinvariables.md`: the `run_physics` contract for the physics owner (inputs, outputs, rules).
 - `docs/ROOM_TWIN_DESIGN.md`: the room-level twin design (photos, archetypes, appliances, 3D).

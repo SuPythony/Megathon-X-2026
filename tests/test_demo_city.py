@@ -90,3 +90,13 @@ def test_areas_roll_up_and_fit_the_dashboard_contract(city):
             assert 0 <= a.self_funding_share <= 1
         assert set(a.tier_share) <= {"A", "B", "C"}
     assert aggregate(homes)[0].area_code == areas[0].area_code  # deterministic order
+
+
+def test_greening_evidence_reports_physics_not_targets(city):
+    from greentwin.twin.city import greening_evidence
+
+    homes, _, _ = city
+    ev = greening_evidence(homes)
+    assert ev["fabric_first"]["carbon_falls_share"] > 0.9  # insulation cuts heat loss: physics, not tuning
+    shares = ev["fabric_first"]["saving_covers_repayment_share"]
+    assert shares["6%/25y"] >= shares["6%/10y"]  # longer terms can only help

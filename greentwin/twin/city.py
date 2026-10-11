@@ -434,6 +434,32 @@ def write_city(out_dir: Path, homes: list[CityHome], areas: list[CityArea], conf
     return paths
 
 
+def greening_evidence(homes: list[CityHome]) -> dict:
+    """What the physics says about greening, per package, without tuning: share of homes where carbon and bills
+    fall, median savings, and the loan-term sensitivity of 'saving covers repayment' (median-based)."""
+    grid = [(0.06, 10), (0.06, 25), (0.04, 25), (0.02, 25)]
+    out: dict = {}
+    names = sorted({k for h in homes for k in h.packages})
+    for name in names:
+        ps = [h.packages[name] for h in homes if h.packages.get(name)]
+        if not ps:
+            continue
+        costed = [p for p in ps if p.cost_gbp]
+        med = lambda xs: float(np.median(xs))  # noqa: E731
+        out[name] = {
+            "homes": len(ps),
+            "carbon_falls_share": round(sum(p.carbon_saving_kg.headline > 0 for p in ps) / len(ps), 3),
+            "bill_falls_share": round(sum(p.p_bill_falls >= 0.5 for p in ps) / len(ps), 3),
+            "median_bill_saving_gbp": round(med([p.bill_saving_gbp.headline for p in ps]), 0),
+            "median_carbon_saving_kg": round(med([p.carbon_saving_kg.headline for p in ps]), 0),
+            "median_cost_gbp": round(med([p.cost_gbp for p in costed]), 0) if costed else None,
+            "saving_covers_repayment_share": {
+                f"{int(r * 100)}%/{y}y": round(sum(p.bill_saving_gbp.headline / 12 >= monthly_repayment(p.cost_gbp, r, y)
+                                                   for p in costed) / len(costed), 3) for r, y in grid} if costed else {},
+        }
+    return out
+
+
 def summary(homes: list[CityHome], areas: list[CityArea]) -> dict:
     """Headline city numbers for the README / demo script."""
     city = [a for a in areas if a.area_type == "postcode_district"]
@@ -455,4 +481,5 @@ def summary(homes: list[CityHome], areas: list[CityArea]) -> dict:
         "tiers": dict(Counter(h.confidence_tier for h in homes if h.is_customer)),
         "street_deal_homes": sum(1 for h in homes if h.street_deal),
         "engine": homes[0].engine if homes else None,
+        "greening_evidence": greening_evidence(homes),
     }

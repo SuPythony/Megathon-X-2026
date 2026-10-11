@@ -341,7 +341,46 @@ These are contract changes, so the consumers (dashboard, API) review them before
 | Verify: BUS grant value, MEES status, RdSAP defaults | Us + team lead | Labels |
 | `build_demo_city.py`, `CityHome`, area extensions | Us (P1) + dashboard owner | All |
 
-## 7. Status: step 1 built (11 Oct 2026)
+## 7. Does the data show that greening is better?
+
+**Position: the data shows what the physics shows. Nothing is tuned to produce a result.**
+- AGENTS.md: physics is the only source of numbers.
+- Compliance fix 7: a synthetic green premium we insert may only be reported as a method check.
+- A rigged result would also fail with judges and with Lloyds' own credit and climate teams.
+
+What the physics shows is still a strong case. `config.json → summary.greening_evidence`, 500 synthetic homes,
+**stand-in physics** (illustrative until the real model is in):
+
+| Package | Carbon falls | Bills fall | Median bill saving | Median carbon saving | Median cost | Saving covers the loan repayment: 6%/10y → 6%/25y → 4%/25y → 2%/25y |
+|---|---|---|---|---|---|---|
+| Fabric first | 100% | 100% | £148/yr | 292 kg/yr | £870 | 42% → 62% → 71% → 78% |
+| Heat pump (+ fabric) | 100% | 100% | £225/yr | 1,984 kg/yr | £13,370 | 3% → 4% → 6% → 9% |
+| Solar PV (3.5 kWp) | 100% | 100% | £230/yr | 171 kg/yr | £6,566 | 0% at every term |
+
+**How to read it (and how to pitch it honestly)**
+1. **Greening is better on carbon and bills in every modelled home.** It also makes homes more resilient: under a
+   +30% price shock, the share of homes over the bill threshold falls from 61% to 46%.
+2. **Fabric-first pays for itself** for a majority of homes on a long term. This is the "self-funding green loan"
+   product.
+3. **Heat pumps and PV are the big carbon wins but don't pay back on bills alone.** That isn't greening losing: it's
+   the gap Lloyds' product design closes. The levers are all sliders, and each must be sourced before quoting:
+   - longer terms and lower green rates
+   - grants (BUS, not yet verified)
+   - export payments for PV (no sourced export tariff yet)
+   - value uplift (Part 4, indicative)
+   - rent uplift (2.8, assumption)
+4. **Not counted yet, and plausibly positive:** comfort, health, property value, rent, lower arrears risk. Each is
+   either indicative (value, rent) or a hypothesis (credit risk), and labelled so.
+
+**What would make the evidence real rather than illustrative:**
+- the real physics and calibration on real meter data
+- real EPC records (needs `EPC_API_TOKEN`)
+- verified grants and export tariffs
+- the Part 4 value model on real sales
+
+The same code re-runs on them unchanged.
+
+## 8. Status: step 1 built (11 Oct 2026)
 
 **Built:** `greentwin/twin/city.py`, `greentwin/twin/city_assumptions.json`, `scripts/build_demo_city.py`, tests
 `tests/test_demo_city.py`. Output: `artifacts/demo_city/v1/{homes.json, areas.json, config.json}` (500 homes).
@@ -387,7 +426,7 @@ These are contract changes, so the consumers (dashboard, API) review them before
 - the cold-year weather and income-based stress: these need P0
 - the full city size and drill-down scenes
 
-## 8. Build order (thinnest path first)
+## 9. Build order (thinnest path first)
 
 1. `build_demo_city.py` on 500 homes from one district with stub physics: `CityHome` + `areas.json`.
 2. Insights that only need P1 + configs: **2.3 self-funding**, **2.4 stress test (price shocks)**, **2.5 carbon per £**,
