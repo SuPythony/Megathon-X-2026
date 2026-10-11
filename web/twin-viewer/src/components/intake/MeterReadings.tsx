@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { type MeterReading, lastMonths, meterReadiness, parseMeterPaste } from '../intake'
+import { type MeterReading, lastMonths, meterReadiness, parseMeterPaste } from '../../intake'
 
 export interface MeterRow { month: string; elec: string; gas: string; estimated: boolean }
 
@@ -50,29 +50,25 @@ export function MeterReadings({ rows, setRows, noGas, setNoGas }: {
   }
 
   return (
-    <details className="group bills">
-      <summary>
-        <span>Your energy bills <span className="muted">(optional, recommended)</span></span>
-        <span className={`badge ${ready.method === 'ready' ? 'ok' : 'est'}`}>
-          {ready.method === 'ready' ? 'Enough to calibrate' : ready.method === 'weak' ? 'Partial' : 'None yet'}
+    <div className="iw-bills">
+      <div className="iw-bills-top">
+        <label className="iw-switch">
+          <input type="checkbox" checked={noGas} onChange={(e) => setNoGas(e.target.checked)} />
+          <span className="iw-switch-track" aria-hidden />
+          No gas supply
+        </label>
+        <span className={`iw-badge ${ready.method}`}>
+          {ready.method === 'ready' ? 'Enough to calibrate' : ready.method === 'weak' ? `${ready.months} of 12 months` : 'Optional'}
         </span>
-      </summary>
-      <p className="muted">
-        Monthly kWh from your bills or smart-meter app lets the twin learn how your home really uses energy. Leave a month
-        blank if you don't have it: blank means missing, not zero.
-      </p>
-      <label className="check">
-        <input type="checkbox" checked={noGas} onChange={(e) => setNoGas(e.target.checked)} />
-        This home has no gas supply
-      </label>
-      <div className="meter-table" role="table" aria-label="Monthly meter readings">
-        <div className="meter-head" role="row">
+      </div>
+      <div className="iw-meter" role="table" aria-label="Monthly meter readings">
+        <div className="iw-meter-head" role="row">
           <span>Month</span><span>Electricity kWh</span><span>Gas kWh</span><span title="Estimated read on the bill">Est.</span>
         </div>
         {rows.map((r, i) => {
           const hi = (Number(r.elec) > CHECK_ELEC) || (!noGas && Number(r.gas) > CHECK_GAS)
           return (
-            <div key={r.month} className={`meter-row ${hi ? 'hi' : ''}`} role="row">
+            <div key={r.month} className={`iw-meter-row ${hi ? 'hi' : ''}`} role="row">
               <span>{label(r.month)}</span>
               <input inputMode="decimal" aria-label={`Electricity ${r.month}`} value={r.elec} placeholder="—"
                 onChange={(e) => set(i, { elec: e.target.value })} />
@@ -84,24 +80,24 @@ export function MeterReadings({ rows, setRows, noGas, setNoGas }: {
           )
         })}
       </div>
-      {errors.map((e) => <small key={e} className="err">{e}</small>)}
+      {errors.map((e) => <p key={e} className="iw-err">{e}</p>)}
       {rows.some((r) => Number(r.elec) > CHECK_ELEC || (!noGas && Number(r.gas) > CHECK_GAS)) &&
-        <small className="warn">Some months look very high: check they're kWh, not £ or meter readings.</small>}
-      <p className={ready.method === 'ready' ? 'ok-text' : 'muted'}>
+        <p className="iw-warn">Some months look very high: check they're kWh, not £ or meter readings.</p>}
+      <p className="iw-hint">
         {ready.months} months · {ready.winter} winter · {ready.summer} summer.{' '}
         {ready.method === 'ready' ? 'Enough for the twin to calibrate to your home.'
-          : 'For a reliable calibration: 12+ months including at least 3 winter and 2 summer months.'}
+          : 'A reliable calibration needs 12+ months, with at least 3 winter and 2 summer months.'}
       </p>
-      <details className="paste">
+      <details className="iw-paste">
         <summary>Paste from a spreadsheet</summary>
         <textarea rows={4} value={paste} onChange={(e) => setPaste(e.target.value)}
           placeholder={'2025-01, 310, 1840\n2025-02, 290, 1620, E\n(month, electricity kWh, gas kWh, E = estimated)'} />
-        <div className="inline">
-          <button type="button" className="chip" onClick={applyPaste} disabled={!paste.trim()}>Load</button>
-          <button type="button" className="chip" onClick={() => { setRows(emptyMeterRows()); setPasteMsg([]) }}>Reset to last 12 months</button>
+        <div className="iw-row">
+          <button type="button" className="iw-chip small" onClick={applyPaste} disabled={!paste.trim()}>Load</button>
+          <button type="button" className="iw-chip ghost small" onClick={() => { setRows(emptyMeterRows()); setPasteMsg([]) }}>Reset to last 12 months</button>
         </div>
-        {pasteMsg.map((m) => <small key={m} className={m.startsWith('Loaded') ? 'ok' : 'err'}>{m}</small>)}
+        {pasteMsg.map((m) => <p key={m} className={m.startsWith('Loaded') ? 'iw-ok' : 'iw-err'}>{m}</p>)}
       </details>
-    </details>
+    </div>
   )
 }

@@ -133,7 +133,8 @@ class TwinIntake(BaseModel):
         if not self.meter_readings:
             self.warnings.append("No meter readings: the twin can't be calibrated to this home yet (prior only)")
         elif len(self.meter_readings) < 12:
-            self.warnings.append(f"Only {len(self.meter_readings)} months of meter readings; 12+ covering winter and "
+            n = len(self.meter_readings)
+            self.warnings.append(f"Only {n} month{'' if n == 1 else 's'} of meter readings; 12+ covering winter and "
                                  "summer are needed for a reliable calibration")
         # Intakes saved by the browser form already carry its warnings: keep each once, in order.
         self.warnings = list(dict.fromkeys(self.warnings))

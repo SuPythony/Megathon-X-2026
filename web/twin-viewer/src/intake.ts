@@ -40,7 +40,44 @@ export interface TwinIntake {
   thermostat_c: number | null
   heating_periods: [number, number][]
   meter_readings: MeterReading[]
+  // Optional follow-ups, asked only when relevant (household.follow_up_questions); null = not sure / not asked
+  plug_in_heater_use: HeaterUse | null
+  led_lighting: LedShare | null
   warnings: string[]
+}
+
+export type HeaterUse = 'never' | 'rarely' | 'some_evenings' | 'most_days'
+export const HEATER_USE_OPTIONS: [HeaterUse, string][] = [
+  ['never', 'Never'], ['rarely', 'Rarely'], ['some_evenings', 'Some evenings'], ['most_days', 'Most days'],
+]
+export type LedShare = 'all' | 'most' | 'about_half' | 'few'
+export const LED_OPTIONS: [LedShare, string][] = [
+  ['all', 'All'], ['most', 'Most'], ['about_half', 'About half'], ['few', 'Few or none'],
+]
+// Same rules as household.follow_up_questions, for what the browser knows (no EPC record here).
+const TOP_UP_HEATING = new Set(['electric_storage', 'electric_storage_hhr', 'solid_fuel'])
+export function askHeaterUse(heating: string | null, applianceTypes: string[]): string | null {
+  if (applianceTypes.includes('electric_heater')) return 'You listed a plug-in heater'
+  if (heating && TOP_UP_HEATING.has(heating)) return 'Storage and room heaters are often topped up'
+  return null
+}
+export function askLighting(hasEpc: boolean): string | null {
+  return hasEpc ? null : 'Without an EPC we don\'t know your lighting'
+}
+
+/** Hours ticked on a 24-hour strip -> heating periods [[start, end], ...] (end exclusive, up to 24). */
+export function hoursToPeriods(on: boolean[]): [number, number][] {
+  const out: [number, number][] = []
+  for (let h = 0; h < 24; h++) {
+    if (on[h] && (h === 0 || !on[h - 1])) out.push([h, h + 1])
+    else if (on[h]) out[out.length - 1][1] = h + 1
+  }
+  return out
+}
+export function periodsToHours(periods: [number, number][]): boolean[] {
+  const on = Array<boolean>(24).fill(false)
+  for (const [a, b] of periods) for (let h = a; h < b; h++) on[h] = true
+  return on
 }
 
 // One month of bills, as greentwin/twin/intake.py MeterReading. null = missing (never 0); gas 0 only with no gas supply.
@@ -100,30 +137,19 @@ export const PRESENCE_OPTIONS: [Presence, string][] = [
 ]
 
 export type SchedulePreset = 'morning_evening' | 'all_day' | 'custom'
-export const SCHEDULE_PRESETS: Record<Exclude<SchedulePreset, 'custom'>, { label: string; periods: [number, number][] }> = {
-  morning_evening: { label: 'Mornings and evenings (6–9am, 5–10pm)', periods: [[6, 9], [17, 22]] },
-  all_day: { label: 'All day (6am–10pm)', periods: [[6, 22]] },
+export const SCHEDULE_PRESETS: Record<Exclude<SchedulePreset, 'custom'>, { label: string; hint: string; periods: [number, number][] }> = {
+  morning_evening: { label: 'Mornings & evenings', hint: '6–9am, 5–10pm', periods: [[6, 9], [17, 22]] },
+  all_day: { label: 'All day', hint: '6am–10pm', periods: [[6, 22]] },
 }
 
-export const THERMOSTAT_RANGE: [number, number] = [10, 28] // matches TwinIntake.thermostat_c in intake.py
-export const MAX_OCCUPANTS = 12
-
-/** Problems with custom heating periods (hours 0-24, start before end, no overlaps); empty when fine. */
-export function periodErrors(periods: [number, number][]): string[] {
-  const out: string[] = []
-  periods.forEach(([s, e], i) => {
-    if (!(s >= 0 && s <= 23 && e >= 1 && e <= 24)) out.push(`Period ${i + 1}: hours must be between 0 and 24`)
-    else if (s >= e) out.push(`Period ${i + 1}: the heating must go on before it goes off`)
-  })
-  const sorted = [...periods].sort((a, b) => a[0] - b[0])
-  for (let i = 1; i < sorted.length; i++) if (sorted[i][0] < sorted[i - 1][1]) { out.push('Periods overlap'); break }
-  return out
-}
+// The slider covers usual settings; intake.py accepts 10-28 C.
+export const THERMOSTAT_SLIDER: [number, number] = [15, 25]
+export const MAX_OCCUPANTS = 8
 
 // Heating as the user knows it today; overrides the EPC (greentwin/twin/household.py apply_user_heating).
 export const HEATING_OPTIONS: [string, string][] = [
-  ['gas_boiler_combi', 'Gas boiler (combi, no hot water tank)'],
-  ['gas_boiler_regular', 'Gas boiler with a hot water tank'],
+  ['gas_boiler_combi', 'Gas combi boiler'],
+  ['gas_boiler_regular', 'Gas boiler + hot water tank'],
   ['air_source_heat_pump', 'Air-source heat pump'],
   ['ground_source_heat_pump', 'Ground-source heat pump'],
   ['electric_storage', 'Electric storage heaters'],
@@ -151,8 +177,8 @@ export function intakeWarnings(i: Omit<TwinIntake, 'warnings'>): string[] {
     out.push('Photos supplied without consent; they will not be processed')
   const used = i.meter_readings.filter((r) => r.electricity_kwh != null || r.gas_kwh != null).length
   if (!used) out.push("No meter readings: the twin can't be calibrated to this home yet (prior only)")
-  else if (used < 12) out.push(`Only ${used} months of meter readings; 12+ covering winter and summer are needed for a reliable calibration`)
-  if (i.occupants == null || i.thermostat_c == null || !i.heating_periods.length)
+  else if (used < 12) out.push(`Only ${used} month${used === 1 ? '' : 's'} of meter readings; 12+ covering winter and summer are needed for a reliable calibration`)
+  if (i.occupants == null || i.daytime_occupancy == null || i.thermostat_c == null || !i.heating_periods.length)
     out.push('Some household answers are "not sure": the twin uses typical UK values with wider uncertainty')
   return out
 }

@@ -216,63 +216,7 @@ button:disabled { cursor: default; opacity: 0.45; }
 .compass-label { background: var(--green); padding: 2px 7px; }
 .empty { padding: 16px; }
 
-/* modal (new home) */
-.modal-backdrop {
-  position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 16px;
-  background: rgba(15, 28, 24, 0.4); backdrop-filter: blur(4px); animation: fade 0.15s ease-out;
-}
-.modal {
-  width: min(540px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; background: #fff; border-radius: 16px; padding: 24px;
-  display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25); animation: rise 0.18s ease-out;
-}
-@keyframes fade { from { opacity: 0; } }
-@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
-.modal h2 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
-.modal p { margin: 0; }
-.field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
-.field > span { font-weight: 600; }
-.field input:not([type=file]), .field select {
-  height: 40px; padding: 0 12px; border: 1px solid rgba(23, 36, 43, 0.18); border-radius: 10px; background: #fff; transition: border-color 0.15s, box-shadow 0.15s;
-}
-.field input:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(11, 110, 79, 0.12); outline: none; }
-.field input:disabled { background: #f3f5f6; }
-.check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
-.check input { accent-color: var(--green); margin-top: 2px; }
-.ok { color: var(--green); font-size: 12px; }
-.err { color: var(--red); font-size: 12px; }
-.modal .muted { font-size: 12px; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.modal-actions button { height: 38px; padding: 0 16px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-weight: 600; }
-.modal-actions .primary { background: var(--green); color: #fff; border-color: var(--green); }
-
-.group { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px 14px; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-.group legend { font-weight: 700; font-size: 14px; padding: 0 6px; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.inline { display: flex; align-items: center; gap: 8px; }
-.inline input { width: 110px; }
-.unit { color: var(--muted); font-size: 13px; }
-.chip { height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font-size: 12px; font-weight: 600; }
-.periods { display: flex; flex-direction: column; gap: 6px; }
-.period { display: flex; align-items: center; gap: 8px; }
-.period select { height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; background: #fff; }
-
-.bills > summary { display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 700; font-size: 14px; list-style: none; }
-.bills > summary::-webkit-details-marker { display: none; }
-.bills > summary .badge { margin: 0; }
-.bills[open] > summary { margin-bottom: 4px; }
-.meter-table { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
-.meter-head, .meter-row { display: grid; grid-template-columns: 90px 1fr 1fr 34px; gap: 8px; align-items: center; }
-.meter-head { font-size: 11px; color: var(--muted); font-weight: 600; position: sticky; top: 0; background: #fff; padding: 2px 0; }
-.meter-row span { font-size: 13px; }
-.meter-row input:not([type=checkbox]) { height: 32px; padding: 0 8px; border: 1px solid rgba(23, 36, 43, 0.18); border-radius: 8px; min-width: 0; text-align: right; }
-.meter-row input:disabled { background: #f3f5f6; }
-.meter-row input[type=checkbox] { accent-color: var(--green); justify-self: center; }
-.meter-row.hi input { border-color: #d9a400; }
-.paste summary { cursor: pointer; font-size: 13px; color: var(--blue); font-weight: 600; }
-.paste textarea { width: 100%; margin: 8px 0; border: 1px solid rgba(23, 36, 43, 0.18); border-radius: 10px; padding: 8px; font: 12px/1.4 ui-monospace, monospace; }
-
 @media (max-width: 900px) {
-  .row2 { grid-template-columns: 1fr; }
   .topbar { right: 16px; flex-wrap: wrap; }
   .scene-select { min-width: 140px; flex: 1; }
   .brand div { display: none; }

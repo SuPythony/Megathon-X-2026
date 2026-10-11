@@ -19,7 +19,7 @@ One page per question: *what can it do, where is the code, and is it real yet?* 
 
 | Capability | Status | Where |
 |---|---|---|
-| **Intake form:** postcode (only the district is kept, reduced in the browser), EPC certificate number (validated, normalised), floor plan and fuse box photos with consent | ✅ | `greentwin/twin/intake.py`, viewer "New home" |
+| **Intake form:** six short steps (Home, Heating, Household, Bills, Photos, Review) in pastel green and white; only the postcode is required, every question has "Not sure"; sliders for people and thermostat, tiles for heating, a tap-or-drag 24-hour strip for the schedule, photo drop zones, a review that counts answered vs not sure. Postcode reduced to the district in the browser; EPC number formatted as you type | ✅ | `greentwin/twin/intake.py`, viewer `IntakeForm.tsx`, `components/intake/` |
 | **Household questions:** occupants, daytime presence, thermostat setting, heating schedule (presets or custom periods, validated); each allows "not sure", which means typical UK values with wider priors | ✅ | `intake.py`, `household.py`, viewer "New home" form |
 | **Heating as the user knows it:** heating system, fuel, hot-water source. Overrides a stale EPC; conflicts flagged (EPC vs answer, bills vs fuel) | ✅ | `household.apply_user_heating`, `meter_fuel_conflicts` |
 | **Optional follow-ups, only when relevant:** plug-in heater use (a heater is listed, or storage / solid-fuel room heating) and how much lighting is LED (no EPC, or EPC < 100%). Explicit answers are held fixed; "not sure" becomes an uncertain input with a wider prior; provenance records which | ✅ | `household.follow_up_questions`, `inputs._priors` |
