@@ -95,7 +95,7 @@ def test_hot_water_is_separate_from_heating():
 def test_intake_household_and_meters():
     i = TwinIntake(intake_id="i", postcode_district="M14", occupants=3, thermostat_c=20,
                    meter_readings=[MeterReading(month="2025-01", gas_kwh=1800, electricity_kwh=300)])
-    assert any("Only 1 months" in w for w in i.warnings)
+    assert any("Only 1 month of" in w for w in i.warnings)
     with pytest.raises(ValueError):
         TwinIntake(intake_id="i", postcode_district="M14",
                    meter_readings=[MeterReading(month="2025-01"), MeterReading(month="2025-01")])
