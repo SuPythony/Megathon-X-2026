@@ -51,6 +51,51 @@ class HedonicValueModel:
         self.effects = json.loads(eff.read_text()) if eff.exists() else None
         self.n, self.seed = n_samples, seed
 
+    def value_samples(self, prop: Property, rng) -> Optional[np.ndarray]:
+        """Posterior predictive draws of the home's value today (GBP, July 2026 money), V-16.
+
+        Every parameter is drawn from its posterior (location effects from their saved mean/std; an LSOA or LA the
+        model never saw is drawn from the fitted spread of that level, N(0, s_level), not set to 0), then StudentT
+        observation noise is added, so the spread is the full predictive uncertainty for a sale of this home.
+        """
+        if prop.epc.sap_score is None:
+            return None
+        p, lv, n = self.post, self.levels, self.n
+        idx = rng.integers(0, len(p["a0"]), n)  # joint posterior draws for the sample-based parameters
+
+        def level_effect(name: str, code: Optional[str], sd_name: str) -> np.ndarray:
+            levels = lv.get(name, [])
+            if code in levels and f"{name_map[name]}_mean" in p:
+                i = levels.index(code)
+                return rng.normal(p[f"{name_map[name]}_mean"][i], p[f"{name_map[name]}_std"][i], n)
+            return rng.normal(0.0, p[sd_name][idx])  # unseen level: posterior predictive from the hierarchy
+
+        name_map = {"laua": "a_la", "lsoa21": "a_lsoa"}
+        rgn = REGION_CODE.get(prop.location.region)
+        mu = p["a0"][idx].copy()
+        if rgn in lv["rgn"]:
+            mu += p["a_region"][idx, lv["rgn"].index(rgn)]
+        mu += level_effect("laua", prop.location.local_authority_code, "s_la")
+        mu += level_effect("lsoa21", prop.location.lsoa_code, "s_lsoa")
+        form = {"semi_detached": "Semi-Detached", "mid_terrace": "Mid-Terrace", "end_terrace": "End-Terrace",
+                "detached": "Detached", "enclosed_mid_terrace": "Enclosed Mid-Terrace",
+                "enclosed_end_terrace": "Enclosed End-Terrace"}.get(prop.built_form.value, "unknown")
+        cats = {"typeform": f"{ppd_type(prop)}|{form}", "age_band": prop.construction_age_band or "",
+                "year": lv["year"][-1]}  # V-12: today's market = latest fitted year
+        for c, val in cats.items():
+            if val in lv[c]:
+                mu += p[f"b_{c}"][idx, lv[c].index(val)]
+        mu += p["c_lease"][idx] * float(prop.constraints.leasehold)
+        mu += p["c_log_tfa"][idx] * (np.log(prop.floor_area_m2) - 4.5)
+        rooms = prop.habitable_rooms if prop.habitable_rooms is not None else 5
+        mu += p["c_rooms"][idx] * (min(max(rooms, 1), 12) - 5)
+        mu += p["c_epc_age"][idx] * (0.7 - 3)  # typical EPC age at sale (V-05): median 0.7 years
+        rt = f"{rgn}|{ppd_type(prop)}"
+        beta = p["beta_rt"][idx, lv["rt"].index(rt)] if rt in lv["rt"] else p["beta0"][idx]
+        mu += beta * (prop.epc.sap_score - 60.0) / SAP_SCALE
+        sig = p["sigma_type"][idx, lv["ptype"].index(ppd_type(prop))]
+        return np.exp(mu + sig * rng.standard_t(5.0, size=n))
+
     def _beta_bayes(self, prop: Property, rng, n: int) -> np.ndarray:
         """Bayesian hierarchical draws, per SAP point (log points)."""
         key = f"{REGION_CODE.get(prop.location.region, '')}|{ppd_type(prop)}"
@@ -105,9 +150,13 @@ class HedonicValueModel:
                                                contribution=round(float(np.median(uplift) * 100), 2), unit="%")],
         )
         if cur is not None:
-            out["value_after_gbp"] = summarise(cur * (1 + uplift), "GBP")
+            out["value_after_gbp"] = summarise(cur * (1 + uplift), "GBP", worst_tail="low")
         else:
-            out["unavailable_reason"] = "No current value estimate: uplift shown in % only."
+            # V-16: no valuation given -> the model's posterior predictive value for this home (full distribution),
+            # and value after = value x (1 + uplift), sample by sample (joint, not interval arithmetic)
+            v = self.value_samples(prop, rng)
+            out["current_value_distribution"] = summarise(v, "GBP")
+            out["value_after_gbp"] = summarise(v * (1 + uplift), "GBP", worst_tail="low")
         return ValueImpact(**out)
 
     def green_twins(self, prop: Property, k: int = 3) -> list[GreenTwin]:

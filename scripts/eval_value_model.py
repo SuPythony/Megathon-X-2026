@@ -27,7 +27,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 from greentwin.value import hedonic as H  # noqa: E402
-from train_value_model import interval_metrics, ols_design  # noqa: E402
+from train_value_model import ols_design  # noqa: E402
+from greentwin.value.metrics import distribution_metrics, samples_from_quantiles  # noqa: E402
 
 
 def log(*a):
@@ -74,14 +75,29 @@ def main() -> None:
     fit = H.HedonicFit(enc, {k: len(v) for k, v in enc.levels.items()}, None, None, None)
     post = load_posterior(art, 300, rng)
 
-    def bayes_eval(d):
-        chunks = [d.iloc[i] for i in np.array_split(np.arange(len(d)), 10)]
-        ys = np.concatenate([fit.predict_samples(c, post, rng) for c in chunks], axis=1)
-        lo, med, hi = np.percentile(ys, [5, 50, 95], axis=0)
-        return interval_metrics(d["log_price_adj"].to_numpy(), lo, med, hi)
+    S = 300  # predictive draws per observation, for every model (V-15)
 
-    metrics["bayes"] = {"test": bayes_eval(te), "out_of_time": bayes_eval(oot)}
+    def bayes_samples(d):
+        chunks = [d.iloc[i] for i in np.array_split(np.arange(len(d)), 10)]
+        return np.concatenate([fit.predict_samples(c, post, rng) for c in chunks], axis=1)
+
+    preds = []
+    metrics["bayes"] = {}
+    for name, d in (("test", te), ("out_of_time", oot)):
+        ys = bayes_samples(d)
+        metrics["bayes"][name] = distribution_metrics(d["log_price_adj"].to_numpy(), ys)
+        q = np.percentile(ys, [5, 25, 50, 75, 95], axis=0)
+        preds.append(pd.DataFrame({  # held-out predictions (submission item I): full predictive summary per sale
+            "set": name, "transactionid": d["transactionid"].to_numpy(), "postcode_district": d["postcode_district"],
+            "lsoa21": d["lsoa21"], "ptype": d["ptype"], "year": d["year"], "sap": d["sap"],
+            "price_adj_gbp": d["price_adj"].round(0), "pred_mean_log": ys.mean(0).round(5),
+            "pred_sd_log": ys.std(0, ddof=1).round(5),
+            **{f"pred_p{p}_gbp": np.exp(v).round(0) for p, v in zip((5, 25, 50, 75, 95), q)},
+            "pit": np.mean(ys <= d["log_price_adj"].to_numpy()[None, :], axis=0).round(4)}))
     log("bayes", json.dumps(metrics["bayes"]))
+    pred_dir = ROOT / "deliverables" / "test_predictions"
+    pred_dir.mkdir(parents=True, exist_ok=True)
+    pd.concat(preds).to_csv(pred_dir / f"value_{a.version}_test_predictions.csv.gz", index=False)
 
     # ------------------------------------------------------------------ OLS baselines (normal equations)
     cats = ["laua", "typeform", "age_band", "year"]
@@ -91,12 +107,13 @@ def main() -> None:
         Xtr, lv = ols_design(trd, cats, with_sap)
         y = trd["log_price_adj"].to_numpy()
         coef = ols_fit(Xtr, y)
-        q5, q95 = np.percentile(y - Xtr @ coef, [5, 95])
+        train_resid = y - Xtr @ coef
         res = {}
         for name, d in (("test", ted), ("out_of_time", ootd)):
             Xd, _ = ols_design(d, cats, with_sap, lv)
-            med = Xd @ coef
-            res[name] = interval_metrics(d["log_price_adj"].to_numpy(), med + q5, med, med + q95)
+            pred = Xd @ coef
+            draws = pred[None, :] + rng.choice(train_resid, size=(S, len(pred)))  # residual bootstrap
+            res[name] = distribution_metrics(d["log_price_adj"].to_numpy(), draws)
         if with_sap:
             res["sap_coef_pct_per_point"] = round(float((np.exp(coef[-1]) - 1) * 100), 4)
             resid = y - Xtr @ coef
@@ -121,13 +138,28 @@ def main() -> None:
             x[c] = pd.Categorical(d[src].astype(object).fillna("unknown").astype(str), categories=cats_)
         return x
     Xl = lgb_X(trd, trd)
+    QL = (0.05, 0.25, 0.5, 0.75, 0.95)
     qs = {q: lgb.LGBMRegressor(objective="quantile", alpha=q, n_estimators=600, learning_rate=0.05,
                                num_leaves=127, min_child_samples=50, random_state=a.seed, verbose=-1
-                               ).fit(Xl, trd["log_price_adj"]) for q in (0.05, 0.5, 0.95)}
-    metrics["lgbm_quantile"] = {
-        name: interval_metrics(d["log_price_adj"].to_numpy(), *(qs[q].predict(lgb_X(d, trd)) for q in (0.05, 0.5, 0.95)))
-        for name, d in (("test", ted), ("out_of_time", ootd))}
+                               ).fit(Xl, trd["log_price_adj"]) for q in QL}
+    metrics["lgbm_quantile"] = {"note": "predictive draws approximated from 5 predicted quantiles"}
+    for name, d in (("test", ted), ("out_of_time", ootd)):
+        Xd = lgb_X(d, trd)
+        draws = samples_from_quantiles({q: qs[q].predict(Xd) for q in QL}, S, rng)
+        metrics["lgbm_quantile"][name] = distribution_metrics(d["log_price_adj"].to_numpy(), draws)
     log("LightGBM", json.dumps(metrics["lgbm_quantile"]))
+
+    # ------------------------------------------------------------------ naive baseline: LA x type median
+    g = trd.groupby(["laua", "ptype"])["log_price_adj"]
+    cell_med, cell_resid = g.median(), trd["log_price_adj"] - g.transform("median")
+    glob = float(trd["log_price_adj"].median())
+    metrics["naive_la_type_median"] = {}
+    for name, d in (("test", ted), ("out_of_time", ootd)):
+        pred = pd.MultiIndex.from_frame(d[["laua", "ptype"]]).map(cell_med.to_dict()).to_numpy(dtype=float)
+        pred = np.where(np.isfinite(pred), pred, glob)
+        draws = pred[None, :] + rng.choice(cell_resid.to_numpy(), size=(S, len(pred)))
+        metrics["naive_la_type_median"][name] = distribution_metrics(d["log_price_adj"].to_numpy(), draws)
+    log("naive", json.dumps(metrics["naive_la_type_median"]))
 
     # ------------------------------------------------------------------ confounding checks (V-11)
     w = H.add_design_cols(df[in_time])

@@ -8,8 +8,8 @@
     },
     "within_neighbourhood_cells": {
       "type": "normal",
-      "mean": 0.0020415548262213965,
-      "sd": 7.398521755774479e-05
+      "mean": 0.00205239595923158,
+      "sd": 6.667174230035068e-05
     },
     "bayesian_hierarchical": {
       "type": "posterior",

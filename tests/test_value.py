@@ -99,6 +99,19 @@ def test_green_twins_ranges_only_min_sales_and_empty_ok():
     assert find(p, s.iloc[: MIN_SALES - 1]) == []  # fewer than MIN_SALES -> nothing shown
 
 
+@pytest.mark.skipif(not (Path(__file__).resolve().parents[1] / "artifacts/value_model/v1/posterior.npz").exists(),
+                    reason="needs the fitted v1 posterior")
+def test_missing_value_gives_full_predictive_distribution():
+    p = load("SH2")
+    p.current_value_estimate_gbp = None
+    v = HedonicValueModel().value_impact(p, rating(72))
+    cv = v.current_value_distribution
+    assert cv is not None and cv.std > 0 and cv.interval(0.9).lo < cv.median < cv.interval(0.9).hi
+    assert 100_000 < cv.median < 1_000_000                 # plausible for a 95 m2 South West semi
+    assert v.value_after_gbp is not None and v.value_after_gbp.std > 0
+    assert v.value_after_gbp.median > cv.median * 0.99     # joint draws: after = value x (1 + uplift)
+
+
 def test_type_mapping():
     assert ppd_type(load("SH1")) == "terraced" and ppd_type(load("SH2")) == "semi" and ppd_type(load("SH3")) == "flat"
 

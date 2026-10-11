@@ -36,6 +36,10 @@ Branch `p4/property-value` (built on `p3/green-home-score`; merge that first, se
   uv run python scripts/value_showcase.py
   ```
 
+## Full distributions and evaluation (V-15, V-16)
+- When `Property.current_value_estimate_gbp` is missing, `value_impact` now fills `current_value_distribution` with the model's posterior predictive value and computes `value_after_gbp` draw by draw. UI and LLM: show the median (right-skewed prices) with the 90% interval.
+- Evaluation report for submission item G: `docs/value/EVALUATION.md`. Held-out predictions (item I): `deliverables/test_predictions/value_v1_test_predictions.csv.gz`.
+
 ## Artifacts committed
 `artifacts/value_model/v1/`: `posterior.npz` (small parameters as samples; location effects as mean/std), `encoding.json`, `rating_effects.json` (V-13 mixture), `metrics.json` (evaluation), `green_twins_showcase.json`, `config.json`.
 

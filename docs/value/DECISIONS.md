@@ -24,6 +24,8 @@ Branch: `p4/property-value` (from `p3/green-home-score`, so it reuses the EPC pa
 | V-12 | Sale years after the training data use the latest fitted year effect | Fixed (bug) |
 | V-13 | **Triangulated rating effect**: equal-weight mixture of OLS + within-cell + Bayesian designs | Decided (user, 11 Oct 2026) |
 | V-14 | Unknown PV in sales imputed explicitly (same-type mean, flagged) for the twin score only | Decided |
+| V-15 | One distribution-metric function for all models: MSE/RMSE/MAE/R² (log and £), MAPE, Spearman, CRPS, coverage 50–95%, pinball, PIT KS, log score | Decided (user asked for proper test metrics) |
+| V-16 | Every value output is a full Distribution, incl. the home's posterior predictive value when no valuation is given | Decided (user) |
 
 ---
 
@@ -123,6 +125,12 @@ Caveats:
 - Twins are descriptive only, not evidence of uplift.
 - Empty is a valid answer ("not enough comparable greener sales"). The full dataset (10× this sample) would find more.
 - **Next step:** report the same pool's not-greener neighbours (|gap| < 5) as the like-for-like baseline. This needs a field in `GreenTwin` (contract change, consumer review).
+
+## V-15 Test-set measurement
+Full report with tables: **[EVALUATION.md](EVALUATION.md)**. All models (Bayesian, LightGBM quantile, OLS with/without SAP, naive LA × type median) are scored from 300 predictive draws per sale by `greentwin/value/metrics.py`, so point and distributional metrics are comparable. The metric code is unit-tested against closed-form answers (`tests/test_value_metrics.py`). Headline (held-out test, n = 50,000): Bayesian R² 0.870 (log) / 0.820 (£), MSE 0.0494, RMSE 0.222 log, median APE 11.3%, CRPS 0.116, coverage 50/80/90/95% = 0.50/0.79/0.88/0.93; best of all models on MSE, R² (log), CRPS and pinball on both test sets. Held-out predictions with full predictive quantiles: `deliverables/test_predictions/value_v1_test_predictions.csv.gz` (58,602 rows).
+
+## V-16 Full distributions, never bare numbers
+User requirement: the Bayesian part outputs full distributions, not point values. `HedonicValueModel.value_samples` draws the home's value today from the posterior predictive: every parameter from its posterior, unseen LSOA/LA effects from the fitted level spread N(0, s_level) (not 0), plus StudentT sale noise. `value_impact` returns `uplift_pct`, `rating_effect_pct_per_sap_point`, `value_after_gbp` and, when no valuation is supplied, `current_value_distribution`, all as `Distribution`s; `value_after = value × (1 + uplift)` is computed draw by draw. Showcase predictive values contain the stated valuations within their 90% intervals (EVALUATION.md §9). Test: `test_missing_value_gives_full_predictive_distribution`.
 
 ## V-14 Unknown PV in sales: explicit imputation (twins only)
 `PHOTO_SUPPLY` is missing for 47% of linked sales (72–82% of 2016–2020 sales, an EPC-version gap; 9–14% in 2009–2014). Without it, only 53.1% of sales could be scored. For the descriptive twin score only, unknown PV takes the mean renewables sub-score of same-type sales where PV is known (a small number, since about 3% of homes have PV), and the row is flagged `imputed_pv`. Coverage rises to 93.1%. This follows the project rule: explicit imputation with a flag, never a silent 0. The value model itself does not use PV.
