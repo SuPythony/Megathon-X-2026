@@ -348,8 +348,9 @@ These are contract changes, so the consumers (dashboard, API) review them before
 - Compliance fix 7: a synthetic green premium we insert may only be reported as a method check.
 - A rigged result would also fail with judges and with Lloyds' own credit and climate teams.
 
-What the physics shows is still a strong case. `config.json → summary.greening_evidence`, 500 synthetic homes,
-**stand-in physics** (illustrative until the real model is in):
+What the physics shows is still a strong case. `config.json → summary.greening_evidence`. The figures below are from
+the first run (500 synthetic homes, **stand-in physics**); the current build (60 homes, P2's `physics_l1`) is under
+"First run" below:
 
 | Package | Carbon falls | Bills fall | Median bill saving | Median carbon saving | Median cost | Saving covers the loan repayment: 6%/10y → 6%/25y → 4%/25y → 2%/25y |
 |---|---|---|---|---|---|---|
@@ -383,15 +384,16 @@ The same code re-runs on them unchanged.
 ## 8. Status: step 1 built (11 Oct 2026)
 
 **Built:** `greentwin/twin/city.py`, `greentwin/twin/city_assumptions.json`, `scripts/build_demo_city.py`, tests
-`tests/test_demo_city.py`. Output: `artifacts/demo_city/v1/{homes.json, areas.json, config.json}` (500 homes).
+`tests/test_demo_city.py`. Output: `artifacts/demo_city/v1/{homes.json, areas.json, config.json}` (60 homes by
+default: P2's half-hourly PV/battery layer is too memory-heavy for hundreds of homes on a laptop).
 
 - **Homes are synthetic** (no EPC extract or `EPC_API_TOKEN` on this machine). They're placed over real Manchester
   postcode districts (M8, M14, M19, M20, M21) with synthetic small areas (`M14-03`, never real LSOA codes). The housing
   mix is a labelled assumption. Loft insulation and low-energy lighting follow p3's EPC-fitted priors. Swap
   `synthetic_homes()` for an EPC mapper when real records are available; nothing downstream changes.
-- Per home: twin params + provenance, 200 prior samples, baseline + 3 packages (`fabric_first`, `heat_pump`,
-  `solar_pv`), each re-simulated as a whole. All homes run in a few batched, vmapped physics calls (grouped by fuel):
-  500 homes in about 2 s.
+- Per home: twin params + provenance, 60 prior samples, baseline + 3 packages (`fabric_first`, `heat_pump`,
+  `solar_pv`), each re-simulated as a whole. Homes run in batched, vmapped physics calls, grouped by fuel and by
+  what P2's PV/battery inputs depend on (PV angles, heating hours): 60 homes in about 4 s on `physics_l1`.
 - **Insights built:**
   - 2.3 self-funding loans: P(saving ≥ repayment) per package; best package per home.
   - 2.4 price stress test: base / +30% / −20% before and after the best package.
@@ -412,6 +414,10 @@ The same code re-runs on them unchanged.
 | Customer tiers A / B / C | 2 / 53 / 39 |
 | Homes in street-deal clusters | 146 |
 
+**Current build** (60 synthetic homes, P2's `physics_l1`, uncalibrated, synthetic weather), share of homes where the
+saving covers the repayment at 6% over 25 years: fabric first 58%, solar PV 8%, heat pump 0%. Carbon and bills fall
+in 100% of modelled homes for all three packages. Same direction as the first run.
+
 **What the first run already says:**
 - Self-funding loans are mostly cheap fabric measures. The big-ticket packages (heat pump, PV) don't pay for
   themselves at the assumed rate and term, so the lending story for them is grants, longer terms or a lower rate.
@@ -424,7 +430,7 @@ The same code re-runs on them unchanged.
 **Not yet:**
 - rentals (2.8), rating after, value, score map: these need P2, P3, P4 and P5
 - the cold-year weather and income-based stress: these need P0
-- the full city size and drill-down scenes
+- drill-down scenes; a larger city needs the PV layer run in chunks
 
 ## 9. Build order (thinnest path first)
 

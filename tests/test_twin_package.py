@@ -177,7 +177,7 @@ def test_protocol_and_package_rerun(twin_and_samples):
     base = t.simulate(s, [])
     package = t.simulate(s, [RetrofitAction(retrofit_id="loft_insulation"), RetrofitAction(retrofit_id="draught_proofing")])
     assert package.gas_kwh.mean() < base.gas_kwh.mean()
-    assert t.last_engine in ("physics_stub", "physics")
+    assert t.last_engine in ("physics_stub", "physics_l1")
 
 
 def test_element_heat_loss_and_scene(twin_and_samples):
@@ -189,12 +189,11 @@ def test_element_heat_loss_and_scene(twin_and_samples):
     assert sum(x.heat_loss_share_pct for x in scene.surfaces) <= 100.5
 
 
-def test_calibrate_prior_only_and_team_handoff(twin_and_samples):
+def test_calibrate_prior_only_without_bills(twin_and_samples):
+    # With bills, calibrate() runs P2's Bayesian calibration: tests/test_twin_p2_integration.py
     t, _ = twin_and_samples
     result, samples = t.calibrate(_prop("SH1"), [], [])
     assert result.method == "prior_only" and result.provenance.engine in ("mock", "physics_l1")
-    with pytest.raises(NotImplementedError):
-        t.calibrate(_prop("SH1"), _usage("SH1"), [])
 
 
 def test_rooms_sum_to_whole_house(twin_and_samples):

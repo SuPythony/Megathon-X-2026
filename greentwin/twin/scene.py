@@ -217,7 +217,7 @@ class RoomEnergyView(BaseModel):
 
 
 class EnergyOverlay(BaseModel):
-    engine: str = Field(description="'physics' or 'physics_stub' (stand-in: never real results)")
+    engine: str = Field(description="'physics_l1' (P2 physics) or 'physics_stub' (stand-in: never real results)")
     calibrated: bool
     weather_source: str
     rooms: list[RoomEnergyView]

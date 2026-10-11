@@ -1,7 +1,7 @@
 """Build the demo city: many homes' digital twins in batch, plus the business insights for the Lloyds dashboard.
 
-    uv run python scripts/build_demo_city.py                 # 500 homes -> artifacts/demo_city/v1/
-    uv run python scripts/build_demo_city.py --n 2000 --samples 200
+    uv run python scripts/build_demo_city.py                 # 60 homes -> artifacts/demo_city/v1/
+    uv run python scripts/build_demo_city.py --n 60 --samples 60
 
 Homes are SYNTHETIC over real Manchester postcode districts (greentwin/twin/city_assumptions.json) until an EPC
 extract is available. Numbers come from the stub physics until greentwin/twin/physics.py exists (engine field says
@@ -23,8 +23,8 @@ from greentwin.twin.city import build_city, summary, write_city  # noqa: E402
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=500)
-    ap.add_argument("--samples", type=int, default=200)
+    ap.add_argument("--n", type=int, default=60)        # laptop-friendly: P2's half-hourly PV layer is memory-heavy
+    ap.add_argument("--samples", type=int, default=60)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", default=str(ROOT / "artifacts" / "demo_city" / "v1"))
     args = ap.parse_args()

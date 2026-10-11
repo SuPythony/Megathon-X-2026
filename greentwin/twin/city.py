@@ -227,10 +227,13 @@ def simulate_many(samples_list: list[PosteriorSamples], weather: dict) -> tuple[
     """Run many homes' samples in a few vmapped calls (grouped by fuel). Returns per-home {gas, elec} sample arrays."""
     groups: dict = defaultdict(list)
     for i, s in enumerate(samples_list):
-        groups[fuel_config(s.base)].append(i)
+        # One batch shares one set of P2 half-hourly PV/battery inputs, built from the batch's base home: group by
+        # what those inputs depend on, not just the fuel.
+        b = s.base
+        groups[(fuel_config(b), b.pv_azimuth_deg, b.pv_tilt_deg, b.heating_hours_per_day)].append(i)
     out: list[Optional[dict]] = [None] * len(samples_list)
     engine = "physics_stub"
-    for fuel, idx in groups.items():
+    for (fuel, *_), idx in groups.items():
         keys = list(samples_list[idx[0]].params)
         params = {k: np.concatenate([np.asarray(samples_list[i].params[k]) for i in idx]) for k in keys}
         big = PosteriorSamples(property_id="batch", n_samples=len(params[keys[0]]), params=params,

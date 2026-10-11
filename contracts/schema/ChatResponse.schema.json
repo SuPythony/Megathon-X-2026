@@ -222,7 +222,11 @@
             "get_results",
             "run_scenario",
             "search_docs",
-            "query_graph"
+            "query_graph",
+            "get_energy_prior",
+            "rank_recommendations",
+            "get_customer_memory",
+            "propose_memory"
           ],
           "title": "Name",
           "type": "string"
@@ -304,7 +308,7 @@
         "router": {
           "enum": [
             "jev",
-            "claude_fallback"
+            "llm_fallback"
           ],
           "title": "Router",
           "type": "string"

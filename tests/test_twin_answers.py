@@ -102,8 +102,11 @@ def test_technical_quantities_are_generated_with_sources():
 def test_battery_losses_reduce_self_use():
     sc, pkg = _pkg()
     base = pkg.params.model_copy(update={"pv_kwp": 4.0, "battery_kwh": 10.0})
+    # battery_round_trip_efficiency is the stand-in's battery model; P2's physics takes its battery efficiencies from
+    # the prepared electricity inputs (ElectricityIntake), so this checks the stub explicitly.
+    from greentwin.twin.physics_stub import run_physics as stub_run
     run = lambda rte: simulate(prior_samples(base.model_copy(update={"battery_round_trip_efficiency": rte}), 1, priors={}),  # noqa: E731
-                               pkg.physics_timeseries(), pkg.fuel_config())[0]
+                               pkg.physics_timeseries(), pkg.fuel_config(), run_physics=stub_run)[0]
     lossless, lossy = run(1.0), run(0.8)
     assert lossy.electricity_import_kwh.sum() > lossless.electricity_import_kwh.sum()
     assert lossy.pv_generation_kwh.sum() == pytest.approx(lossless.pv_generation_kwh.sum())

@@ -68,7 +68,7 @@ export interface Distribution {
 
 /** Where a number came from. Every result carries one. */
 export interface Provenance {
-  engine: "physics_l1" | "bayes_calibration" | "surrogate_deeponet" | "sap_estimator" | "ebm" | "xgboost" | "gnn" | "bayesian_hedonic" | "hedonic" | "dr_learner" | "rules" | "jev" | "claude" | "haiku_vision" | "template" | "mock";
+  engine: "physics_l1" | "bayes_calibration" | "surrogate_deeponet" | "sap_estimator" | "ebm" | "xgboost" | "gnn" | "bayesian_hedonic" | "hedonic" | "dr_learner" | "rules" | "jev" | "claude" | "llm" | "llm_vision" | "template" | "mock";
   model_version: string;
   data_version: string;
   seed?: number | null;
@@ -461,7 +461,7 @@ export interface FloorPlan {
   area_vs_epc_pct?: number | null;
   exterior_wall_length_m?: number | null;
   window_area_m2?: number | null;
-  source: "haiku_vision" | "agent_drawn" | "parametric";
+  source: "llm_vision" | "agent_drawn" | "parametric";
   confirmed_by_agent?: boolean;
 }
 
@@ -473,7 +473,7 @@ export interface ElementTag {
   field: string;
   value: number | string;
   confidence: number;
-  source: "haiku_vision" | "manual";
+  source: "llm_vision" | "manual";
   confirmed_by_agent?: boolean;
 }
 
@@ -749,7 +749,7 @@ export interface GreenTwin {
 export interface Feasibility {
   retrofit_id: string;
   status: "feasible" | "feasible_with_conditions" | "needs_survey" | "infeasible";
-  decided_by: "rules" | "jev" | "claude_fallback" | "agent";
+  decided_by: "rules" | "jev" | "llm_fallback" | "agent";
   reason_codes?: string[];
   /** Human-readable, from rules/KB (never the LLM) */
   reasons?: string[];
@@ -762,7 +762,7 @@ export interface FeasibilityReport {
   items: Feasibility[];
   rules_version: string;
   jev_used?: boolean;
-  router?: "jev" | "claude_fallback" | "rules_only";
+  router?: "jev" | "llm_fallback" | "rules_only";
 }
 
 /** Output of the System-1 router (Jev or Claude fallback). */
@@ -772,7 +772,7 @@ export interface WhatIfRoute {
   scenario?: ScenarioSpec | null;
   needs_clarification?: boolean;
   clarifying_question?: string | null;
-  router: "jev" | "claude_fallback";
+  router: "jev" | "llm_fallback";
 }
 
 /** Validator output for one LLM answer. */
@@ -796,7 +796,7 @@ export interface Citation {
 }
 
 export interface ToolCallRecord {
-  name: "get_home_facts" | "get_results" | "run_scenario" | "search_docs" | "query_graph";
+  name: "get_home_facts" | "get_results" | "run_scenario" | "search_docs" | "query_graph" | "get_energy_prior" | "rank_recommendations" | "get_customer_memory" | "propose_memory";
   input: Record<string, unknown>;
   /** e.g. the scenario_id a run_scenario call produced */
   output_ref?: string | null;

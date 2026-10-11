@@ -1,6 +1,9 @@
-"""Photo-to-twin: Claude Sonnet 5.5 vision reads a floor plan or fuse box photo into a structured draft.
+"""Photo-to-twin: vision reads a floor plan or fuse box photo into a structured draft.
 
-The model returns a schema-validated Pydantic object (structured outputs via ``client.messages.parse``).
+Uses the team's one LLM provider and client (``greentwin.llm.client``: OpenAI ``gpt-6-luna``, approved by the team
+lead for every call), like P4's room-photo capture (``capture.py``). The two read different photos: this module the
+floor plan (rooms, dimensions -> layout) and fuse box (circuits); ``capture.py`` room photos (element tags).
+The model returns a schema-validated Pydantic object (structured outputs via ``client.responses.parse``).
 Drafts never reach the twin directly: the user confirms them first, and vision never produces energy numbers.
 For floor plans the model picks the closest prefit archetype (``archetypes.py``) and reads room labels and any
 printed dimensions; ``fit_layout`` turns that into a ``TwinLayout``. Responses are cached on disk by image hash
@@ -27,7 +30,9 @@ from greentwin.twin.archetypes import (
     get_archetype,
 )
 
-MODEL = "claude-sonnet-5-5"
+from greentwin.llm import client as llm  # noqa: E402
+
+MODEL = llm.MODEL
 PROMPT_VERSION = "v1"
 MAX_TOKENS = 16000
 CACHE_DIR = Path(__file__).resolve().parents[2] / "cache" / "llm" / "vision"
@@ -140,31 +145,26 @@ def _parse(schema: type[T], prompt: str, image: bytes, effort: str, client: Any,
         return schema.model_validate_json(path.read_text(encoding="utf-8"))
 
     if client is None:
-        import anthropic
+        if not llm.has_key():
+            raise VisionError("no OPENAI_API_KEY: confirm the house type and rooms by hand instead")
+        client = llm.client()
 
-        client = anthropic.Anthropic()
-
-    response = client.messages.parse(
+    data_url = f"data:{_media_type(image)};base64,{base64.standard_b64encode(image).decode()}"
+    response = client.responses.parse(
         model=MODEL,
-        max_tokens=MAX_TOKENS,
-        output_config={"effort": effort},
-        messages=[{
-            "role": "user",
-            "content": [
-                {"type": "image", "source": {"type": "base64", "media_type": _media_type(image),
-                                             "data": base64.standard_b64encode(image).decode()}},
-                {"type": "text", "text": prompt},
-            ],
-        }],
-        output_format=schema,
+        reasoning={"effort": effort},
+        max_output_tokens=MAX_TOKENS,
+        input=[{"role": "user", "content": [
+            {"type": "input_image", "image_url": data_url},
+            {"type": "input_text", "text": prompt},
+        ]}],
+        text_format=schema,
     )
-    if response.stop_reason == "refusal":
-        raise VisionError(f"model declined the image: {getattr(response, 'stop_details', None)}")
-    if response.stop_reason == "max_tokens":
-        raise VisionError("output truncated at max_tokens")
-    result = response.parsed_output
-    if result is None:
-        raise VisionError("no structured output returned")
+    if getattr(response, "status", None) == "incomplete":
+        raise VisionError(f"output incomplete: {getattr(response, 'incomplete_details', None)}")
+    result = response.output_parsed
+    if result is None:  # a refusal or no parseable output
+        raise VisionError("model returned no structured draft (refused or unparseable); confirm by hand")
 
     if path:
         path.parent.mkdir(parents=True, exist_ok=True)

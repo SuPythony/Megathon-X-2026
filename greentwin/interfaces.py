@@ -80,6 +80,9 @@ class PosteriorSamples:
     params: Mapping[str, Array]
     base: TwinParams
     seed: int = 42
+    # Optional per-sample monthly inputs, shape (n_samples, n_months): weather and schedules that were inferred
+    # jointly with the parameters (P2's calibration). When set, they replace the shared weather for these samples.
+    inputs: Optional[Mapping[str, Array]] = None
 
 
 @dataclass

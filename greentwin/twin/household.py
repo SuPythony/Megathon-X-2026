@@ -14,15 +14,19 @@ from contracts.models import HeatingSystem, Property
 from greentwin.twin.appliances import ApplianceSummary
 
 Presence = Literal["out_all_day", "part_day", "home_all_day"]
-# Share of the day someone is home, for metabolic gains. Working assumption.
+# Share of the day someone is home, for metabolic gains. Working assumption. SAP's 60 W/person is already a 24-hour
+# average for a typical household, taken here as "part_day"; other answers scale it by their share relative to that.
 PRESENCE_FRACTION: dict[str, float] = {"out_all_day": 0.55, "part_day": 0.7, "home_all_day": 0.85}
+SAP_TYPICAL_PRESENCE = "part_day"
 
 
 class Occupancy(BaseModel):
     occupants: float
     presence: Presence
     presence_fraction: float
-    metabolic_gains_w: float = Field(description="60 W per person (SAP 2012 Table 5) x share of the day at home")
+    metabolic_gains_w: float = Field(description="60 W per person (SAP 2012 Table 5, a 24 h average), scaled by "
+                                                  "daytime presence relative to a typical household; before the "
+                                                  "40 W/person evaporation loss (net 20 W/person, as P2's formula)")
     source: str
 
 
@@ -57,7 +61,7 @@ def occupancy(prop: Property, occupants: Optional[float], presence: Optional[Pre
     frac = PRESENCE_FRACTION[pres]
     src = "user answer: occupants (fixed)" if occupants else "sap_2012 table 1b from floor area (uncertain)"
     return Occupancy(occupants=round(n, 2), presence=pres, presence_fraction=frac,
-                     metabolic_gains_w=round(60 * n * frac, 1), source=src)
+                     metabolic_gains_w=round(60 * n * frac / PRESENCE_FRACTION[SAP_TYPICAL_PRESENCE], 1), source=src)
 
 
 def heating_behaviour(thermostat_c: Optional[float], periods: Optional[Sequence[tuple[int, int]]],

@@ -36,6 +36,7 @@ dependencies = [
   "fastapi>=0.111",
   "uvicorn>=0.30",
   "anthropic>=0.40",
+  "openai>=3.28",            # P4 LLM provider (Responses API)
   "reportlab>=4.0",
   "pytest>=8.0",
   "ruff>=0.5",
@@ -43,6 +44,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+report = ["matplotlib>=3.8", "Markdown>=3.6", "pypdf>=4.0"]
 stretch = [
   "gpytorch>=1.11",
   "botorch>=0.11",

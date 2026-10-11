@@ -35,7 +35,7 @@
     "hot_water_kwh_per_day": 3.703,
     "baseload_kwh_per_day": 5.696,
     "lighting_share_of_baseload": 0.209,
-    "internal_gains_w": 245.3,
+    "internal_gains_w": 289.0,
     "solar_gain_factor": 1.0,
     "pv_kwp": 0.0,
     "pv_azimuth_deg": 180.0,
@@ -100,7 +100,8 @@
   },
   "fuel": {
     "heating_fuel": "electricity",
-    "hot_water_fuel": "electricity"
+    "hot_water_fuel": "electricity",
+    "hot_water_efficiency": 1.0
   },
   "fabric": [
     {
@@ -399,7 +400,7 @@
     },
     {
       "field": "internal_gains_w",
-      "value": 245.3,
+      "value": 289.0,
       "source": "default",
       "status": "default",
       "confirmed": false,
@@ -831,7 +832,7 @@
     "occupants": 2.0,
     "presence": "home_all_day",
     "presence_fraction": 0.85,
-    "metabolic_gains_w": 102.0,
+    "metabolic_gains_w": 145.7,
     "source": "user answer: occupants (fixed)"
   },
   "heating_behaviour": {
@@ -1625,9 +1626,9 @@
       "mu": 0.0,
       "sigma": 0.07,
       "base": 1.0,
-      "lower": null,
+      "lower": 0.3,
       "upper": null,
-      "rationale": "Tight: confounded with heat_loss_multiplier on gas data alone"
+      "rationale": "Tight: confounded with heat_loss_multiplier on gas data alone; a combustion system stays below 100%"
     },
     {
       "param": "hot_water_kwh_per_day",

@@ -130,7 +130,10 @@ optional, with defaults, in `physics_api.py`):
 ## 3. For the physics owner
 
 **You write one function:** `run_physics(params, weather, mode, fuel)` in **`greentwin/twin/physics.py`**.
-`physics_api.get_run_physics()` picks it up automatically: no other file changes. Until then the stub runs.
+**Merged (P2, engine `physics_l1`).** `physics_api.get_run_physics()` returns it. The twin wrapper (`simulate.py`) adds
+what it needs: the half-hourly PV/battery inputs (`electricity_layer`, development-generated from the monthly weather)
+when any sample has PV or a battery, and standard conditions (19 °C, 11 h, run as `"calibrated"`) for the rating.
+The stub stays available as `simulate(..., run_physics=physics_stub.run_physics)`.
 
 - Inputs and outputs: `docs/digitaltwinvariables.md` sections 2–5. The key lists are in code in
   `greentwin/twin/physics_api.py`: `PHYSICS_PARAM_KEYS`, `WEATHER_KEYS`, `TOTAL_KEYS`, `MONTHLY_KEYS`, `ELEMENTS`.
@@ -250,7 +253,7 @@ measured on the EPC → fitted floor plan → RdSAP default table → SAP 2012 f
 
 **Ours (Part 1):**
 1. Verify every `to_verify` value in `rdsap_defaults.json` against RdSAP 2012, and cite the appliance figures.
-2. Run vision live on real photos (needs `ANTHROPIC_API_KEY` from the team lead); cache demo drafts.
+2. Run vision live on real photos (needs `OPENAI_API_KEY` from the team lead; same client as the LLM); cache demo drafts.
 3. Wire `TwinIntake` → twin once an API endpoint exists.
 
 **Other teams:**
