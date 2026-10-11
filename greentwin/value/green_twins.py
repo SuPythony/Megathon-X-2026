@@ -51,6 +51,10 @@ def sale_scores(s: pd.DataFrame) -> pd.Series:
     st = s["SOLAR_WATER_HEATING_FLAG"].eq("Y")
     ren = pd.Series([m.renewables_sub(k, 0.0, bool(x)) if not np.isnan(k) else np.nan for k, x in zip(kwp, st)],
                     index=s.index)
+    # V-14: PHOTO_SUPPLY was not recorded by several EPC versions (47% of sales). Unknown PV is imputed EXPLICITLY
+    # as the mean renewables sub-score of same-type sales where it is known (not 0), and flagged.
+    s["imputed_pv"] = ren.isna()
+    ren = ren.fillna(ren.groupby(s["ptype"]).transform("mean"))
     ctl = E._map_unique(s["MAINHEATCONT_DESCRIPTION"], E.controls_list)
     light = num("LOW_ENERGY_LIGHTING")
     smart = pd.Series([float(m.smart_sub(c, li)) if c is not None and not np.isnan(li) else np.nan
@@ -97,8 +101,10 @@ def find(prop: Property, sales: pd.DataFrame, k: int = 3, lsoa: Optional[str] = 
         c = c[c["BUILT_FORM"] == form]
     if prop.construction_age_band:
         c = c[c["age_band"].astype(str).str.startswith(prop.construction_age_band[:4])]
+    from .model import REGION_CODE
     levels = [("LSOA", "lsoa21", lsoa or prop.location.lsoa_code), ("MSOA", "msoa21", msoa),
-              ("local authority", "laua", prop.location.local_authority_code)]
+              ("local authority", "laua", prop.location.local_authority_code),
+              ("region", "rgn", REGION_CODE.get(prop.location.region))]  # last resort, labelled in `same`
     out: list[GreenTwin] = []
     for lo, hi in TIERS:
         for name, col, code in levels:

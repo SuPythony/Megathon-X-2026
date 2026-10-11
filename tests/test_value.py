@@ -81,6 +81,24 @@ def test_unavailable_without_rating_or_recorded_sap(fake_artifacts):
     assert v2.method == "unavailable" and v2.uplift_pct is None
 
 
+def test_green_twins_ranges_only_min_sales_and_empty_ok():
+    from greentwin.value.green_twins import MIN_SALES, find, home_score
+    p = load("SH1")
+    own = home_score(p)
+    rows = []
+    for i in range(MIN_SALES):  # exactly MIN_SALES greener comparable sales in the LA
+        rows.append({"ptype": "terraced", "year": 2022, "tfa": p.floor_area_m2, "BUILT_FORM": "Mid-Terrace",
+                     "age_band": "1900-1929", "lsoa21": "E01", "msoa21": "E02", "laua": "E08000003",
+                     "rgn": "E12000002", "green_score": own + 20, "price_adj": 250000 + 1000 * i,
+                     "CURRENT_ENERGY_RATING": "C"})
+    s = pd.DataFrame(rows)
+    twins = find(p, s)
+    assert len(twins) == 1 and twins[0].price_per_m2_gbp.n_samples == MIN_SALES
+    assert "local authority" in twins[0].same
+    assert not any(k in twins[0].model_dump_json() for k in ("paon", "street", "postcode"))
+    assert find(p, s.iloc[: MIN_SALES - 1]) == []  # fewer than MIN_SALES -> nothing shown
+
+
 def test_type_mapping():
     assert ppd_type(load("SH1")) == "terraced" and ppd_type(load("SH2")) == "semi" and ppd_type(load("SH3")) == "flat"
 

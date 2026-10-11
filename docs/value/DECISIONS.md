@@ -23,6 +23,7 @@ Branch: `p4/property-value` (from `p3/green-home-score`, so it reuses the EPC pa
 | V-11 | Confounding checks: within-neighbourhood cells and repeat sales | Done |
 | V-12 | Sale years after the training data use the latest fitted year effect | Fixed (bug) |
 | V-13 | **Triangulated rating effect**: equal-weight mixture of OLS + within-cell + Bayesian designs | Decided (user, 11 Oct 2026) |
+| V-14 | Unknown PV in sales imputed explicitly (same-type mean, flagged) for the twin score only | Decided |
 
 ---
 
@@ -106,8 +107,25 @@ The post-retrofit SAP is **illustrative** here (sd 3 points) until Part 2's sap_
 - SH2 includes "no clear effect": South West semis have a near-zero Bayesian slope (0.004%/pt), and the interval touches 0. The wording rule applies: if the 90% interval includes 0, say there is no clear effect.
 - SH3, a London flat, has a modest effect (Bayesian 0.065%/pt).
 
-## V-10 Green twins (code written, not yet run)
-`greentwin/value/green_twins.py`: greener comparable sales nearby, as ranges only. Score at sale = Green Home Score without intensity (brief weights renormalised over six components, same EPC parsers as the score); same type, form, age band, floor area ±10%, sold 2019–2024; LSOA → MSOA → LA; tiers +15–25 / +25–35 / +35 points; ≥ 5 sales per tier; HPI-adjusted £/m² as a Distribution.
+## V-10 Green twins
+`greentwin/value/green_twins.py`, built by `uv run python scripts/build_green_twins.py --version v1`: greener comparable sales nearby, as ranges only. Score at sale = Green Home Score without intensity (brief weights renormalised over six components, same EPC parsers as the score). Filters: same type, form, age band, floor area ±10%, sold 2019–2024. Geography LSOA → MSOA → LA → region (last resort, labelled). Tiers +15–25 / +25–35 / +35 points; ≥ 5 sales per tier (privacy and stability). Output: HPI-adjusted £/m² as a Distribution. Precomputed: `artifacts/value_model/v1/green_twins_showcase.json`.
+
+Results (10% sample; 93.1% of 1,047,182 sales scored after V-14; score-at-sale quantiles P5 31.5, P50 51.1, P95 67.5):
+
+| Home | Own score (no intensity) | Twins found |
+| --- | --- | --- |
+| SH1 | 31.2 | Tier +15–25: 26 sales, median gap 18.4, mostly EPC D, median £3,158/m² (local authority). Tier +25–35: 56 sales, gap 26.4, EPC C, £1,695/m² (**region**) |
+| SH2 | 49.6 | none: 20 matching sales in its LA, none ≥ 15 points greener (max gap ~9) |
+| SH3 | 60.3 | none: 5 matching sales in its LA, max gap ~5.6 |
+
+Caveats:
+- £/m² from different geographies is **not comparable** (SH1's region-level tier is cheaper because of location, not greenness). The UI must show the geography (in `GreenTwin.same`) and should not imply greener homes are cheaper or dearer.
+- Twins are descriptive only, not evidence of uplift.
+- Empty is a valid answer ("not enough comparable greener sales"). The full dataset (10× this sample) would find more.
+- **Next step:** report the same pool's not-greener neighbours (|gap| < 5) as the like-for-like baseline. This needs a field in `GreenTwin` (contract change, consumer review).
+
+## V-14 Unknown PV in sales: explicit imputation (twins only)
+`PHOTO_SUPPLY` is missing for 47% of linked sales (72–82% of 2016–2020 sales, an EPC-version gap; 9–14% in 2009–2014). Without it, only 53.1% of sales could be scored. For the descriptive twin score only, unknown PV takes the mean renewables sub-score of same-type sales where PV is known (a small number, since about 3% of homes have PV), and the row is flagged `imputed_pv`. Coverage rises to 93.1%. This follows the project rule: explicit imputation with a flag, never a silent 0. The value model itself does not use PV.
 
 ---
 

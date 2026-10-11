@@ -111,4 +111,16 @@ class HedonicValueModel:
         return ValueImpact(**out)
 
     def green_twins(self, prop: Property, k: int = 3) -> list[GreenTwin]:
-        return []  # TODO(V-xx): matched greener comparable sales, ranges only
+        """V-10: greener comparable sales as ranges. Scored sales if available (git-ignored data), else the
+        precomputed showcase file, else empty ('not enough comparable greener sales')."""
+        scored = ROOT / "data" / "processed" / f"sales_scored_{self.version}.parquet"
+        if scored.exists():
+            import pandas as pd
+            from .green_twins import find
+            return find(prop, pd.read_parquet(scored).dropna(subset=["green_score"]), k=k)
+        show = ROOT / "artifacts" / "value_model" / self.version / "green_twins_showcase.json"
+        if show.exists():
+            hit = json.loads(show.read_text()).get(prop.property_id)
+            if hit:
+                return [GreenTwin.model_validate(t) for t in hit["twins"]][:k]
+        return []
