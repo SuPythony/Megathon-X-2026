@@ -3,25 +3,46 @@
 Part 5 (P4) · Branch `p4/kb-llm` · Extends `IMPLEMENTATION_PLAN_v2.md` Block 6 and `LLD.pdf` §4.5. Where this plan
 adds something those documents do not cover, it says so; it never relaxes a rule in `AGENTS.md`.
 
+**Provider decision (11 Oct 2026): OpenAI only, local embeddings.** This changes the documented default
+(`.env.example` `LLM_PROVIDER=anthropic`, LLD "Claude"); `AGENTS.md` (Jev fallback "Claude structured output",
+Photo-to-twin "Claude Haiku") must be updated in the same PR, with the team lead's sign-off.
+
+## 0. Reuse decisions (adopt before building)
+
+| Need | Choice | Why | Rejected |
+|---|---|---|---|
+| Agent loop, tools, guardrails, sessions, tracing | **OpenAI Agents SDK** (`openai-agents`, Responses API) | Function tools with Pydantic schemas, output guardrails (our validator), SQLite sessions and tracing out of the box | Hand-written loop (only if the SDK blocks call caching, §5.2) |
+| Unstructured documents + free-text notes (methods, policy pages, agent notes, chat notes) | **Cognee** (Apache-2.0, v1.6.1, py3.10–3.14): `remember` / `recall` / `improve` / `forget`, graph + vector, local mode, source metadata stamped on chunks | Reuses a maintained graph-RAG memory instead of our own chunker, embedder and graph extraction | Mem0 (LLM-written ADD-only memories, needs a key for every write, conflicts with confirm/retract governance); Graphiti/Zep (needs Neo4j/FalkorDB; embedded Kuzu deprecated; LLM on every write) |
+| Home facts, model outputs, governed customer memory, events, scores, chat/tool logs | **DuckDB** (already a dependency) | The only source of numbers must be deterministic SQL; memory must be auditable and confirmable | Putting numbers or constraints in an LLM-extracted graph |
+| Retrofit / rule / grant graph | **Deterministic edges from our configs** in DuckDB (no LLM extraction) | Configs are already structured; extraction would only add noise | — |
+| Structured outputs (explanation plan, router, memory proposals) | `client.responses.parse(..., text_format=PydanticModel)` | Typed parsing; refusals arrive as a `refusal` content item | — |
+| Embeddings | Local (fastembed / Cognee local model) | Free, offline, reproducible builds | OpenAI embeddings (key needed for every rebuild) |
+| HTTP | FastAPI routers (pattern already in `greentwin/api/energy_prior.py`) | Local precedent | — |
+
+Fallback if Cognee does not install cleanly or its local models are too heavy (it pulls a local extractor and
+embedder on first use): timebox 45 minutes (AGENTS.md), then use DuckDB `fts` + `vss` + fastembed for documents
+(§4.2b). The tool interface (`search_docs`) does not change.
+
 ## 1. What we are building
 
 One explanation layer that answers a customer or agent about **their** home, using only numbers our models
 produced, with sources, and that remembers the customer across sessions.
 
 ```
- user message ─► Router (Jev | Claude structured | rules) ─► intent + ScenarioSpec slots
+ user message ─► Router (Jev | OpenAI structured | rules) ─► intent + ScenarioSpec slots
                                                 │
                      ┌──────────────────────────┴───────────────────────────┐
                      ▼                                                      ▼
-            Claude tool loop (strict tools)                         Template explainer
+       OpenAI Agents SDK loop (strict tools)                        Template explainer
       get_home_facts · get_energy_prior · run_scenario               (no key / validator
       get_results · rank_recommendations · search_docs               fails twice)
       query_graph · get_customer_memory · propose_memory
                      │
                      ▼
-   Explanation plan (claims → evidence refs) ─► Validator (numbers + evidence + wording) ─► ChatResponse
+   Explanation plan (claims → evidence refs) ─► Validator = output guardrail ─► ChatResponse
                      │                                                                     │
-                     └──────────── chat log, tool log, memory events ──► DuckDB knowledge base ◄┘
+                     └── chat log, tool log, memory events ──► DuckDB (facts, memory) ◄────┘
+                                                               Cognee  (docs, notes)  ◄── search_docs, notes
 ```
 
 Five properties, each checkable:
@@ -48,10 +69,16 @@ Five properties, each checkable:
 
 ## 3. Storage: one structured knowledge base
 
-Single embedded **DuckDB** file `data/greentwin.duckdb` (git-ignored), built reproducibly by
-`python -m greentwin.kb.build`. DuckDB gives SQL, full-text search (`fts` extension, BM25) and vector search
-(`vss` extension, HNSW) in one file, so there is one store to back up, version and test. Large arrays
-(posterior samples, per-home explanations) stay in Parquet and are registered as DuckDB views.
+Two stores, split by what they hold:
+- **DuckDB** `data/greentwin.duckdb` (git-ignored): everything structured and everything that must be exact:
+  homes, model outputs, registries, the config graph, governed customer memory, events, scores, chat and tool
+  logs. Large arrays (posterior samples, per-home explanations) stay in Parquet as DuckDB views.
+- **Cognee** (local data dir `data/cognee/`, git-ignored): unstructured text for retrieval: rendered method,
+  retrofit, rule, grant, dataset and wording documents (one Cognee dataset `greentwin_docs`), and free-text
+  customer notes (one dataset per customer, `notes_<customer_id>`). Every document is added with metadata
+  (`doc_id`, `kind`, `applies_to`, `source_url`, `version`, `verified`) so recalled chunks carry citations.
+Both are built reproducibly by `python -m greentwin.kb.build`. The DuckDB `documents` table remains the
+registry of what was given to Cognee (ids, hashes, licence), so citations resolve even if Cognee is rebuilt.
 
 ### 3.1 Conventions on every table
 - `*_id` primary keys; `created_at` (UTC); `source` (`dataset|model|config|user|agent|llm_extracted|system`);
@@ -73,8 +100,8 @@ Single embedded **DuckDB** file `data/greentwin.duckdb` (git-ignored), built rep
 | **Registries** | `configs` | config_id (`retrofit_catalogue`…), version, content_hash, JSON | `contracts/*.json` |
 | | `datasets` | dataset_id, publisher, licence, url, rows, sha256, use | `deliverables/src/datasets.py`, M04 proof |
 | | `model_cards` | model_id, version, metrics JSON, card_path | `artifacts/*/metrics.json` |
-| **Documents** | `documents` | doc_id, title, kind (`method|rule|retrofit|grant|dataset|policy|faq`), applies_to JSON, licence, source_url, version, content_hash | KB ingest |
-| | `chunks` | chunk_id, doc_id, ord, heading_path, text, n_tokens, embedding FLOAT[384] | ingest + embedder |
+| **Documents** | `documents` | doc_id, title, kind (`method|rule|retrofit|grant|dataset|policy|faq`), applies_to JSON, licence, source_url, version, verified, content_hash, cognee_dataset | KB ingest (text itself lives in Cognee) |
+| | `chunks` | *fallback only (§4.2b):* chunk_id, doc_id, heading_path, text, embedding FLOAT[384] | only if Cognee is not used |
 | **Graph** | `nodes` | node_id, type (`Home|Element|Retrofit|Rule|Grant|LSOA|Region|Customer|Goal|Doc`), props JSON | build |
 | | `edges` | src, rel (`HAS_ELEMENT|IN_LSOA|IN_REGION|REQUIRES|EXCLUDES|BLOCKED_BY|GRANT_APPLIES|OWNS|PREFERS|REJECTED|COMPLETED|CITES`), dst, props JSON | build + memory |
 | **Customers & memory** (§6) | `customers` | customer_id (pseudonymous), created_at, consent JSON | onboarding |
@@ -91,8 +118,10 @@ Views: `v_home_facts(property_id)` (property + latest prior/score/feasibility), 
 (latest confirmed item per key), `v_recent_events(customer_id, days)`.
 
 ### 3.3 Build and refresh
-`greentwin/kb/build.py` is idempotent: load configs and examples → render documents (§4.1) → chunk → embed →
-build FTS and HNSW indexes → build graph → load model outputs (M04 priors for every known home). A `kb_version`
+`greentwin/kb/build.py` is idempotent: load configs and examples → render documents (§4.1) → register them in
+`documents` → `cognee.remember` them into `greentwin_docs` with metadata (then `improve` once to build the graph,
+using OpenAI when a key is present) → build the config graph → load model outputs (M04 priors for every known
+home). A `kb_version`
 row records the content hashes of every input; the health check fails if any input changed without a rebuild.
 
 ## 4. Retrieval
@@ -111,16 +140,17 @@ Three kinds of retrieval, each behind a tool, each returning the evidence the va
 
 Chunking: split on Markdown headings, ~350–500 tokens, 15% overlap, keep `heading_path` for context.
 
-### 4.2 Hybrid search (`search_docs`)
-1. **BM25** over `chunks.text` (DuckDB `fts`): exact terms such as "cavity", "BUS", rule ids.
-2. **Dense** over `chunks.embedding` (DuckDB `vss`, cosine). Embeddings from a local CPU model
-   (`fastembed`, `BAAI/bge-small-en-v1.5`, 384-d, ONNX, no torch). Anthropic has no embeddings endpoint, and
-   local embedding keeps the build offline and free.
-3. **Fusion:** reciprocal rank fusion (k = 60) of the two lists, then **metadata filters** from the request
-   (`kind`, `applies_to.retrofit_id`, `applies_to.property_type`).
-4. Return top-k (default 5) chunks with `doc_id`, `chunk_id`, `heading_path`, snippet and source URL. These
-   become `Citation(source="doc", ref="doc_id#chunk_id")`.
-Stretch: rerank the top 20 with a small cross-encoder if retrieval evaluation (§9) shows it helps.
+### 4.2 Search (`search_docs`)
+**a. Cognee (default).** `cognee.recall(query, datasets=["greentwin_docs"])` with Cognee's own routing between
+graph, vector and hybrid retrieval. We use the returned **source text and metadata only** (no Cognee-generated
+answer), apply our metadata filters (`kind`, `applies_to.retrofit_id`, `applies_to.property_type`), and return
+the top-k (default 5) as `Citation(source="doc", ref="doc_id#chunk")` with snippet and URL. Retrieval works
+without an LLM key once the KB is built.
+
+**b. Fallback (only if Cognee is dropped).** DuckDB `fts` (BM25) + `vss` (cosine over fastembed
+`BAAI/bge-small-en-v1.5`, 384-d, ONNX, CPU) fused by reciprocal rank fusion (k = 60), same filters, same output.
+
+Either way, `search_docs` is evaluated on the same labelled set (§9), so the choice is measured, not assumed.
 
 ### 4.3 Structured retrieval (the only source of home-specific numbers)
 SQL views behind typed tools (`get_home_facts`, `get_energy_prior`, `get_results`). Tools return compact JSON
@@ -133,13 +163,13 @@ Templated queries only (no free Cypher/SQL from the model), e.g. `blocked_retrof
 is the GraphRAG step: fetch the home's subgraph (constraints, eligible grants, blocked items), then explain.
 
 ### 4.5 Memory retrieval (`get_customer_memory`)
-Always returns confirmed constraints and goals; adds the top relevant preferences and the last N events, ranked
-by recency and (for free-text notes) BM25 match to the question. Proposed (unconfirmed) items are returned
-separately, marked as unconfirmed.
+Always returns confirmed constraints and goals from DuckDB; adds the top relevant preferences and the last N
+events by recency; and, for free-text notes, `cognee.recall(question, datasets=[f"notes_{customer_id}"])`.
+Proposed (unconfirmed) items are returned separately, marked as unconfirmed. Notes never supply numbers.
 
 ## 5. Tools and the LLM loop
 
-### 5.1 Tool set (all `strict: true`, `additionalProperties: false`)
+### 5.1 Tool set (strict function tools: `additionalProperties: false`, every property in `required`, optional fields nullable)
 
 | Tool | Input | Returns | Notes |
 |---|---|---|---|
@@ -155,22 +185,32 @@ separately, marked as unconfirmed.
 
 The `ToolCallRecord.name` literal in `contracts/models.py` is extended with the four new tool names (§10).
 
-### 5.2 Loop (manual, so every step is logged and validated)
-- Model from `LLM_MODEL` (team default `claude-sonnet-5-5`; `claude-opus-5-5` for evaluation runs if budget
-  allows). Adaptive thinking at `effort: "low"` for chat routes, raised only if evaluation shows a gain.
-- `tool_choice: auto`. Forced tool choice is rejected on current models, so the system prompt requires
-  `run_scenario` for every what-if and the validator rejects answers to what-if routes without one.
-- Up to 6 tool rounds; parallel tool calls executed concurrently and returned in **one** user message; failed
-  tools return `is_error: true`, never dropped.
-- Check `stop_reason` before reading content (`refusal` → template answer; `max_tokens` → one retry with a
-  higher cap). Server-side refusal fallback enabled (`fallbacks: "default"`).
-- **Prompt caching:** tools + frozen system prompt first, cached. Per-session memory and home context are
-  injected as a mid-conversation `system` message after the first user turn, so they never invalidate the
-  cached prefix. No timestamps or IDs in the system prompt.
-- Every request/response cached in `cache/llm/` by hash(model + prompt version + messages + tool outputs).
+### 5.2 Loop (OpenAI Agents SDK on the Responses API)
+- **Models** from env: `LLM_MODEL` for answers (start with `gpt-6.1-sol`, the balanced model in the current
+  docs; `gpt-6-astra` for evaluation runs if budget allows) and `LLM_MODEL_FAST` for routing and memory
+  proposals (`gpt-6-luna`). Confirm the IDs with `client.models.list()` once the key works; never hard-code
+  them in code. Reasoning effort `low` for chat routes, raised only if evaluation shows a gain.
+- **Agent:** one `Agent` with the §5.1 function tools and `output_type` = the explanation plan (§5.3). The
+  validator (§5.4) runs as an **output guardrail**; a failure triggers one rerun with the failed claims named,
+  then the template explainer.
+- **Tool choice:** `auto` by default; for routes the router labels `numeric` or `comparative`, force the
+  scenario tool (`tool_choice={"type": "function", "name": "run_scenario"}`), which the Responses API supports.
+- **Parallel tool calls** allowed; each `function_call` is answered with a `function_call_output` carrying the
+  same `call_id`; tool errors return a structured error string, never a dropped call. Up to 6 tool rounds.
+- **Refusals and truncation:** a `refusal` content item → template answer with a plain-language note;
+  `status == "incomplete"` with `max_output_tokens` → one retry with a higher cap.
+- **Prompt caching** is automatic above 1,024 prompt tokens: keep the tool list and instructions byte-stable
+  and first, put per-turn context (memory, home facts) after them, set `prompt_cache_key` to the customer id
+  for per-customer cache accounting, and track `usage.input_tokens_details.cached_tokens`.
+- **Sessions:** the SDK's SQLite session for conversation history (`data/sessions.sqlite`); our DuckDB
+  `chat_turns`/`tool_calls` remain the audit log.
+- **Replay cache:** every model call cached in `cache/llm/` by hash(model + prompt version + input items +
+  tool outputs) through a thin model wrapper, so evaluations replay offline. If the SDK makes that wrapper
+  awkward (verify in phase 4), drop to a ~150-line manual Responses loop with the same tools and guardrail.
 
 ### 5.3 Explanations as claims, then text
-The model returns an **explanation plan** via structured output (`output_config.format`):
+The model returns an **explanation plan** via structured output (the agent's `output_type`, i.e. a strict JSON
+schema on the Responses API):
 `claims[] = {text, kind: number|fact|advice|caveat, value?, unit?, evidence: [{tool_call_id, json_path} |
 {doc_id, chunk_id} | {rule_id}]}` plus `caveats[]` and `follow_up?`. Code renders the plan into the answer and
 the UI can show "why?" per claim. This makes validation exact (each number has a declared source path) instead
@@ -263,13 +303,15 @@ narrows, ladder recomputed without loft insulation.
 
 ## 8. Code layout
 ```
-greentwin/kb/        build.py · schema.sql · ingest.py (render configs/docs) · chunk.py · embed.py
-                     search.py (BM25 + vss + RRF) · graph.py (templated queries) · store.py (DuckDB access)
-greentwin/memory/    models.py · service.py (write/confirm/retract, screening) · score.py (Beta + nudge)
-                     rank.py (rank_recommendations)
-greentwin/llm/       tools.py (schemas + handlers) · chat.py (loop, caching, stop reasons) · plan.py
-                     (claims schema) · validator.py · template.py · prompts/system_v1.md · cache.py
-greentwin/jev/       client.py · router.py (Jev → Claude structured → rules)
+greentwin/kb/        build.py · schema.sql · ingest.py (render configs/docs) · cognee_store.py (remember/recall
+                     wrapper + metadata) · search.py (search_docs; fallback BM25+vss) · graph.py (templated
+                     queries over config edges) · store.py (DuckDB access)
+greentwin/memory/    models.py · service.py (write/confirm/retract, screening, notes → Cognee) · score.py
+                     (Beta + nudge) · rank.py (rank_recommendations)
+greentwin/llm/       tools.py (function tools + handlers) · agent.py (Agents SDK agent, guardrail, sessions)
+                     · plan.py (claims schema) · validator.py · template.py · prompts/instructions_v1.md
+                     · cache.py (replay cache)
+greentwin/jev/       client.py · router.py (Jev → OpenAI structured → rules)
 greentwin/api/       chat.py · memory.py (routers)
 eval/scenarios/      *.json (≥30 → 100) · eval/run_llm_eval.py
 tests/               test_kb_*.py · test_memory_*.py · test_validator.py · test_chat_offline.py
@@ -301,22 +343,26 @@ Bump schema to 0.5.0, regenerate `contracts/types.ts` and JSON Schemas, keep con
 ## 11. Build order (phases with checkpoints)
 | Phase | Delivers | Checkpoint | Effort |
 |---|---|---|---|
+| **0 · Spike: dependencies** | add `openai`, `openai-agents`, `cognee` (+ local embedder); confirm install, local mode, model IDs | Cognee recalls a test doc with metadata; Agents SDK runs one tool call (or fallback chosen) | 0.5 day |
 | **1 · KB store** | `schema.sql`, build script, configs/examples/M04 priors loaded, registries | `kb.build` reproducible; `v_home_facts` returns SH1–SH3 | 0.5 day |
-| **2 · Documents + search** | rendered corpus, chunking, local embeddings, BM25 + vss + RRF, `search_docs` | retrieval eval recall@5 ≥ 0.85 | 1 day |
+| **2 · Documents + search** | rendered corpus into Cognee with metadata, `search_docs` (Cognee, or DuckDB fallback) | retrieval eval recall@5 ≥ 0.85 | 0.5–1 day |
 | **3 · Graph** | nodes/edges from catalogue, rules, homes; 5 templated queries | `blocked_retrofits(SH3)` and `eligible_grants` correct | 0.5 day |
-| **4 · Tools + loop + validator + template** | tool schemas/handlers, manual loop, claims plan, validator, template, LLM cache | offline chat for SH1–SH3 passes; 0 unvalidated numbers | 1.5 days |
+| **4 · Tools + agent + validator + template** | function tools, Agents SDK agent with output guardrail, claims plan, validator, template, replay cache | offline chat for SH1–SH3 passes; 0 unvalidated numbers | 1.5 days |
 | **5 · Memory** | contracts 0.5.0, memory service + screening, Beta score, `rank_recommendations`, memory API | session 1→3 script passes all guardrails | 1 day |
-| **6 · Router + Jev** | Jev client, Claude structured fallback, rules fallback, τ calibration hook | routing accuracy ≥ 95% above τ on labelled prompts | 0.5–1 day |
+| **6 · Router + Jev** | Jev client, OpenAI structured fallback, rules fallback, τ calibration hook | routing accuracy ≥ 95% above τ on labelled prompts | 0.5–1 day |
 | **7 · Evaluation + docs** | ≥30 scenarios, eval runner, `docs/LLM.md` (submission item E), health checks | targets in §9 met or gaps documented | 1 day |
 `run_scenario` stays on the mock until the orchestrator lands; everything else uses real data now (M04, configs).
 
 ## 12. Risks and decisions needed
 | Item | Decision / mitigation |
 |---|---|
-| `ANTHROPIC_API_KEY` / `JEV_API_KEY` not provided yet | Ask the team lead when phase 4/6 needs a live run; everything is built and tested offline first |
+| OpenAI key in `.env` is stored without a variable name | Must read `OPENAI_API_KEY=sk-...` before any live run; `JEV_API_KEY` still to come from the team lead; everything is built and tested offline first |
+| Provider change (Anthropic → OpenAI) | Team-lead sign-off; update `AGENTS.md`, `.env.example` (`LLM_PROVIDER=openai`, model vars) and the LLD in the same PR |
+| Cognee footprint (local extractor/embedder downloads, `dlt` core dependency, multi-tenant API default) | Use the library (not the server); set `ENABLE_BACKEND_ACCESS_CONTROL=false` if the API is used; DuckDB fallback after a 45-minute timebox |
 | Contract change (0.5.0) | Needs review from P5 (UI) and P2 (orchestrator) before merge |
 | Grant facts out of date (BUS, ECO4 status unverified per AGENTS.md) | Documents carry `verified` flags; validator blocks unverified policy numbers |
 | Memory nudging could feel manipulative | Bounded λ, best-physics option always shown, every move explained, no loan push (value never a reason to borrow) |
 | Personal data in free text | Screening before storage; no PII columns; synthetic customers only |
 | Prompt injection via agent notes or documents | Tool outputs and notes are data, never instructions; system prompt says so; eval scenario covers it |
-| Embedding model download on a slow link | One-off ~130 MB; BM25-only mode works without it |
+| Model downloads on a slow link | One-off; keyword/BM25 retrieval still works without embeddings |
+| LLM-extracted graph quality (Cognee `improve`) | Used for document retrieval only; never a source of numbers or constraints |
