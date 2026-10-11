@@ -1,0 +1,11 @@
+{
+  "elapsed_seconds": 12.595464875004836,
+  "seed": 42,
+  "data_version": "bayesian-controlled-example/0.1",
+  "n_samples": 128,
+  "calibration_status": "performed",
+  "sha256": {
+    "result.json": "96a9e8f1b526d54f585f6a4e91230ae812f5477dfa27ce1dbd24d73a9f7db7fa",
+    "output_samples.npz": "923b7cb6b67aa81d5d220a916f504e3e99881f3ab793b615b09b82dd0914b5e3"
+  }
+}

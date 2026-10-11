@@ -42,6 +42,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+report = ["matplotlib>=3.8", "Markdown>=3.6", "pypdf>=4.0"]
 stretch = [
   "gpytorch>=1.11",
   "botorch>=0.11",

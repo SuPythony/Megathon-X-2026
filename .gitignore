@@ -7,16 +7,22 @@
 __pycache__/
 *.py[cod]
 .venv/
+.uv-cache/
+.uv-python/
 .pytest_cache/
+.pytest_tmp/
 .mypy_cache/
 .ruff_cache/
+.report_cache/
 *.egg-info/
 
 # Data (download with scripts; never commit raw or large files)
 data/raw/
 data/interim/
 data/processed/*.parquet
+data/processed/application_history.sqlite*
 data/cache/
+data/processed/synthetic/
 *.duckdb
 *.duckdb.wal
 

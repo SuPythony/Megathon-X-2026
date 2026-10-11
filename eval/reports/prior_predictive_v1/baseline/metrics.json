@@ -1,0 +1,11 @@
+{
+  "elapsed_seconds": 14.408374291990185,
+  "seed": 42,
+  "data_version": "prior-predictive/0.1",
+  "n_samples": 128,
+  "calibration_status": "not_performed",
+  "sha256": {
+    "result.json": "b0401aaf73e0c95ca4e11c61d6b6ce7289dd32bd3c1207a967f5146db03cc1af",
+    "output_samples.npz": "46ca7a5d2556884a0db9e355c57e3c8f5d819c2ba6bba54d410fe8bdd1baa7fa"
+  }
+}
